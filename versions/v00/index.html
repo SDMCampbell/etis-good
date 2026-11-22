@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Samuel Campbell · Full Stack Web Developer</title>
+  <meta name="description" content="Samuel Campbell – Full Stack Web Developer. Three interactive ways to read my resume.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%23141414%27/%3E%3Ctext x=%2716%27 y=%2723%27 font-family=%27monospace%27 font-size=%2720%27 font-weight=%27700%27 text-anchor=%27middle%27 fill=%27%23f1b51c%27%3ES%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#0e0f12; --fg:#ecebe6; --muted:#8d8e96; --line:#24262d; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; background:var(--bg); color:var(--fg);
+      font:16px/1.5 "JetBrains Mono", ui-monospace, Consolas, monospace;
+      display:flex; flex-direction:column; align-items:center; padding:9vh 24px 120px; }
+    header { max-width:960px; width:100%; }
+    h1 { font:600 clamp(40px,7vw,76px)/1 Fraunces, Georgia, serif; letter-spacing:-.02em; margin:0 0 14px; }
+    .role { color:var(--muted); margin:0 0 6px; }
+    .lede { max-width:56ch; color:#c7c7cd; margin:28px 0 48px; }
+    .grid { max-width:960px; width:100%; display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px; }
+    .card { display:flex; flex-direction:column; text-decoration:none; color:inherit; border:1px solid var(--line);
+      border-radius:14px; overflow:hidden; background:#14161b; transition:transform .2s, border-color .2s; }
+    .card:hover, .card:focus-visible { transform:translateY(-4px); border-color:#4a4d57; outline:none; }
+    .preview { height:150px; position:relative; overflow:hidden; font-size:11px; }
+    .body { padding:18px 18px 20px; }
+    .body h2 { margin:0 0 6px; font-size:17px; }
+    .body p { margin:0; color:var(--muted); font-size:13px; }
+    .num { color:var(--muted); font-size:12px; }
+    /* mini previews */
+    .p-term { background:#0b0c0a; color:#9fe870; padding:14px; line-height:1.6; }
+    .p-term .c { color:#f2c14e; }
+    .p-term .cur { display:inline-block; width:7px; height:12px; background:#9fe870; vertical-align:middle; animation:b 1s steps(1) infinite; }
+    @keyframes b { 50% { opacity:0; } }
+    .p-git { background:#f6f4ee; color:#222; padding:14px 14px 0 36px; line-height:2; }
+    .p-git::before { content:""; position:absolute; left:18px; top:0; bottom:0; width:2px; background:#2f6fde; }
+    .p-git::after { content:""; position:absolute; left:30px; top:44px; height:56px; width:2px; background:#e0623a; }
+    .p-git span { display:block; position:relative; white-space:nowrap; }
+    .p-git span::before { content:""; position:absolute; left:-22px; top:9px; width:10px; height:10px; border-radius:50%; background:#fff; border:2px solid #2f6fde; }
+    .p-git b { color:#b26a00; font-weight:600; margin-right:6px; }
+    .p-os { background:linear-gradient(160deg,#2b8c86,#1f5f7a); }
+    .p-os .w { position:absolute; background:#e9e5d8; border:2px solid #111; box-shadow:4px 4px 0 #111; }
+    .p-os .w i { display:block; height:14px; background:#f1b51c; border-bottom:2px solid #111; }
+    .p-os .w1 { left:24px; top:22px; width:120px; height:84px; }
+    .p-os .w2 { left:110px; top:52px; width:130px; height:78px; }
+    .p-os .w2 i { background:#e05a47; }
+    .p-os .ic { position:absolute; left:250px; width:22px; height:22px; background:#e9e5d8; border:2px solid #111; }
+    footer { margin-top:56px; color:var(--muted); font-size:13px; max-width:960px; width:100%; }
+    footer a { color:var(--fg); }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="role">~/samuel-campbell</p>
+    <h1>Samuel Campbell</h1>
+    <p class="role">Full Stack Web Developer · Lexington, SC</p>
+    <p class="lede">A user-focused software and web engineer who loves building real-world, high-quality products. Same resume, three ways to explore it. Pick one.</p>
+  </header>
+
+  <main class="grid">
+    <a class="card" href="terminal/">
+      <div class="preview p-term" aria-hidden="true">
+        <div><span class="c">doog@etis-good</span>:~$ whoami</div>
+        <div>Samuel Campbell</div>
+        <div><span class="c">doog@etis-good</span>:~$ ls jobs/</div>
+        <div>agfirst  marco  mindamp  xgrok ...</div>
+        <div><span class="c">doog@etis-good</span>:~$ <span class="cur"></span></div>
+      </div>
+      <div class="body"><span class="num">01</span><h2>Terminal</h2><p>An interactive shell. Type <code>help</code>, tab-complete commands, and <code>cat</code> your way through my jobs.</p></div>
+    </a>
+    <a class="card" href="gitlog/">
+      <div class="preview p-git" aria-hidden="true">
+        <span><b>a1f3c0</b>merge: back to AgFirst</span>
+        <span><b>7d2e91</b>feat: homepage 99% speed</span>
+        <span><b>c48b02</b>feat: Drupal modules</span>
+        <span><b>e9a113</b>feat: REST APIs</span>
+      </div>
+      <div class="body"><span class="num">02</span><h2>Git Log</h2><p>My career as a commit graph. Each job is a branch, and you can filter it by skill to see where I used what.</p></div>
+    </a>
+    <a class="card" href="desktop/">
+      <div class="preview p-os" aria-hidden="true">
+        <div class="w w1"><i></i></div><div class="w w2"><i></i></div>
+        <div class="ic" style="top:24px"></div><div class="ic" style="top:64px"></div><div class="ic" style="top:104px"></div>
+      </div>
+      <div class="body"><span class="num">03</span><h2>DoogOS</h2><p>A retro desktop. Open files and apps, drag windows around, and play with a skills explorer.</p></div>
+    </a>
+  </main>
+
+  <footer>
+    <a href="mailto:SamuelDCampbell@gmail.com">SamuelDCampbell@gmail.com</a> · <a href="https://github.com/SDMCampbell">GitHub</a>
+  </footer>
+  <script src="assets/resume-data.js"></script>
+  <script src="assets/switcher.js"></script>
+<script data-version-bar data-v="0" src="../../timeline/version-bar.js"></script>
+</body>
+</html>

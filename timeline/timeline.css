@@ -1,0 +1,73 @@
+:root { --chalk:#FFF7E8; --chalk-2:#F6E9CF; --contour:#EAD9B6; --ink:#1C1838; --soft:#5B5577; --verm:#FF4A1C; --sun:#FFBE0B; --lake:#00A6A6; --violet:#7A4DFF; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--chalk); color: var(--ink); font: 17px/1.55 "Instrument Sans", system-ui, sans-serif; }
+.mono { font-family: "Martian Mono", ui-monospace, monospace; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+a { color: inherit; }
+.top { position: sticky; top: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; padding: 8px 20px; background: var(--chalk); border-bottom: 3px solid var(--ink); min-height: 56px; }
+.back { font-weight: 600; text-decoration: none; background: var(--verm); color: var(--ink); border: 3px solid var(--ink); padding: 8px 14px; box-shadow: 3px 3px 0 var(--ink); min-height: 44px; display: inline-flex; align-items: center; }
+.back:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
+main { max-width: 1200px; margin: 0 auto; padding: 28px 20px 120px; }
+h1 { font: 800 clamp(40px, 8vw, 88px)/0.95 "Bricolage Grotesque", system-ui, sans-serif; letter-spacing: -.03em; margin: 0 0 12px; }
+h2 { font: 800 30px/1.1 "Bricolage Grotesque", system-ui, sans-serif; margin: 0; }
+.intro p { max-width: 62ch; color: var(--soft); margin: 0 0 24px; }
+
+.viewer { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); grid-template-areas: "alt alt" "entry frame"; gap: 20px; }
+.frames { grid-area: frame; display: grid; grid-template-columns: 1fr; gap: 14px; align-content: start; }
+.frames.cmp-on { grid-template-columns: 1fr 1fr; }
+.frames .cmp { grid-column: 1 / -1; }
+.viewer.cmp-wide { grid-template-areas: "alt alt" "entry entry" "frame frame"; }
+.best-wrap .frame-cap { background: var(--verm); color: var(--ink); }
+.altimeter { grid-area: alt; touch-action: pan-y; cursor: ew-resize; user-select: none; -webkit-user-select: none; position: relative; display: flex; align-items: flex-end; gap: 0; overflow-x: auto; padding: 18px 6px 10px; border-bottom: 2px dashed var(--contour); outline: none; scroll-snap-type: x mandatory; }
+.altimeter:focus-visible { box-shadow: 0 0 0 3px var(--violet); border-radius: 6px; }
+.alt-step { flex: 1 0 64px; scroll-snap-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; background: none; border: 0; padding: 0 2px; color: var(--ink); font: inherit; }
+.alt-bar { width: 10px; background: var(--contour); border-radius: 5px 5px 0 0; transition: background .2s; }
+.alt-step .dot { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--ink); background: var(--chalk); display: grid; place-items: center; font: 600 10px "Martian Mono", monospace; }
+.alt-step.feat .dot { background: var(--sun); }
+.alt-step.best .dot { background: var(--verm); }
+.alt-step.rej .dot { background: var(--chalk-2); border-style: dashed; }
+.alt-step[aria-selected="true"] .dot { outline: 3px solid var(--violet); outline-offset: 3px; }
+.alt-step[aria-selected="true"] .alt-bar { background: var(--ink); }
+.alt-step .lbl { font: 600 10px "Martian Mono", monospace; min-height: 1em; }
+
+.entry { grid-area: entry; background: var(--chalk-2); border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--ink); padding: 20px; align-self: start; }
+.entry h3 { font: 800 28px/1.1 "Bricolage Grotesque", system-ui, sans-serif; margin: 6px 0 10px; }
+.entry p { margin: 0 0 10px; }
+.entry .why { color: var(--soft); }
+.entry .try { border-left: 4px solid var(--lake); padding-left: 10px; }
+.badge { display: inline-block; padding: 2px 8px; border: 2px solid var(--ink); border-radius: 99px; font: 600 11px "Martian Mono", monospace; text-transform: uppercase; margin-left: 6px; background: var(--chalk); }
+.badge.kept, .badge.baseline { background: var(--sun); }
+.badge.best { background: var(--verm); }
+.badge.rejected { background: var(--chalk); border-style: dashed; }
+.badge.merged { background: #CDEBFF; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.btn { font: 600 15px "Instrument Sans", sans-serif; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 14px; border: 3px solid var(--ink); background: var(--chalk); color: var(--ink); text-decoration: none; cursor: pointer; box-shadow: 3px 3px 0 var(--ink); }
+.btn.primary { background: var(--ink); color: var(--chalk); }
+.btn:hover:not([disabled]) { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
+.btn[disabled] { opacity: .35; cursor: default; }
+.btn:focus-visible, .alt-step:focus-visible, .rows a:focus-visible { outline: 3px solid var(--violet); outline-offset: 3px; }
+
+.frame-wrap { position: relative; border: 3px solid var(--ink); background: #fff; aspect-ratio: 16 / 10; overflow: hidden; box-shadow: 5px 5px 0 var(--ink); }
+.frame-wrap iframe { position: absolute; left: 0; top: 0; width: 200%; height: 200%; border: 0; transform: scale(.5); transform-origin: 0 0; pointer-events: none; }
+.frame-cap { position: absolute; left: 8px; bottom: 8px; background: var(--ink); color: var(--chalk); padding: 4px 8px; }
+
+.log { margin-top: 48px; }
+.log h2 { display: inline-block; margin-right: 16px; }
+.toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.rows { list-style: none; padding: 0; margin: 16px 0 0; border-top: 3px solid var(--ink); }
+.rows li { display: grid; grid-template-columns: 70px 1fr auto; gap: 14px; align-items: baseline; padding: 12px 4px; border-bottom: 1px solid var(--contour); }
+.rows li.hide { display: none; }
+.rows .v { font: 600 13px "Martian Mono", monospace; }
+.rows .t { font-weight: 600; }
+.rows .n { color: var(--soft); font-size: 15px; grid-column: 2; }
+.rows a { font: 600 13px "Martian Mono", monospace; text-transform: uppercase; }
+
+@media (max-width: 820px) {
+  .viewer { grid-template-columns: 1fr; grid-template-areas: "alt" "entry" "frame"; }
+  .frame-wrap { aspect-ratio: 9 / 14; }
+  .frames.cmp-on { grid-template-columns: 1fr 1fr; }
+  .frames.cmp-on .frame-wrap { aspect-ratio: 9 / 16; }
+  .frame-wrap iframe { width: 390px; height: 844px; transform: none; }
+  .rows li { grid-template-columns: 52px 1fr; }
+  .rows a { grid-column: 2; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

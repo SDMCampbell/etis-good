@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" data-concept="terminal">
+<head>
+  <meta name="robots" content="noindex">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>doog@etis-good: ~ · Samuel Campbell</title>
+  <meta name="description" content="Samuel Campbell's resume as an interactive terminal.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%23141414%27/%3E%3Ctext x=%2716%27 y=%2723%27 font-family=%27monospace%27 font-size=%2720%27 font-weight=%27700%27 text-anchor=%27middle%27 fill=%27%23f1b51c%27%3ES%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="terminal.css">
+</head>
+<body class="theme-green">
+  <div class="crt" aria-hidden="true"></div>
+  <main class="term" id="term" aria-label="Interactive terminal resume">
+    <div class="titlebar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="title">doog@etis-good: ~</span>
+    </div>
+    <div class="quick" id="quick" aria-label="Quick commands"></div>
+    <div class="screen" id="screen">
+      <div id="out" role="log" aria-live="polite"></div>
+      <form class="line" id="form" autocomplete="off">
+        <label for="cmd" class="prompt" id="prompt"></label>
+        <input id="cmd" type="text" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Type a command">
+      </form>
+    </div>
+  </main>
+  <noscript><p style="color:#fff;padding:2rem">This page needs JavaScript. The <a href="../desktop/">other concepts</a> do too, sorry!</p></noscript>
+  <script src="../assets/resume-data.js"></script>
+  <script src="terminal.js"></script>
+  <script src="../assets/switcher.js"></script>
+<script data-version-bar data-v="14" src="../../../timeline/version-bar.js"></script>
+</body>
+</html>

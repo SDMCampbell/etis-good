@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Summit Register · every version of samueldcampbell</title>
+  <meta name="description" content="Every version of Samuel Campbell's site: what changed, why, and a live copy of each one to try.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%231C1838%27/%3E%3Cpath d=%27M5 25 L12 17 L17 20 L27 7%27 stroke=%27%23FF4A1C%27 stroke-width=%274%27 fill=%27none%27 stroke-linecap=%27round%27/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Instrument+Sans:wght@400;600&family=Martian+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="timeline.css">
+</head>
+<body>
+  <header class="top">
+    <a class="back" href="../">↩ Current best</a>
+    <span class="mono">Summit register</span>
+  </header>
+  <main>
+    <section class="intro">
+      <h1>Summit Register</h1>
+      <p>This site is rebuilt in rounds. Each round tries one experiment, tests it, and keeps it or not. Every version is archived here as a working copy, including the experiments that lost. Drag along the strip, or use ← → and [ ] to step between milestones.</p>
+    </section>
+
+    <section class="viewer" aria-label="Version preview">
+      <div class="altimeter" id="alt" role="listbox" aria-label="Milestones" tabindex="0"></div>
+      <article class="entry" id="entry" aria-live="polite"></article>
+      <div class="frames" id="frames">
+        <div class="frame-wrap">
+          <iframe id="frame" title="Preview of the selected version" loading="lazy" tabindex="-1"></iframe>
+          <div class="frame-cap mono" id="cap"></div>
+        </div>
+        <div class="frame-wrap best-wrap" id="bestWrap" hidden>
+          <iframe id="bestFrame" title="Preview of the current best version" tabindex="-1"></iframe>
+          <div class="frame-cap mono" id="bestCap"></div>
+        </div>
+        <label class="mono toggle cmp"><input type="checkbox" id="compare"> Compare with current best</label>
+      </div>
+    </section>
+
+    <section class="log" aria-labelledby="logh">
+      <h2 id="logh">Full logbook</h2>
+      <label class="mono toggle"><input type="checkbox" id="onlyFeat"> milestones only</label>
+      <ol class="rows" id="rows"></ol>
+    </section>
+  </main>
+  <script src="../versions/manifest.js"></script>
+  <script src="timeline.js"></script>
+</body>
+</html>

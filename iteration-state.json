@@ -1,0 +1,194 @@
+{
+  "settings": {
+    "ROUNDS_PER_CYCLE": 6,
+    "CYCLES_PER_RUN": 3
+  },
+  "goal": "Samuel Campbell's bio/resume site: answer who/what/where-now + contact in under 30s for recruiters, and give developers a distinctive interaction to play with on the first screen. Content always renders from assets/resume-data.js.",
+  "timeline_rules": "Every evaluated round is snapshotted to versions/vNN/ and listed in versions/manifest.js. Turning points are featured. Visitors can open any version, step between milestones, and return to the current best in one action. Losing experiments stay in the archive.",
+  "design_spec": "Designer spec (primary 'The Learning Curve', alternatives 'Patch Bay' and 'Pull a Print', 24-item backlog, guardrails) summarized in docs/design-brief.md",
+  "last_completed_version": 18,
+  "strongest_version": 18,
+  "target_version": 18,
+  "run": {
+    "started": "2026-11-22",
+    "start_version": 0
+  },
+  "brief": {
+    "next_version": 19,
+    "protect": "v18: Learning Curve wall (desktop climb, phone curve), chips, spotlight + deep links, round-two knot + 99% send, pitches + print, pitch bar, register scrubber + compare, help/belay, night, auto-belay, offline, share card, and the regression suite (loop scripts r2–r18).",
+    "weakness": "Main-page code is ~86KB uncompressed vs the designer's 60KB budget. The night theme CSS, the developer layer (help/belay) and the register scrubber load for everyone even though most visitors never use them.",
+    "experiment": "Split for speed: move night-theme CSS into assets/night.css loaded only when night is active, and the help/belay + register scrubber code into assets/extras.js loaded on first use (? key, belay, or register scrolled into view). Keep all regression tests green.",
+    "expected_payoff": "First-load HTML+CSS+JS drops toward the 60KB budget, with no visible change and every interaction still passing.",
+    "question": "Can the budget be met through loading strategy alone, without cutting features?",
+    "also_consider": [
+      "A 4th direction worth testing: a 'pair-programming' chat-style front door that answers recruiter questions from resume-data.js (no AI, just matching)",
+      "Replace the placeholder AgFirst bullet and tags once Samuel supplies real highlights; regenerate assets/og.png afterwards",
+      "Turn the regression scripts into a committed tests/ folder so they ship with the repo"
+    ]
+  },
+  "history": [
+    {
+      "v": 0,
+      "title": "Three concepts",
+      "verdict": "baseline",
+      "lesson": "Content model is solid; the front door is a chooser."
+    },
+    {
+      "v": 1,
+      "title": "The Learning Curve",
+      "verdict": "kept",
+      "lesson": "One strong interaction beats a menu. Drag, keyboard, rail and hold-taps all work. Weak spots: CLS 0.10 on desktop from font swap, chalk bag clips mid-row, the bag change is instant so the skill story is easy to miss."
+    },
+    {
+      "v": 2,
+      "title": "Skills you can watch pile up",
+      "verdict": "kept",
+      "lesson": "Motion that carries meaning works: chips make the curve's y-axis legible. Kept it cheap (WAAPI, no library) and fully skipped under reduced motion. On phones the summit CTA duplicated the main buttons, so it shrinks to just Copy address."
+    },
+    {
+      "v": 3,
+      "title": "Spotlight a skill, share the view",
+      "verdict": "kept",
+      "lesson": "Making the rack a filter for the wall connects the below-the-fold content to the hero. Found and fixed a race: the idle hint was yanking the token back after a spotlight. Long unbroken tokens in bullets needed overflow-wrap on phones."
+    },
+    {
+      "v": 4,
+      "title": "Patch Bay (alternate direction)",
+      "verdict": "rejected",
+      "lesson": "A puzzle in front of the facts slows recruiters, and a matrix of 32 cables is less legible than one spotlight. The 'NO CARRIER: COBOL lives at …' microcopy is worth stealing for the spotlight. The Learning Curve stays the foundation."
+    },
+    {
+      "v": 5,
+      "title": "Round two & the 99% send",
+      "verdict": "kept",
+      "lesson": "Specific beats generic. The floating badge crowds the narrow phone route, so on phones the 99% moves into the card instead. Measuring CLS sources showed the real culprit was late-filled text in a centered grid, not fonts."
+    },
+    {
+      "v": 6,
+      "title": "Scrub the register",
+      "verdict": "kept",
+      "lesson": "Previews make the archive worth visiting. Lazy-loading the iframe only when the section is on screen kept the home page light, and embedded previews skip their own register to avoid nesting."
+    },
+    {
+      "v": 7,
+      "title": "Pull a Print (alternate direction)",
+      "verdict": "rejected",
+      "lesson": "Typography and one-job-per-page pacing are the zine's real wins. The pull is delightful but hides essentials. Rapid page flips needed a pending-target fix. Worth merging: a calm pitch-by-pitch reading mode for the résumé section."
+    },
+    {
+      "v": 8,
+      "title": "Phone-first: the curve on its side",
+      "verdict": "kept",
+      "lesson": "Designing for the thumb beat shrinking the desktop. Separating horizontal-scrub from vertical-scroll intent (8px, dominant axis) was essential; tested with real touch events. On a phone the horizontal curve reads even more like a learning curve than the vertical climb."
+    },
+    {
+      "v": 9,
+      "title": "Pitches, borrowed from the zine",
+      "verdict": "kept",
+      "lesson": "Borrowing one idea from a losing direction strengthened the winner. Testing print with a real PDF exposed that the first check had been rendered in screen mode by mistake; under print media it went 3 → 2 pages after trimming the intro."
+    },
+    {
+      "v": 10,
+      "title": "climb --help & belay check",
+      "verdict": "kept",
+      "lesson": "Hidden layers add delight at near-zero cost to the main path. Native <dialog> gave focus trap + Esc for free. The belay zones made the drag snapping logic visible, which is useful for tuning too."
+    },
+    {
+      "v": 11,
+      "title": "Pitch bar navigation",
+      "verdict": "kept",
+      "lesson": "A persistent section index is worth its 56px on phones. The bigger win was the bug it surfaced: test fixed elements after scrolling, not just at load. Also fixed: rack chip rows were not wrapping on phones since v1."
+    },
+    {
+      "v": 12,
+      "title": "Compare any version with the summit",
+      "verdict": "kept",
+      "lesson": "Side-by-side previews make 'why it changed' land faster than prose. Scaling two 1280px iframes into half-width boxes stays sharp enough to read headings."
+    },
+    {
+      "v": 13,
+      "title": "Night climb",
+      "verdict": "kept",
+      "lesson": "Keeping the paper cards made the dark theme feel like the same site. Caught a CSS gotcha: a background shorthand with a color in a non-final layer is invalid and silently dropped; measured contrast exposed it immediately."
+    },
+    {
+      "v": 14,
+      "title": "Auto-belay (watch it climb)",
+      "verdict": "kept",
+      "lesson": "A guided mode complements rather than duplicates when it adds information (the captions). Same trap as v5's knot: buttons inside the route must be excluded from drag-start. On phones, caption placement needed the empty lower-right of the curve so it never covers holds."
+    },
+    {
+      "v": 15,
+      "title": "Works offline",
+      "verdict": "kept",
+      "lesson": "Network-first for everything is the safe default for a site that changes every round; cache-first assets would have paired fresh HTML with stale JS after deploys. The size budget is now the clearest technical debt: the night theme and accumulated features doubled the CSS."
+    },
+    {
+      "v": 16,
+      "title": "Weight diet (regression-tested)",
+      "verdict": "kept",
+      "lesson": "Cruft was small; features are the weight. A standing regression suite (one action script per round) made the cleanup safe, and it's now the gate for every future round. Remaining budget gap (~86381 vs 60000 bytes uncompressed, ~25KB gzipped) is recorded as known debt."
+    },
+    {
+      "v": 17,
+      "title": "One site, many rooms",
+      "verdict": "kept",
+      "lesson": "Consistent wayfinding is cheap and makes the modes feel like part of one site. Inside archived snapshots, links to the register must escape the snapshot folder; the bar now detects that."
+    },
+    {
+      "v": 18,
+      "title": "Share card",
+      "verdict": "kept",
+      "lesson": "The first impression extends to places the site doesn't control. The OG image is a snapshot of data, so it must be regenerated when the résumé changes (documented in tools/og-card.html)."
+    }
+  ],
+  "cycle_reviews": [
+    {
+      "cycle": 1,
+      "versions": "v1–v6",
+      "biggest_wins": [
+        "v1 replaced a chooser with a first-screen interaction that answers who/what/now",
+        "v3 turned skills into a filter with shareable deep links",
+        "v5 made the wall specific to Samuel (round two knot, 99% send) and cut CLS to 0"
+      ],
+      "directions_tried": [
+        "Learning Curve climbing wall (v1–v3, v5, v6)",
+        "Patch Bay hardware matching game (v4, rejected)"
+      ],
+      "getting_repetitive": "Bolting more widgets onto the route card (summit strip, compare view, send tag). The card is near capacity on phones.",
+      "next_cycle_ambition": "Test the third design direction (Pull a Print zine) for real, then rework the phone hero as its own layout instead of a squeezed desktop grid, and try a navigation change (pitch-by-pitch scrolling)."
+    },
+    {
+      "cycle": 2,
+      "versions": "v7–v12",
+      "biggest_wins": [
+        "v8 gave phones their own geometry (horizontal learning curve) instead of a shrunken desktop",
+        "v11 pitch bar plus the fix for a hidden viewport-widening bug that had been pushing fixed UI off-screen since v8",
+        "v9 proved a losing direction (the zine) can donate its best idea to the winner"
+      ],
+      "directions_tried": [
+        "Pull a Print editorial zine (v7, rejected)",
+        "Phone-first horizontal layout (v8)",
+        "Persistent section navigation (v11)"
+      ],
+      "getting_repetitive": "Small add-on layers (help overlay, compare toggle, register polish). Useful, but each adds less.",
+      "next_cycle_ambition": "Try a different visual style (a night/headlamp mode), a different core interaction for passive visitors (an auto-belay story mode that climbs and narrates), and harden performance/offline. End with a full verification pass."
+    },
+    {
+      "cycle": 3,
+      "versions": "v13–v18",
+      "biggest_wins": [
+        "v14 auto-belay gave passive visitors (and screen-shares) a narrated climb with per-job skill deltas",
+        "v13 night climb added a second visual style without losing the identity (paper cards, same holds); contrast verified 9.8–15.8:1",
+        "v16 turned the per-round test scripts into a regression suite that now gates every change"
+      ],
+      "directions_tried": [
+        "Night/headlamp visual style (v13)",
+        "Hands-off guided interaction (v14)",
+        "Offline + performance hardening (v15–v16)"
+      ],
+      "getting_repetitive": "Polish passes and add-on layers. The wall is close to feature-complete; more widgets would crowd it.",
+      "next_cycle_ambition": "Pay down the size budget for real (split night CSS and dev-layer JS into lazily loaded files), then pick one bold new direction to test against the wall."
+    }
+  ]
+}
