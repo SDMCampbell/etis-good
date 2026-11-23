@@ -73,6 +73,7 @@
       addEventListener("pointermove", function (e) { if (e.pointerType === "mouse") mouse = { x: e.clientX, y: e.clientY }; }, { passive: true });
       document.addEventListener("mouseout", function (e) { if (!e.relatedTarget) mouse = null; });     // pointer left the window: circle the centre
       function where(a) { var v = /matrix\(([^)]+)\)/.exec(getComputedStyle(a.el).transform); if (!v) return [a.x, a.y]; v = v[1].split(","); return [+v[4], +v[5]]; }
+      var lastIai = 0;                                     // samurai strikes take turns
       function slotOf(a) { if (!slots.has(a)) slots.set(a, slots.size); return slots.get(a); }
       var IDLE = {
         // normal: orbit the mouse pointer (or the middle of the screen), in two rings turning opposite ways
@@ -83,12 +84,23 @@
           return { x: scrollX + c.x + Math.cos(ang) * r, y: scrollY + c.y + Math.sin(ang) * r, ms: 160, wait: 90 };
         },
         // samurai: walk to a place in a neat line down the right side of the screen and sit in meditation
-        samurai: function (a) {
+        // ...and if the mouse pointer comes near one that's in its place, it strikes: an iaijutsu draw that vanishes into a cut
+        // across the pointer and reappears in its place a moment later (drawn by samurai.js). Several in range take turns.
+        samurai: function (a, now) {
           var i = slotOf(a), perCol = Math.max(4, Math.floor((innerHeight - 120) / 58)), col = Math.floor(i / perCol), row = i % perCol;
           var x = scrollX + innerWidth - (narrow ? 30 : 70) - col * 46, y = scrollY + 110 + row * 58;
           a.el.dataset.rest = performance.now();
-          var d = Math.hypot(x - a.x, y - a.y);
-          return { x: x, y: y, ms: d < 2 ? 200 : Math.max(250, d * 1.6), wait: 150 };
+          var d = Math.hypot(x - a.x, y - a.y), back = { x: x, y: y, ms: d < 2 ? 200 : Math.max(250, d * 1.6), wait: 150 };
+          if (a._iaiT && now - a._iaiT < 560) { back.state = "striking"; back.wait = 60; return back; }
+          if (mouse && d < 2 && now - (a._iaiT || 0) > 1400 && now - lastIai > 320) {
+            var p = where(a), mx = scrollX + mouse.x, my = scrollY + mouse.y;
+            if (Math.hypot(mx - p[0], my - (p[1] - 18)) < 150) {
+              a._iaiT = lastIai = now;
+              a.el.dataset.iai = now; a.el.dataset.ix = mx; a.el.dataset.iy = my;
+              back.state = "striking"; back.wait = 60;
+            }
+          }
+          return back;
         },
         // robot: wander the screen as before; but any robot the mouse pointer comes near stops and fires its laser at it
         robot: function (a, now) {

@@ -9,7 +9,9 @@
 //   moving down     -> a controlled descent in a crouched ready stance, hand on the hilt
 //   building        -> draws the sword and slashes across the element; sheathes it again when done
 //   nothing to do   -> lines up down the right side of the screen, poised in a low iaijutsu stance: one hand on the
-//                      hilt, the other on the scabbard, sword sheathed and ready to draw
+//                      hilt, the other on the scabbard, sword sheathed and ready to draw. If the mouse pointer comes near,
+//                      it strikes: a flash as it draws, it vanishes into a cut straight across the pointer, then
+//                      reappears poised in its place a moment later.
 (function () {
   var SVGNS = "http://www.w3.org/2000/svg";
   // running is a full sprint: torso pitched far forward, both arms swept straight back
@@ -94,6 +96,9 @@
       s.p.aura.setAttribute("d", seg([fF[0] - 2, fF[1] + 2 + t * 4], [fF[0] - 2, fF[1] + 2 + t * 4 + l]) + seg([fB[0] + 2, fB[1] + 4 + ((t + .5) % 1) * 4], [fB[0] + 2, fB[1] + 4 + ((t + .5) % 1) * 4 + l]));
       s.p.aura.setAttribute("opacity", (.5 * (1 - t)).toFixed(2));
     } else s.p.aura.setAttribute("d", "");
+    // mid-strike the samurai is gone: it's in the cut across the pointer
+    var gone = s.iaiT && now - s.iaiT > 40 && now - s.iaiT < 480;
+    if (gone !== s.hidden) { s.hidden = gone; s.g.setAttribute("opacity", gone ? 0 : 1); }
     s.g.setAttribute("transform", "translate(" + s.ox.toFixed(1) + " " + s.oy.toFixed(1) + ") scale(" + s.face + " 1)");
   }
 
@@ -117,6 +122,8 @@
         }
         s.x = p[0]; s.y = p[1];
         var speed = Math.hypot(s.vx, s.vy), prev = s.state;
+        // an iaijutsu strike at the pointer (started by the idle behaviour, which sets data-iai): vanish, cut, reappear
+        if (c.dataset.iai && c.dataset.iai !== s.iaiSeen) { s.iaiSeen = c.dataset.iai; s.iaiT = now; iai(s, +c.dataset.ix, +c.dataset.iy); }
         if (c.classList.contains("slash")) s.state = "slash";
         else if (speed < .04 && c.dataset.rest && now - c.dataset.rest < 500) s.state = "meditate";
         else if (speed < .04) s.state = "idle";
@@ -171,6 +178,24 @@
       e.innerHTML = '<svg viewBox="-10 -10 20 20"><path d="M0 -9 L0 -3 M0 3 L0 9 M-9 0 L-3 0 M3 0 L9 0 M-6 -6 L-2.5 -2.5 M2.5 2.5 L6 6 M6 -6 L2.5 -2.5 M-2.5 2.5 L-6 6"/></svg>';
       world.appendChild(e); setTimeout(function () { e.remove(); }, 380);
     }
+    // The strike: a glint where the samurai stands as it draws, a faint streak along its path, and a bright cut straight
+    // through the pointer, angled along the line of the attack; the figure is hidden until it reappears (see render)
+    function iai(s, x, y) {
+      var w = document.querySelector(".swarm-intro-world"); if (!w) return;
+      var sx = s.x + s.ox, sy = s.y + s.oy - 18, dx = x - sx, dy = y - sy, len = Math.hypot(dx, dy) || 1, ang = Math.atan2(dy, dx) * 180 / Math.PI;
+      function fx(cls, cx, cy, width, angle, delay) {
+        var e = document.createElement("div"); e.className = cls;
+        e.style.left = cx + "px"; e.style.top = cy + "px"; if (width) e.style.width = width + "px";
+        if (angle !== undefined) e.style.setProperty("--a", angle + "deg");
+        if (delay) e.style.animationDelay = delay + "ms";
+        w.appendChild(e); setTimeout(function () { e.remove(); }, 700 + (delay || 0));
+      }
+      fx("iai-glint", sx, sy);                                          // the draw
+      fx("iai-path", sx + dx / 2, sy + dy / 2, len, ang, 30);           // the dash
+      fx("iai-cut", x, y, 150, ang + (Math.random() < .5 ? 24 : -24), 70);   // the cut, slightly across the line of attack
+      fx("iai-glint", sx, sy, 0, undefined, 470);                       // and back
+    }
+
     function wake() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } }
 
     // the library moves a cursor on before our observer runs, so remember where each one has just been sent
