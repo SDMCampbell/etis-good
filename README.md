@@ -35,7 +35,7 @@ Each mode is a different way of using the swarm library. Pick one with the switc
 **normal** circles the mouse pointer in two rings turning opposite ways (or the middle of the screen when the pointer isn't on it);
 **samurai** walk to a neat line down the right side of the screen and wait poised in a low iaijutsu stance, katana sheathed at the hip with one hand on the hilt, ready to draw;
 **robot** wander the screen as before;
-**wizard** drift slowly to a spot, then float there cross-legged in meditation (staff hovering beside them) for a few seconds before drifting on. This needed a small patch to `swarm-intro.js`, marked "etis-good patch": an `idle` option that
+**wizard** drift into an evenly spaced horizontal line low on the screen and float there cross-legged in meditation (staff hovering beside them) while a wave rolls endlessly along the line. This needed a small patch to `swarm-intro.js`, marked "etis-good patch": an `idle` option that
 says where an idle cursor goes, and a `persist` option that keeps the swarm after the page is built.
 
 **Click to rebuild**: while the swarm is on screen, clicking a piece of the page (anything but a link or control) sends the nearest free worker to take it apart: the build in reverse, starting from its bottom-right corner and dragging back to the top-left, with typed text deleted from the end (normal) or the element cut away (samurai, who turn and cut back up-left) blasted away (robot) or blasted apart by a bolt of magic (wizard). After a short pause a different worker builds it again the usual way. This is another patch to `swarm-intro.js`: `swarmIntro()` now also returns `rework(el)`.

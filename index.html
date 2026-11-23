@@ -68,6 +68,7 @@
       var mouse = null, slots = new Map();
       addEventListener("pointermove", function (e) { if (e.pointerType === "mouse") mouse = { x: e.clientX, y: e.clientY }; }, { passive: true });
       document.addEventListener("mouseout", function (e) { if (!e.relatedTarget) mouse = null; });     // pointer left the window: circle the centre
+      function where(a) { var v = /matrix\(([^)]+)\)/.exec(getComputedStyle(a.el).transform); if (!v) return [a.x, a.y]; v = v[1].split(","); return [+v[4], +v[5]]; }
       function slotOf(a) { if (!slots.has(a)) slots.set(a, slots.size); return slots.get(a); }
       var IDLE = {
         // normal: orbit the mouse pointer (or the middle of the screen), in two rings turning opposite ways
@@ -87,18 +88,16 @@
         },
         // robot: wander the screen, as before
         robot: null,
-        // wizard: drift slowly to a spot, then float there in meditation for a while before drifting on
+        // wizard: drift into an evenly spaced horizontal line low on the screen, then sit in meditation riding a
+        // wave that rolls along the line without end (slow enough that they stay seated as they bob)
         wizard: function (a, now) {
-          var w = a._wz || (a._wz = { until: 0 });
-          var inView = w.y > scrollY + 60 && w.y < scrollY + innerHeight - 20 && w.x > scrollX && w.x < scrollX + innerWidth;
-          if (now > w.until || !inView) {
-            w.x = scrollX + 50 + Math.random() * (innerWidth - 100); w.y = scrollY + 110 + Math.random() * (innerHeight - 160);
-            var ms = Math.max(1200, Math.hypot(w.x - a.x, w.y - a.y) * 4.5);
-            w.arrive = now + ms; w.until = w.arrive + 3500 + Math.random() * 4500;
-            return { x: w.x, y: w.y, ms: ms, wait: 150 };
-          }
-          if (now >= w.arrive) a.el.dataset.rest = now;                   // arrived: sit and meditate
-          return { x: w.x, y: w.y, ms: Math.max(150, w.arrive - now), wait: 150 };
+          var i = slotOf(a), n = Math.max(size, slots.size), m = narrow ? 24 : 60;
+          var x = scrollX + m + (i + .5) / n * (innerWidth - 2 * m);
+          var y = scrollY + innerHeight - (narrow ? 80 : 110) + Math.sin((x - scrollX) * .011 - now * .0021) * 16;
+          var p = where(a), d = Math.hypot(x - p[0], y - p[1]);
+          if (d > 30) { var ms = Math.min(3200, Math.max(500, d * 2.2)); return { x: x, y: y, ms: ms, wait: ms }; }   // one slow glide into place
+          a.el.dataset.rest = now;
+          return { x: x, y: y, ms: 150, wait: 90 };
         }
       };
       try { size = Math.min(30, +localStorage.getItem("swarmSize") || size); } catch (e) {}
