@@ -35,7 +35,7 @@ Each mode is a different way of using the swarm library. Pick one with the switc
 **robot** wander the screen as before. This needed a small patch to `swarm-intro.js`, marked "etis-good patch": an `idle` option that
 says where an idle cursor goes, and a `persist` option that keeps the swarm after the page is built.
 
-Each mode has its own background, all moving the same way (drifting down, parting around the pointer, fainter behind the text): **normal** is the matrix glyph rain, **samurai** is cherry blossom petals tumbling down from a sakura branch in the top-left corner, and **robot** is deep space, a twinkling starfield with faint, distant asteroids drifting through it.
+Each mode has its own background, all moving the same way (drifting down, fainter behind the text; they don't react to the mouse): **normal** is the matrix glyph rain, **samurai** is cherry blossom petals tumbling down from a sakura branch in the top-left corner, and **robot** is deep space, a twinkling starfield with faint, distant asteroids drifting through it.
 
 In samurai and robot modes the figures also collide: overlapping samurai shove each other apart, and two that run into each other fast clash, with a spark and both knocked back. swarm-intro still decides every cursor's real route, so this is done with a small offset on each figure that springs back to its cursor; a figure that's mid-cut or firing holds its line.
 
