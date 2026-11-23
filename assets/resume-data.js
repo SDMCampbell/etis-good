@@ -1,7 +1,6 @@
 /*
  * Single source of truth for resume content.
- * All three concepts (terminal, gitlog, desktop) read from window.RESUME,
- * so edit here once and every version updates.
+ * The page renders from window.RESUME, so this is the only place to edit.
  *
  * Privacy note: street address and phone number from the PDF resume are
  * intentionally left out because this site is public.
