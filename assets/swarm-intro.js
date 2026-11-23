@@ -4,6 +4,11 @@
      persist: true                                : keep the swarm on screen (idling) after the page is built
    a state on every cursor, as agent.state and data-state on its element: "intro" (swarming the logo at the start),
    "moving" (on its way to a job), "building", "unbuilding", or "idle" (or whatever more specific state the idle hook gives),
+   fight: true, which splits the swarm into two teams (data-team on each cursor): "defend" (half, plus the odd one)
+   builds the page and keeps it up; "attack" never builds, but tears visible elements down (the build in reverse).
+   Defenders rush any attacker that's mid-teardown: catching it cancels the attack, restores the element and knocks
+   the attacker back, stunned. Otherwise defenders rebuild what was torn down. Extra states: "attacking" (on its way to
+   tear something down), "defending" (chasing an attacker) and "stunned",
    and type: false (never type text in; just fade it in) or "all" (type every text element in, however long), and returning rework(el) from swarmIntro(): one cursor takes a built element apart (the build in reverse, from
    its bottom-right corner back to the top-left), then after a short pause another cursor builds it again.
 MIT License
@@ -63,6 +68,8 @@ const CSS = `
 .swarm-intro-logo{position:absolute;display:flex;width:48px;height:48px;margin:-24px 0 0 -24px;align-items:center;justify-content:center;border-radius:9999px;background:color-mix(in srgb,var(--swarm-intro-fg) 25%,transparent);color:var(--swarm-intro-fg);font:600 14px ui-monospace,SFMono-Regular,Menlo,monospace;transition:opacity .35s}
 .swarm-intro-skip{position:fixed;right:16px;bottom:16px;padding:6px 12px;border:1px solid color-mix(in srgb,var(--swarm-intro-fg) 20%,transparent);border-radius:9999px;background:color-mix(in srgb,var(--swarm-intro-bg) 80%,transparent);backdrop-filter:blur(8px);color:var(--swarm-intro-fg);opacity:.7;font:500 11px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.08em;text-transform:uppercase;white-space:pre;pointer-events:auto;cursor:pointer}
 .swarm-intro-skip:hover{opacity:1}
+.swarm-intro-clash{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,#fff 0 18%,var(--swarm-intro-fg) 22%,transparent 62%);animation:swarm-intro-clash .42s ease-out forwards}
+@keyframes swarm-intro-clash{from{transform:scale(.3);opacity:1}to{transform:scale(2.2);opacity:0}}
 `;
 const CURSOR_SVG = `<svg width="18" height="20" viewBox="0 0 18 20" fill="none" aria-hidden="true"><path d="M1.5 1.5 L16 9.2 L9.4 10.9 L6.2 17.6 Z" fill="var(--swarm-intro-fg)" stroke="var(--swarm-intro-bg)" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -162,6 +169,12 @@ function swarmIntro(options = {}) {
         world.appendChild(el);
         const agent = { el, x, y, idleUntil: 0 };
         setState(agent, "intro");
+        // etis-good patch: in a fight, attackers are half the swarm rounded down, so the defence gets the odd one
+        if (options.fight) {
+            const attackers = agents.filter((b) => b.team === "attack").length;
+            agent.team = attackers < Math.floor((agents.length + 1) / 2) ? "attack" : "defend";
+            el.dataset.team = agent.team;
+        }
         agents.push(agent);
         return agent;
     };
@@ -314,15 +327,22 @@ function swarmIntro(options = {}) {
         const v = m[1].split(",");
         return [+v[4], +v[5]];
     };
-    const unbuild = async (a, el) => {
+    const unbuild = async (a, el, label) => {
         const r = docRect(el);
-        setState(a, "moving");
-        await moveTo(a, r.x + r.w, r.y + r.h);
-        if (stopped)
-            return;
+        // etis-good patch (fight): a defender can call el._abort to stop the teardown part-way
+        let abortedBy = null, abortNow;
+        const aborted = new Promise((res) => (abortNow = res));
+        el._abort = (from) => { abortedBy = from || [a.x, a.y]; abortNow(); };
+        setState(a, label || "moving");
+        await Promise.race([moveTo(a, r.x + r.w, r.y + r.h), aborted]);
+        if (stopped || abortedBy) {
+            el._abort = null;
+            if (abortedBy) await knockedBack(a, abortedBy);
+            return abortedBy ? "aborted" : undefined;
+        }
         setState(a, "unbuilding");
         const box = document.createElement("div");
-        box.className = "swarm-intro-box is-unbuild";
+        box.className = "swarm-intro-box is-unbuild" + (label === "attacking" ? " is-attack" : "");
         box._cursor = a.el;
         box.style.cssText = `left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px`;
         const badge = document.createElement("span");
@@ -376,9 +396,18 @@ function swarmIntro(options = {}) {
             requestAnimationFrame(shrink);
         };
         requestAnimationFrame(shrink);
-        await moveTo(a, r.x, r.y, dragMs);
-        await wait(60);
+        await Promise.race([moveTo(a, r.x, r.y, dragMs).then(() => wait(60)), aborted]);
         live = false;
+        el._abort = null;
+        if (abortedBy) {
+            // stopped part-way: the element is put back as it was
+            nodes.forEach(({ node, full, rest }) => { node.data = full; rest.remove(); });
+            el.style.clipPath = clip;
+            box.classList.add("is-done");
+            setTimeout(() => box.remove(), 400);
+            await knockedBack(a, abortedBy);
+            return "aborted";
+        }
         // gone: hide it the way the library hides anything not yet built, then put its text back underneath
         if (!stopped && !el.hasAttribute(PENDING)) {
             el.setAttribute(PENDING, "");
@@ -391,13 +420,111 @@ function swarmIntro(options = {}) {
         el.style.clipPath = clip;
         box.classList.add("is-done");
         setTimeout(() => box.remove(), 400);
+        return "done";
     };
+    /* etis-good patch: the fight. Helpers for both teams. */
+    const fallen = [];                                   // elements the attackers have torn down, waiting to be rebuilt
+    const inView = (el) => {
+        const r = el.getBoundingClientRect();
+        return r.bottom > 40 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth;
+    };
+    async function knockedBack(a, from) {
+        const p = cursorPos(a);
+        let dx = p[0] - from[0], dy = p[1] - from[1], d = Math.hypot(dx, dy) || 1;
+        if (d < 1) { dx = 1; dy = 0; d = 1; }
+        setState(a, "stunned");
+        a.restUntil = performance.now() + rand(2200, 3400);
+        await moveTo(a, p[0] + dx / d * 70, p[1] + dy / d * 50, 260);
+        await wait(500);
+    }
+    function clash(x, y) {
+        const e = document.createElement("div");
+        e.className = "swarm-intro-clash";
+        e.style.left = `${x}px`;
+        e.style.top = `${y}px`;
+        world.appendChild(e);
+        setTimeout(() => e.remove(), 450);
+    }
+    // An attacker: when rested, tear down a random element that's on screen and not already being worked on
+    async function attack(a) {
+        if (performance.now() < (a.restUntil || 0))
+            return false;
+        const choices = targets.filter((t) => !t.hasAttribute(PENDING) && !reworking.has(t) && inView(t));
+        if (!choices.length)
+            return false;
+        const el = choices[Math.floor(Math.random() * choices.length)];
+        reworking.add(el);
+        a.target = el;
+        const res = await unbuild(a, el, "attacking");
+        a.target = null;
+        reworking.delete(el);
+        if (res === "done") {
+            fallen.push(el);
+            a.restUntil = performance.now() + rand(1500, 3500);
+        }
+        return true;
+    }
+    // A defender: first stop any attack in progress (the nearest attacker no one's chasing), then build anything
+    // that's waiting (the first build, or new elements scrolled into view), then rebuild what was torn down
+    async function defend(a) {
+        const me = cursorPos(a);
+        let foe = null, fd = Infinity;
+        agents.forEach((b) => {
+            // defenders only notice an attack once the teardown has visibly started
+            if (b.team !== "attack" || !b.target || b.chasedBy || !b.target._abort || b.state !== "unbuilding")
+                return;
+            const p = cursorPos(b), d = Math.hypot(p[0] - me[0], p[1] - me[1]);
+            if (d < fd) { fd = d; foe = b; }
+        });
+        if (foe) {
+            foe.chasedBy = a;
+            await intercept(a, foe);
+            foe.chasedBy = null;
+            return true;
+        }
+        const el = take();
+        if (el) {
+            a.idleUntil = 0;
+            await build(a, el);
+            return true;
+        }
+        const i = fallen.findIndex((t) => inView(t) && !reworking.has(t));
+        if (i >= 0) {
+            const t = fallen.splice(i, 1)[0];
+            if (!t.hasAttribute(PENDING))
+                return true;
+            reworking.add(t);
+            await build(a, t);
+            reworking.delete(t);
+            return true;
+        }
+        return false;
+    }
+    // Chase an attacker; reaching it while it's still tearing down stops the attack
+    async function intercept(a, foe) {
+        setState(a, "defending");
+        for (let i = 0; i < 16 && !stopped; i++) {
+            const el = foe.target;
+            if (!el || !el._abort)
+                return;
+            const p = cursorPos(foe), q = cursorPos(a), d = Math.hypot(p[0] - q[0], p[1] - q[1]);
+            if (d < 34) {
+                clash((p[0] + q[0]) / 2, (p[1] + q[1]) / 2 - 10);
+                el._abort(q);
+                await wait(250);
+                return;
+            }
+            const ms = clamp(d * 1.05, 120, 600);      // a defender is slower than the attack: far-off ones arrive too late
+            moveTo(a, p[0], p[1], ms);
+            await wait(Math.min(ms, 120));
+        }
+    }
     // Jobs handed to one particular cursor (the nearest free one), or queued for the next to come free
     const jobs = [];
     const reworking = new Set();
-    const dispatch = (job, el, not) => {
+    const dispatch = (job, el, not, team) => {
         const r = el.getBoundingClientRect(), cx = r.left + r.width / 2 + window.scrollX, cy = r.top + r.height / 2 + window.scrollY;
-        const free = agents.filter((a) => !a.working && !a.job);
+        const free = agents.filter((a) => !a.working && !a.job && (!team || !options.fight || a.team === team));
         const pool = free.filter((a) => a !== not).length ? free.filter((a) => a !== not) : free;
         let best = null, bd = Infinity;
         pool.forEach((a) => {
@@ -425,7 +552,7 @@ function swarmIntro(options = {}) {
             setTimeout(() => dispatch(async (b) => {
                 await build(b, el);
                 reworking.delete(el);
-            }, el, a), 700);
+            }, el, a, "defend"), 700);             // in a fight, only a defender builds
         }, el, null);
         return true;
     }
@@ -490,6 +617,25 @@ function swarmIntro(options = {}) {
                 await job(a);
                 a.working = false;
                 continue;
+            }
+            // etis-good patch: in a fight, attackers attack (and never build); defenders defend before anything else.
+            // There's always something to rebuild in a fight, so the skip button goes once nothing new is waiting.
+            if (options.fight && !queue.length && typeof skipBtn !== "undefined" && skipBtn)
+                skipBtn.style.display = "none";
+            if (options.fight && a.team === "attack") {
+                a.working = true;
+                const did = await attack(a);
+                a.working = false;
+                if (!did)
+                    await wander(a);
+                continue;
+            }
+            if (options.fight && a.team === "defend") {
+                a.working = true;
+                const did = await defend(a);
+                a.working = false;
+                if (did)
+                    continue;
             }
             const el = take();
             if (el) {

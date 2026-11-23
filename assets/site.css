@@ -137,3 +137,15 @@ html.ninja .nj-smoke i:nth-child(3) { --x: -6px; --y: 10px; animation-delay: 60m
 html.ninja .nj-smoke i:nth-child(4) { --x: 9px; --y: 9px; animation-delay: 20ms; }
 html.ninja .nj-smoke i:nth-child(5) { --x: 0px; --y: -14px; animation-delay: 50ms; }
 @keyframes nj-smoke { from { transform: translate(0, 0) scale(.4); opacity: .9; } to { transform: translate(var(--x), var(--y)) scale(1.9); opacity: 0; } }
+
+/* ---------- fight ----------
+   Attackers (data-team="attack") are drawn in red in every mode, and so are the boxes they tear elements down with. */
+.swarm-intro-cursor[data-team="attack"], .swarm-intro-box.is-attack { --swarm-intro-fg: #FF5C70; }
+html.robot .swarm-intro-box.is-attack { box-shadow: 0 0 10px rgb(255 92 112 / .4), inset 0 0 10px rgb(255 92 112 / .2); background: repeating-linear-gradient(0deg, rgb(255 92 112 / .07) 0 1px, transparent 1px 4px); }
+html.robot [data-team="attack"] .robot path.beam { stroke: #FFE0E4; filter: drop-shadow(0 0 3px #FF5C70) drop-shadow(0 0 6px #FF5C70); }
+html.robot [data-team="attack"] .robot circle.beam { fill: #FFE0E4; filter: drop-shadow(0 0 5px #FF5C70); }
+html.robot [data-team="attack"] .robot .jet { fill: #FFE0E4; filter: drop-shadow(0 0 3px #FF5C70); }
+html.wizard [data-team="attack"] .wizard .robe { fill: rgb(200 50 80 / .45); }
+html.wizard [data-team="attack"] .wizard .orb, html.wizard [data-team="attack"] .wizard .bolt { filter: drop-shadow(0 0 3px #FF5C70) drop-shadow(0 0 6px #FF2E4C); }
+html.wizard .swarm-intro-box.is-attack { box-shadow: 0 0 12px rgb(255 92 112 / .45), inset 0 0 12px rgb(255 92 112 / .22); background: radial-gradient(ellipse at center, rgb(255 92 112 / .14), transparent 72%); }
+html.ninja [data-team="attack"] .ninja .band { stroke: #1B1E26; }
