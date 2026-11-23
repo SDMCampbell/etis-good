@@ -80,3 +80,7 @@ html[data-mode="samurai"] { --bg: #0c0709; }
 html[data-mode="robot"] { --bg: #03040a; }
 .starfield { position: fixed; left: 0; top: -100vh; width: 100vw; height: 200vh; z-index: -2; pointer-events: none; background-repeat: repeat; animation: starfield-drift 300s linear infinite; will-change: transform; }
 @keyframes starfield-drift { to { transform: translateY(100vh); } }
+
+/* while the swarm is on screen, a click sends a worker to take that piece apart and build it again */
+html.swarm-live #content { cursor: crosshair; }
+html.swarm-live #content :is(a, button, input, select, textarea, label) { cursor: pointer; }

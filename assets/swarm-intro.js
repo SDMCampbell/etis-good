@@ -2,6 +2,8 @@
    Local patch (marked "etis-good patch" below), adding two options:
      idle(agent, now) -> {x, y, ms, wait} | null : where an idle cursor should go instead of wandering at random
      persist: true                                : keep the swarm on screen (idling) after the page is built
+   and returning rework(el) from swarmIntro(): one cursor takes a built element apart (the build in reverse, from
+   its bottom-right corner back to the top-left), then after a short pause another cursor builds it again.
 MIT License
 
 Copyright (c) 2026 Swarnadeep Roy
@@ -249,6 +251,7 @@ function swarmIntro(options = {}) {
             return;
         const box = document.createElement("div");
         box.className = "swarm-intro-box";
+        box._cursor = a.el;  // etis-good patch: lets a mode see which cursor opened the box
         box.style.cssText = `left:${r.x}px;top:${r.y}px`;
         const badge = document.createElement("span");
         badge.className = "swarm-intro-badge";
@@ -278,6 +281,128 @@ function swarmIntro(options = {}) {
         box.classList.add("is-done");
         setTimeout(() => box.remove(), 400);
     };
+    /* etis-good patch: the build in reverse. The cursor goes to the element's bottom-right corner, a full-size
+       selection box appears there, and the cursor drags it back to the top-left while the element goes with it:
+       text is deleted from the end (still laid out, so nothing shifts), anything else is clipped to the box. */
+    const cursorPos = (a) => {
+        const m = /matrix\(([^)]+)\)/.exec(getComputedStyle(a.el).transform);
+        if (!m) return [a.x, a.y];
+        const v = m[1].split(",");
+        return [+v[4], +v[5]];
+    };
+    const unbuild = async (a, el) => {
+        const r = docRect(el);
+        await moveTo(a, r.x + r.w, r.y + r.h);
+        if (stopped)
+            return;
+        const box = document.createElement("div");
+        box.className = "swarm-intro-box is-unbuild";
+        box._cursor = a.el;
+        box.style.cssText = `left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px`;
+        const badge = document.createElement("span");
+        badge.className = "swarm-intro-badge";
+        badge.textContent = `${Math.round(r.w)} × ${Math.round(r.h)}`;
+        box.appendChild(badge);
+        world.appendChild(box);
+        let nodes = [];
+        let typed = canType(el);
+        if (typed) {
+            const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+            for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+                if (!n.data.trim())
+                    continue;
+                const rest = document.createElement("span");
+                rest.className = "swarm-intro-rest";
+                n.after(rest);
+                nodes.push({ node: n, full: n.data, rest });
+            }
+            // a page that styles out the typing (shows built text whole) gets the clip instead
+            if (!nodes.length || !isTransparent(getComputedStyle(nodes[0].rest).color)) {
+                nodes.forEach(({ rest }) => rest.remove());
+                nodes = [];
+                typed = false;
+            }
+        }
+        const total = nodes.reduce((t, n) => t + n.full.length, 0);
+        const clip = el.style.clipPath;
+        const dragMs = (clamp(Math.hypot(r.w, r.h) * 1.05, 260, 720) * pace) / boost();
+        let live = true;
+        const shrink = () => {
+            if (!live)
+                return;
+            const p = cursorPos(a);
+            const w = clamp(p[0] - r.x, 0, r.w), h = clamp(p[1] - r.y, 0, r.h);
+            box.style.width = `${w}px`;
+            box.style.height = `${h}px`;
+            badge.textContent = `${Math.round(w)} × ${Math.round(h)}`;
+            const left = (w / (r.w || 1) + h / (r.h || 1)) / 2;   // how much of the element is still standing
+            if (typed) {
+                let keep = Math.round(total * left);
+                nodes.forEach(({ node, full, rest }) => {
+                    const k = clamp(keep, 0, full.length);
+                    node.data = full.slice(0, k);
+                    rest.textContent = full.slice(k);
+                    keep -= k;
+                });
+            }
+            else
+                el.style.clipPath = `inset(0 ${r.w - w}px ${r.h - h}px 0)`;
+            requestAnimationFrame(shrink);
+        };
+        requestAnimationFrame(shrink);
+        await moveTo(a, r.x, r.y, dragMs);
+        await wait(60);
+        live = false;
+        // gone: hide it the way the library hides anything not yet built, then put its text back underneath
+        if (!stopped && !el.hasAttribute(PENDING)) {
+            el.setAttribute(PENDING, "");
+            pending++;
+        }
+        nodes.forEach(({ node, full, rest }) => {
+            node.data = full;
+            rest.remove();
+        });
+        el.style.clipPath = clip;
+        box.classList.add("is-done");
+        setTimeout(() => box.remove(), 400);
+    };
+    // Jobs handed to one particular cursor (the nearest free one), or queued for the next to come free
+    const jobs = [];
+    const reworking = new Set();
+    const dispatch = (job, el, not) => {
+        const r = el.getBoundingClientRect(), cx = r.left + r.width / 2 + window.scrollX, cy = r.top + r.height / 2 + window.scrollY;
+        const free = agents.filter((a) => !a.working && !a.job);
+        const pool = free.filter((a) => a !== not).length ? free.filter((a) => a !== not) : free;
+        let best = null, bd = Infinity;
+        pool.forEach((a) => {
+            const d = Math.hypot(a.x - cx, a.y - cy);
+            if (d < bd) {
+                bd = d;
+                best = a;
+            }
+        });
+        if (best)
+            best.job = job;
+        else
+            jobs.push(job);
+    };
+    function rework(target) {
+        const el = targets.find((t) => t === target || t.contains(target));
+        if (!el || stopped || reworking.has(el) || el.hasAttribute(PENDING))
+            return false;
+        reworking.add(el);
+        dispatch(async (a) => {
+            await unbuild(a, el);
+            if (stopped)
+                return void reworking.delete(el);
+            // a short, noticeable pause with the element gone, then someone else builds it back
+            setTimeout(() => dispatch(async (b) => {
+                await build(b, el);
+                reworking.delete(el);
+            }, el, a), 700);
+        }, el, null);
+        return true;
+    }
     /* ---------------- scheduling ---------------- */
     const io = new IntersectionObserver((entries) => {
         entries.forEach((e) => {
@@ -327,10 +452,22 @@ function swarmIntro(options = {}) {
     };
     async function run(a) {
         while (!stopped) {
+            // etis-good patch: a rework job handed to this cursor (or waiting for anyone) comes first
+            const job = a.job || jobs.shift();
+            if (job) {
+                a.job = null;
+                a.idleUntil = 0;
+                a.working = true;
+                await job(a);
+                a.working = false;
+                continue;
+            }
             const el = take();
             if (el) {
                 a.idleUntil = 0;
+                a.working = true;
                 await build(a, el);
+                a.working = false;
             }
             else if (pending <= 0 && !options.persist)
                 return finish(false);
@@ -418,6 +555,7 @@ function swarmIntro(options = {}) {
     })();
     return {
         skip,
+        rework,
         destroy() {
             skip();
             cleanup();

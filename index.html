@@ -94,7 +94,16 @@
         intro = swarmIntro({ root: "#content", logo: first ? RESUME.handle : false, respectReducedMotion: false,
           cursors: size, maxCursors: Math.min(30, Math.max(size, narrow ? 14 : 24)),
           persist: true, idle: IDLE[MODE] });
+        document.documentElement.classList.add("swarm-live");
+        var mine = intro; intro.done.then(function () { if (intro === mine) document.documentElement.classList.remove("swarm-live"); });
       }
+      // Click a piece of the page: the nearest free worker takes it apart, and after a moment another builds it again.
+      // Links and controls still work as normal.
+      document.getElementById("content").addEventListener("click", function (e) {
+        if (!intro || !intro.rework || e.target.closest("a, button, input, select, textarea, label")) return;
+        var sel = getSelection && getSelection(); if (sel && String(sel)) return;        // selecting text isn't a click
+        intro.rework(e.target);
+      });
       slider.value = size; out.textContent = size;
       slider.oninput = function () { out.textContent = slider.value; };
       slider.onchange = function () { size = +slider.value; try { localStorage.setItem("swarmSize", size); } catch (e) {} launch(false); };

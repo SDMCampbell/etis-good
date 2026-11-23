@@ -192,7 +192,7 @@
             if (n.nodeType !== 1) return;
             if (n.classList.contains("swarm-intro-cursor")) wake();
             if (n.classList.contains("swarm-intro-box")) {
-              var c = cursorAt(parseFloat(n.style.left), parseFloat(n.style.top));
+              var c = n._cursor || cursorAt(parseFloat(n.style.left), parseFloat(n.style.top));
               if (c) { c._box = n; n._robot = c; }
             }
           });

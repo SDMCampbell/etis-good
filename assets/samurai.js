@@ -124,7 +124,7 @@
         else s.state = s.vy < 0 ? "up" : "down";
         if (s.state === "slash" && prev !== "slash") s.slashT = now;
         if (s.state !== "slash" && Math.abs(s.vx) > .03) s.face = s.vx > 0 ? 1 : -1;
-        if (s.state === "slash") s.face = 1;                                // the cut always runs to the bottom-right
+        if (s.state === "slash") s.face = c.classList.contains("rev") ? -1 : 1;   // cuts run to the bottom-right; un-cuts back to the top-left
         if (s.state === "meditate") s.face = -1;                            // facing in towards the page
         if (s.state === "run") lerp(s.pose, RUN, .3);
         else lerp(s.pose, POSES[s.state], s.state === "slash" ? .45 : .22);
@@ -199,14 +199,14 @@
             if (n.classList.contains("swarm-intro-cursor")) wake();
             if (n.classList.contains("swarm-intro-box")) {
               // the box opens where its cursor was standing: that samurai draws and cuts
-              var c = cursorAt(parseFloat(n.style.left), parseFloat(n.style.top));
-              if (c) { c.classList.add("slash"); n._samurai = c; }
+              var c = n._cursor || cursorAt(parseFloat(n.style.left), parseFloat(n.style.top));
+              if (c) { c.classList.add("slash"); c.classList.toggle("rev", n.classList.contains("is-unbuild")); n._samurai = c; }
             }
           });
           m.removedNodes.forEach(function (n) { if (n.nodeType === 1 && n.classList && n.classList.contains("swarm-intro-cursor")) trail.delete(n); });
         } else if (m.attributeName === "class") {
           var t = m.target;
-          if (t.classList.contains("swarm-intro-box") && t.classList.contains("is-done") && t._samurai) { t._samurai.classList.remove("slash"); t._samurai = null; }   // sword back in its sheath
+          if (t.classList.contains("swarm-intro-box") && t.classList.contains("is-done") && t._samurai) { t._samurai.classList.remove("slash", "rev"); t._samurai = null; }   // sword back in its sheath
         } else if (m.attributeName === "data-swarm-intro-pending" && !m.target.hasAttribute("data-swarm-intro-pending")) cut(m.target);
       });
     }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ["class", "style", "data-swarm-intro-pending"] });
