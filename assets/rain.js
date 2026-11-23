@@ -76,17 +76,73 @@
     var h = hive();
     for (var i = 0; i < n; i++) drones.push({ x: h.x + (Math.random() - .5) * 40, y: h.y + (Math.random() - .5) * 30, state: "idle", word: null, t0: 0, from: null, trail: [], seed: Math.random() * 10 });
   }
-  // schedule a block: each word falls from above the viewport into its exact spot
+  // ---------- swarm build (our own take on the "cursor swarm rebuilds the page" intro, cf. swarm-intro, MIT) ----------
+  // Before a block's text drops in, a cursor drone claims each element in it: it flies to the element's top-left corner,
+  // drags a selection box out to the bottom-right with a live "W × H" readout, and the element's words then rain into the box.
+  var TARGETS = ".who, .chan a, .top-act button, #stamp, h1, #title, #now, #links, #summary, .hint, h2, .sorts, .job, .sys, #contactLines, #contact p";
+  var surveys = [], speed = 1, MAXD = small ? 28 : 56;
+  function grabDrone(near) {
+    var d = drones.filter(function (x) { return x.state === "idle" || x.state === "hold"; }).sort(function (a, b) { return Math.hypot(a.x - near.x, a.y - near.y) - Math.hypot(b.x - near.x, b.y - near.y); })[0];
+    if (!d && drones.length < MAXD) { var h = hive(); d = { x: h.x, y: h.y, state: "idle", trail: [], seed: Math.random() * 10, extra: true }; drones.push(d); }
+    return d;
+  }
+  function planSurveys(block, t0, priority) {
+    var sx = scrollX, sy = scrollY, fixed = getComputedStyle(block).position === "sticky", out = [], k = 0;
+    [].forEach.call(block.querySelectorAll(TARGETS), function (el) {
+      if (el.closest("[hidden]")) return;
+      var r = el.getBoundingClientRect(); if (r.width < 4 || r.height < 4) return;
+      var sv = { block: block, x: r.left + sx, y: r.top + (fixed ? 0 : sy), w: r.width, h: r.height, fixed: fixed,
+        start: t0 + k * (priority ? 70 : 45) / speed, fly: 260 / speed, drag: 330 / speed, drone: null, fade: 0 };
+      sv.lock = sv.start + sv.fly + sv.drag;
+      out.push(sv); k++;
+    });
+    return out;
+  }
+  function updateSurveys(now, sx, sy) {
+    drones.forEach(function (d) { if (d.state === "hold" && now > d.holdUntil) d.state = "idle"; });
+    ctx.save(); ctx.font = "10px 'JetBrains Mono', monospace"; ctx.textBaseline = "bottom";
+    for (var i = surveys.length - 1; i >= 0; i--) {
+      var v = surveys[i], oy = v.fixed ? 0 : sy, x0 = v.x - sx, y0 = v.y - oy;
+      if (now < v.start) continue;
+      if (!v.drone && !v.gave) { v.drone = grabDrone({ x: x0, y: y0 }); v.gave = true; if (v.drone) { v.drone.state = "survey"; v.from = { x: v.drone.x, y: v.drone.y }; } }
+      var d = v.drone, t = now - v.start, bw, bh;
+      if (t < v.fly) {                                     // fly to the corner
+        var q = t / v.fly; q = 1 - Math.pow(1 - q, 3);
+        if (d) { d.x = v.from.x + (x0 - 4 - v.from.x) * q; d.y = v.from.y + (y0 - v.from.y) * q; }
+        continue;
+      }
+      var g = Math.min(1, (t - v.fly) / v.drag); g = g < .5 ? 2 * g * g : 1 - Math.pow(-2 * g + 2, 2) / 2;
+      bw = v.w * g; bh = v.h * g;
+      if (d && g < 1) { d.x = x0 + bw - 4; d.y = y0 + bh; }
+      if (d && g >= 1 && d.state === "survey") { d.state = "idle"; v.drone = null; }   // hand the drone back: it may escort the words
+      var landed = v.block._left <= 0 && !v.block.classList.contains("veiled");
+      if (landed && !v.fade) v.fade = now;
+      var alpha = v.fade ? 1 - (now - v.fade) / 350 : 1;
+      if (alpha <= 0) { surveys.splice(i, 1); continue; }
+      ctx.globalAlpha = Math.max(0, alpha);
+      ctx.setLineDash([4, 3]); ctx.lineWidth = 1; ctx.strokeStyle = "rgba(" + INK.rgb + ",.75)"; ctx.fillStyle = "rgba(" + INK.rgb + ",.06)";
+      ctx.fillRect(x0 - 2, y0 - 1, bw + 4, bh + 2); ctx.strokeRect(x0 - 2.5, y0 - 1.5, bw + 5, bh + 3);
+      var lbl = Math.round(bw) + " × " + Math.round(bh), lw = ctx.measureText(lbl).width + 8, ly = y0 - 3 < 14 ? y0 + bh + 15 : y0 - 3;
+      ctx.setLineDash([]); ctx.fillStyle = INK.acc; ctx.fillRect(x0 - 3, ly - 13, lw, 13);
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--bg"); ctx.fillText(lbl, x0 + 1, ly - 1);
+    }
+    ctx.restore(); ctx.globalAlpha = 1;
+  }
+  // schedule a block: elements get surveyed, then each word falls from above the viewport into its exact spot
   function rainBlock(block, t0, priority) {
     if (block._rained) return; block._rained = true;
     var list = measure(block); block._left = list.length;
     if (!list.length) { block.classList.remove("veiled"); return; }
-    var step = quick ? 2 : priority ? 22 : 7, dur0 = quick ? 380 : 700;
-    var lineY = null, lineStart = 0;
+    var svs = quick ? [] : planSurveys(block, t0, priority);
+    surveys = surveys.concat(svs);
+    var step = (quick ? 2 : priority ? 16 : 6) / speed, dur0 = (quick ? 380 : 650) / speed;
+    var lineY = null, perBox = svs.map(function () { return 0; }), lastLock = svs.length ? svs[svs.length - 1].lock : t0;
     list.forEach(function (w, i) {
-      w.start = t0 + i * step;
-      w.dur = dur0 + Math.random() * (quick ? 120 : 380);
-      w.drop = (quick ? 60 : 120) + Math.random() * (quick ? 120 : 360);
+      var cx = w.x + w.w / 2, cy = w.y + w.h / 2, bi = -1;
+      for (var j = 0; j < svs.length; j++) { var v = svs[j]; if (cx >= v.x - 2 && cx <= v.x + v.w + 2 && cy >= v.y - 2 && cy <= v.y + v.h + 2) { bi = j; } }
+      w.start = bi > -1 ? svs[bi].lock - 120 + (perBox[bi]++) * step : (svs.length ? lastLock : t0 + i * step);
+      w.dur = dur0 + Math.random() * (quick ? 120 : 300) / speed;
+      w.drop = (quick ? 60 : 110) + Math.random() * (quick ? 120 : 300);
       w.glyphs = w.t.split("");
       w.lock = w.t.split("").map(function (_, k) { return .62 + .38 * (k / Math.max(1, w.t.length)) * Math.random(); });
       // one drone escorts the first word of each line
@@ -95,11 +151,34 @@
     });
     if (!raf) raf = requestAnimationFrame(frame);
   }
+  // gather: on a fresh visit the swarm first huddles round a badge in the middle of the screen, then breaks off to build
+  var gather = null;
+  function startGather(ms) {
+    var cx = W / 2, cy = H / 2;
+    gather = { until: performance.now() + ms, t0: performance.now(), cx: cx, cy: cy };
+    drones.forEach(function (d, i) { var a = i / drones.length * Math.PI * 2, rr = 46 + (i % 3) * 12; d.state = "form"; d.fx = cx + Math.cos(a) * rr * 1.6; d.fy = cy + Math.sin(a) * rr; d.x = cx + (Math.random() - .5) * W * .6; d.y = cy + (Math.random() - .5) * H * .6; });
+  }
+  function drawGather(now) {
+    if (!gather) return;
+    if (now > gather.until) { drones.forEach(function (d) { if (d.state === "form" && !formation) { d.state = "hold"; d.holdUntil = now + 1200; } }); gather = null; return; }
+    var a = Math.min(1, (now - gather.t0) / 250, (gather.until - now) / 200);
+    ctx.save(); ctx.globalAlpha = Math.max(0, a); ctx.font = "700 18px 'JetBrains Mono', monospace"; ctx.textBaseline = "middle"; ctx.textAlign = "center";
+    var lbl = "[ " + (R.handle || "swarm") + " ]";
+    ctx.fillStyle = INK.acc; ctx.shadowColor = INK.acc; ctx.shadowBlur = 12; ctx.fillText(lbl, gather.cx, gather.cy); ctx.restore();
+  }
+  // fast scrolling calls up more drones and speeds up the build
+  var lastSY = scrollY, lastST = performance.now();
+  addEventListener("scroll", function () {
+    var now = performance.now(), v = Math.abs(scrollY - lastSY) / Math.max(1, now - lastST) * 1000; lastSY = scrollY; lastST = now;
+    speed = v > 2500 ? 1.8 : v > 1200 ? 1.35 : 1;
+  }, { passive: true });
   function landBlock(b) { b.classList.remove("veiled"); }
   function frame(now) {
     raf = 0;
     ctx.clearRect(0, 0, W, H);
     var sy = scrollY, sx = scrollX, h = hive();
+    drawGather(now);
+    updateSurveys(now, sx, sy);
     // falling words
     for (var i = active.length - 1; i >= 0; i--) {
       var w = active[i], t = (now - w.start) / w.dur;
@@ -166,7 +245,7 @@
     drones = drones.filter(function (d) { return !(d.extra && d.state === "idle"); });
     if (drones.some(function (d) { return d.state === "hover"; })) moving = true;
     if (formation) moving = true;
-    if (active.length || moving || scrambles.length || carries.length || lifts.length || ferries.length || sweeps.length || words.some(function (x) { return x.block._left > 0; })) raf = requestAnimationFrame(frame);
+    if (active.length || moving || gather || surveys.length || scrambles.length || carries.length || lifts.length || ferries.length || sweeps.length || words.some(function (x) { return x.block._left > 0; })) raf = requestAnimationFrame(frame);
     else finish();
   }
   function drawWord(w, y, t, sx, sy, now) {
@@ -192,7 +271,8 @@
   }
   function skipAll() {
     if (done) return;
-    done = true; cancelAnimationFrame(raf); raf = 0; active = [];
+    done = true; cancelAnimationFrame(raf); raf = 0; active = []; surveys = []; gather = null;
+    drones.forEach(function (d) { if (d.state === "survey" || d.state === "hold" || (d.state === "form" && !formation)) d.state = "idle"; });
     blocks.forEach(function (b) { b._rained = true; b._left = 0; b.classList.remove("veiled"); });
     ctx.clearRect(0, 0, W, H); $("skip").hidden = true; kick();
     if (io) io.disconnect();
@@ -739,12 +819,14 @@
   // ---------- 3. go: veil, then rain the hero first and the rest as it scrolls into view ----------
   size();
   if (reduce) { done = true; $("skip").hidden = true; canvas.style.display = "none"; }
-  else { blocks.forEach(function (b) { b.classList.add("veiled"); }); makeDrones(small ? 12 : 24); }
+  else { blocks.forEach(function (b) { b.classList.add("veiled"); }); makeDrones(small ? 16 : 24); }
   var io = null;
   var ready = document.fonts && document.fonts.ready ? Promise.race([document.fonts.ready, new Promise(function (r) { setTimeout(r, 900); })]) : Promise.resolve();
   ready.then(function () {
     if (done || reduce) return;
-    var t = performance.now() + 80;
+    var GATHER = quick ? 0 : 650;
+    if (GATHER) { startGather(GATHER); kick(); }
+    var t = performance.now() + 80 + GATHER;
     var hero = blocks.filter(function (b) { return b.dataset.priority; });
     hero.forEach(function (b) { rainBlock(b, t, true); });
     blocks.filter(function (b) { return b.classList.contains("top"); }).forEach(function (b) { rainBlock(b, t + 200, true); });

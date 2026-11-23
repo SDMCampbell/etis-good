@@ -4,7 +4,7 @@
  * verdict: baseline | kept | rejected | merged (partly folded into a later version)
  */
 window.VERSIONS = {
-  "current": 48,
+  "current": 49,
   "list": [
     {
       "v": 0,
@@ -494,6 +494,16 @@ window.VERSIONS = {
       "note": "A regression pass over every interaction from this run on desktop, phone and reduced motion: keyboard order, channels, find and gather, dispatch then sort, hive replay and phosphor, copy relay, contrast audit and print. Fixes from the pass: sort buttons now show no active sort while a skill dispatch is showing, and choosing a sort clears the dispatch; print gets a clean black-on-white palette and hides the hive, menus, toasts, copy and sort controls, and the hint.",
       "why": "Seventeen rounds of new interactions needed checking together before the run ends.",
       "try": "Click a skill in Systems, then choose a sort; or print the page.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 49,
+      "title": "Swarm build",
+      "verdict": "kept",
+      "featured": true,
+      "note": "The entrance now works the way swarm-intro does, rebuilt in our own code. On a fresh visit the drones huddle round a [ doog ] badge in the middle of the screen, then break off. Each drone claims an element, flies to its top-left corner and drags a dashed selection box to the bottom-right with a live 'W × H' size label, and that element's words then fall into the box. Sections further down build as you scroll to them; fast scrolling calls in extra drones (up to 56) and speeds up the build. Skip, Esc or any key finishes instantly; reduced motion shows the page with no animation.",
+      "why": "Samuel asked for the swarm to use swarm-intro or our own version of it. Neither machine can download the package (GitHub and npm are blocked), so this is an independent implementation built on our falling-text engine. The README credits the original (MIT).",
+      "try": "Open the site in a new tab (the full build plays once per session), then scroll fast.",
       "date": "2026-11-22"
     }
   ]

@@ -1,488 +1,494 @@
 {
- "settings": {
-  "ROUNDS_PER_CYCLE": 6,
-  "CYCLES_PER_RUN": 3
- },
- "goal": "Samuel Campbell's résumé site as a pure-text experience: every line rains down from the top and locks into place, escorted by a swarm of tiny cursor drones (original, inspired by falling-code films and drone-swarm sci-fi; no film quotes, logos or names). Recruiters still get name/role/company/email immediately; content always renders from assets/resume-data.js and stays real, selectable, accessible text.",
- "timeline_rules": "Every evaluated round is snapshotted to versions/vNN/ and listed in versions/manifest.js. Turning points are featured. Visitors can open any version, step between milestones, and return to the current best in one action. Losing experiments stay in the archive.",
- "design_spec": "NEWDESIGNS.md section 'Direction 3: Text Rain' (this run). Cockpit spec above it is kept for history.",
- "last_completed_version": 48,
- "strongest_version": 48,
- "target_version": 66,
- "run": {
-  "started": null,
-  "start_version": 48,
-  "previous_runs": [
-   {
-    "versions": "v1–v18",
-    "winner": 18,
-    "direction": "The Learning Curve (climbing wall)"
-   },
-   {
-    "versions": "v19–v30 (stopped by owner after 12 of 18 rounds)",
-    "winner": 30,
-    "direction": "Pilot Seat cockpit"
-   },
-   {
-    "run": 3,
-    "versions": "v31–v48",
-    "direction": "Text Rain (pure text, words fall into place, cursor-drone swarm)",
-    "winner": 48,
-    "verified_featured": 32,
-    "ended": "2026-11-22"
-   }
-  ]
- },
- "brief": {
-  "next_version": 49,
-  "protect": "v48: the complete Text Rain site.",
-  "weakness": "Not yet checked on real devices (iOS Safari, Android Chrome) or with a real screen reader. The old rooms (/terminal, /gitlog, /desktop) still wear the Learning Curve styling and gitlog has a load-time layout shift.",
-  "experiment": "Next run: bring the three rooms into the text world (or retire them), test on real phones, and add opt-in terminal sound (keyclick on land, off by default).",
-  "expected_payoff": "One consistent site everywhere a visitor can go.",
-  "question": "Should the old rooms be reskinned or retired?"
- },
- "history": [
-  {
-   "v": 0,
-   "title": "Three concepts",
-   "verdict": "baseline",
-   "lesson": "Content model is solid; the front door is a chooser."
+  "settings": {
+    "ROUNDS_PER_CYCLE": 6,
+    "CYCLES_PER_RUN": 3
   },
-  {
-   "v": 1,
-   "title": "The Learning Curve",
-   "verdict": "kept",
-   "lesson": "One strong interaction beats a menu. Drag, keyboard, rail and hold-taps all work. Weak spots: CLS 0.10 on desktop from font swap, chalk bag clips mid-row, the bag change is instant so the skill story is easy to miss."
+  "goal": "Samuel Campbell's résumé site as a pure-text experience: every line rains down from the top and locks into place, escorted by a swarm of tiny cursor drones (original, inspired by falling-code films and drone-swarm sci-fi; no film quotes, logos or names). Recruiters still get name/role/company/email immediately; content always renders from assets/resume-data.js and stays real, selectable, accessible text.",
+  "timeline_rules": "Every evaluated round is snapshotted to versions/vNN/ and listed in versions/manifest.js. Turning points are featured. Visitors can open any version, step between milestones, and return to the current best in one action. Losing experiments stay in the archive.",
+  "design_spec": "NEWDESIGNS.md section 'Direction 3: Text Rain' (this run). Cockpit spec above it is kept for history.",
+  "last_completed_version": 49,
+  "strongest_version": 49,
+  "target_version": 66,
+  "run": {
+    "started": null,
+    "start_version": 48,
+    "previous_runs": [
+      {
+        "versions": "v1–v18",
+        "winner": 18,
+        "direction": "The Learning Curve (climbing wall)"
+      },
+      {
+        "versions": "v19–v30 (stopped by owner after 12 of 18 rounds)",
+        "winner": 30,
+        "direction": "Pilot Seat cockpit"
+      },
+      {
+        "run": 3,
+        "versions": "v31–v48",
+        "direction": "Text Rain (pure text, words fall into place, cursor-drone swarm)",
+        "winner": 48,
+        "verified_featured": 32,
+        "ended": "2026-11-22"
+      }
+    ]
   },
-  {
-   "v": 2,
-   "title": "Skills you can watch pile up",
-   "verdict": "kept",
-   "lesson": "Motion that carries meaning works: chips make the curve's y-axis legible. Kept it cheap (WAAPI, no library) and fully skipped under reduced motion. On phones the summit CTA duplicated the main buttons, so it shrinks to just Copy address."
+  "brief": {
+    "next_version": 50,
+    "protect": "v49: swarm build intro plus everything from v48.",
+    "weakness": "Not yet checked on real devices. The old rooms still use the Learning Curve styling.",
+    "experiment": "Bring the three rooms into the text world (or retire them), real-device check, opt-in sound.",
+    "expected_payoff": "One consistent site everywhere.",
+    "question": "Reskin or retire the rooms?"
   },
-  {
-   "v": 3,
-   "title": "Spotlight a skill, share the view",
-   "verdict": "kept",
-   "lesson": "Making the rack a filter for the wall connects the below-the-fold content to the hero. Found and fixed a race: the idle hint was yanking the token back after a spotlight. Long unbroken tokens in bullets needed overflow-wrap on phones."
-  },
-  {
-   "v": 4,
-   "title": "Patch Bay (alternate direction)",
-   "verdict": "rejected",
-   "lesson": "A puzzle in front of the facts slows recruiters, and a matrix of 32 cables is less legible than one spotlight. The 'NO CARRIER: COBOL lives at …' microcopy is worth stealing for the spotlight. The Learning Curve stays the foundation."
-  },
-  {
-   "v": 5,
-   "title": "Round two & the 99% send",
-   "verdict": "kept",
-   "lesson": "Specific beats generic. The floating badge crowds the narrow phone route, so on phones the 99% moves into the card instead. Measuring CLS sources showed the real culprit was late-filled text in a centered grid, not fonts."
-  },
-  {
-   "v": 6,
-   "title": "Scrub the register",
-   "verdict": "kept",
-   "lesson": "Previews make the archive worth visiting. Lazy-loading the iframe only when the section is on screen kept the home page light, and embedded previews skip their own register to avoid nesting."
-  },
-  {
-   "v": 7,
-   "title": "Pull a Print (alternate direction)",
-   "verdict": "rejected",
-   "lesson": "Typography and one-job-per-page pacing are the zine's real wins. The pull is delightful but hides essentials. Rapid page flips needed a pending-target fix. Worth merging: a calm pitch-by-pitch reading mode for the résumé section."
-  },
-  {
-   "v": 8,
-   "title": "Phone-first: the curve on its side",
-   "verdict": "kept",
-   "lesson": "Designing for the thumb beat shrinking the desktop. Separating horizontal-scrub from vertical-scroll intent (8px, dominant axis) was essential; tested with real touch events. On a phone the horizontal curve reads even more like a learning curve than the vertical climb."
-  },
-  {
-   "v": 9,
-   "title": "Pitches, borrowed from the zine",
-   "verdict": "kept",
-   "lesson": "Borrowing one idea from a losing direction strengthened the winner. Testing print with a real PDF exposed that the first check had been rendered in screen mode by mistake; under print media it went 3 → 2 pages after trimming the intro."
-  },
-  {
-   "v": 10,
-   "title": "climb --help & belay check",
-   "verdict": "kept",
-   "lesson": "Hidden layers add delight at near-zero cost to the main path. Native <dialog> gave focus trap + Esc for free. The belay zones made the drag snapping logic visible, which is useful for tuning too."
-  },
-  {
-   "v": 11,
-   "title": "Pitch bar navigation",
-   "verdict": "kept",
-   "lesson": "A persistent section index is worth its 56px on phones. The bigger win was the bug it surfaced: test fixed elements after scrolling, not just at load. Also fixed: rack chip rows were not wrapping on phones since v1."
-  },
-  {
-   "v": 12,
-   "title": "Compare any version with the summit",
-   "verdict": "kept",
-   "lesson": "Side-by-side previews make 'why it changed' land faster than prose. Scaling two 1280px iframes into half-width boxes stays sharp enough to read headings."
-  },
-  {
-   "v": 13,
-   "title": "Night climb",
-   "verdict": "kept",
-   "lesson": "Keeping the paper cards made the dark theme feel like the same site. Caught a CSS gotcha: a background shorthand with a color in a non-final layer is invalid and silently dropped; measured contrast exposed it immediately."
-  },
-  {
-   "v": 14,
-   "title": "Auto-belay (watch it climb)",
-   "verdict": "kept",
-   "lesson": "A guided mode complements rather than duplicates when it adds information (the captions). Same trap as v5's knot: buttons inside the route must be excluded from drag-start. On phones, caption placement needed the empty lower-right of the curve so it never covers holds."
-  },
-  {
-   "v": 15,
-   "title": "Works offline",
-   "verdict": "kept",
-   "lesson": "Network-first for everything is the safe default for a site that changes every round; cache-first assets would have paired fresh HTML with stale JS after deploys. The size budget is now the clearest technical debt: the night theme and accumulated features doubled the CSS."
-  },
-  {
-   "v": 16,
-   "title": "Weight diet (regression-tested)",
-   "verdict": "kept",
-   "lesson": "Cruft was small; features are the weight. A standing regression suite (one action script per round) made the cleanup safe, and it's now the gate for every future round. Remaining budget gap (~86381 vs 60000 bytes uncompressed, ~25KB gzipped) is recorded as known debt."
-  },
-  {
-   "v": 17,
-   "title": "One site, many rooms",
-   "verdict": "kept",
-   "lesson": "Consistent wayfinding is cheap and makes the modes feel like part of one site. Inside archived snapshots, links to the register must escape the snapshot folder; the bar now detects that."
-  },
-  {
-   "v": 18,
-   "title": "Share card",
-   "verdict": "kept",
-   "lesson": "The first impression extends to places the site doesn't control. The OG image is a snapshot of data, so it must be regenerated when the résumé changes (documented in tools/og-card.html)."
-  },
-  {
-   "v": 19,
-   "title": "Cockpit: Frame AUTODIDACT",
-   "verdict": "kept",
-   "lesson": "The install log maps onto the data with zero invention: contact counts equal the cumulative skill count at every sortie, verified going up and down. CLS needed three fixes: reserved space for JS-filled readouts, transform-only throttle movement, and a console with fixed line slots instead of appended rows."
-  },
-  {
-   "v": 20,
-   "title": "Target lock + cold start",
-   "verdict": "kept",
-   "lesson": "Lock-on makes the skills data part of the cockpit instead of a list. Honest edge case: untagged skills (Kentico, WordPress) say 'listed in the system bays, not tied to one sortie' rather than faking a location. The boot is opacity-only so CLS stays 0."
-  },
-  {
-   "v": 21,
-   "title": "Sensor Scope (alternate direction)",
-   "verdict": "rejected",
-   "lesson": "A map shows everything at once but tells no story; the throttle's sequence is what makes learning feel like progress. Worth keeping: tap-to-ping as a playful way to lock contacts on the cockpit's own scope."
-  },
-  {
-   "v": 22,
-   "title": "Story refits",
-   "verdict": "kept",
-   "lesson": "Set pieces make specific facts stick. The decode stays reflow-free by overlaying an absolutely positioned scramble on transparent real text, so screen readers only ever get the real text and the box never resizes. Borrowing the rejected v21's ping worked well."
-  },
-  {
-   "v": 23,
-   "title": "Sound, reference card, overdrive",
-   "verdict": "kept",
-   "lesson": "Opt-in sound with zero audio until the first gesture keeps the page polite. The throttle-slam trigger needed loosening (3 extremes, not 4) to be findable by hand."
-  },
-  {
-   "v": 24,
-   "title": "Service Log & archived frames",
-   "verdict": "kept",
-   "lesson": "Consistent naming and palette across every page makes the redesign feel complete. Known issue noticed: the git-log room has its own layout shift on load (unchanged since v0)."
-  },
-  {
-   "v": 25,
-   "title": "Hangar Refit (alternate direction)",
-   "verdict": "rejected",
-   "lesson": "Scrolling is the easiest navigation, but 'fun' in this brief means hands-on control. Worth merging: one crate per installed system on the frame schematic is a more satisfying counter than per-bay hardpoints."
-  },
-  {
-   "v": 26,
-   "title": "Mission briefings + crate frame",
-   "verdict": "kept",
-   "lesson": "A focused, shareable per-job view helps recruiters who want one role in detail. Hash-change navigation needed the same briefing handling as a fresh load. Crates per system make the frame a truthful progress bar."
-  },
-  {
-   "v": 27,
-   "title": "Pilot record (achievements)",
-   "verdict": "kept",
-   "lesson": "Hints in the record double as a discovery guide for the hidden features. Guarded 'Full systems' so the 6-second autopilot can't award it."
-  },
-  {
-   "v": 28,
-   "title": "Controller linked",
-   "verdict": "kept",
-   "lesson": "Edge-triggered buttons plus a continuous stick that settles on release feels right. Verified with a simulated gamepad (axes and buttons injected); real hardware is untested."
-  },
-  {
-   "v": 29,
-   "title": "Loadout screen",
-   "verdict": "kept",
-   "lesson": "Provenance ('arrived in sortie 4, used in 4') answers both 'what' and 'how deep' at a glance. Untagged skills honestly say 'on file'."
-  },
-  {
-   "v": 30,
-   "title": "Hangar day",
-   "verdict": "kept",
-   "lesson": "Theme tokens made the light variant mostly a palette swap; the exceptions were hard-coded dark surfaces and text on amber/green fills. An automated contrast audit (~150 elements per theme) is now part of the suite."
-  },
-  {
-   "v": 31,
-   "title": "Text Rain + drone escort",
-   "verdict": "kept",
-   "lesson": "Measuring each word with Range rects lets the canvas land glyphs exactly where the DOM text sits, so the hand-off is seamless. Drones needed easing (swoop, then ride) to read as a swarm rather than markers. Hero lands in ~1.1–1.4 s."
-  },
-  {
-   "v": 32,
-   "title": "The swarm comes alive",
-   "verdict": "kept",
-   "lesson": "Wrapping the clicked word in a temporary span (then unwrapping and normalizing) lets the canvas scramble it without touching layout; verified the text is identical afterwards. Sampling the handle from an offscreen canvas gives a formation for any handle without a hand-made pixel font."
-  },
-  {
-   "v": 33,
-   "title": "Résumé REPL (alternate direction)",
-   "verdict": "rejected",
-   "lesson": "Commands are great for precise questions ('where did he use Drupal?') but bad as the only way in. Keep the document; borrow the find-a-skill answer for a type-to-find feature on it."
-  },
-  {
-   "v": 34,
-   "title": "Type to find (swarm-assisted)",
-   "verdict": "kept",
-   "lesson": "Borrowing the REPL's best idea onto the document beat the REPL itself. Moved the drone hive to the bottom-right so it no longer covers the header controls."
-  },
-  {
-   "v": 35,
-   "title": "Channel switching",
-   "verdict": "kept",
-   "lesson": "Re-raining the destination turns navigation into part of the show at almost no cost (it reuses the entrance engine in quick mode). Phones still lack a section index; that's a gap to fill."
-  },
-  {
-   "v": 36,
-   "title": "Cheap enough to keep",
-   "verdict": "kept",
-   "lesson": "Decorative idle motion is the usual reason an animation loop never stops. The remaining hitch is measurement of big sections at once; chunking that is a candidate for a later round."
-  },
-  {
-   "v": 37,
-   "title": "Drone carry",
-   "verdict": "kept",
-   "lesson": "A first pass moved every word on its own arc and dissolved into a word cloud; carrying each block as one unit with a visible four-drone squad reads as 'the swarm is moving this'. Staggering blocks 120 ms apart keeps the paths readable."
-  },
-  {
-   "v": 38,
-   "title": "Swarm Board",
-   "verdict": "kept",
-   "lesson": "Reusing the measure-mutate-fly engine made a whole layout change cost almost nothing: anything the DOM can do, the swarm can animate. The board stays opt-in because the document is still faster to scan."
-  },
-  {
-   "v": 39,
-   "title": "Recall",
-   "verdict": "kept",
-   "lesson": "Shift+R clashed with type-to-find (capital letters start a search), so replay moved to 0, next to the 1–4 channel keys. Lift words need their glyph arrays initialised like falling ones."
-  },
-  {
-   "v": 40,
-   "title": "Gather",
-   "verdict": "kept",
-   "lesson": "getComputedStyle is live: read the colour before adding the class that hides the target, or the flying copy is invisible. The find bar needed flex-wrap so the list sits under the input instead of squeezing it."
-  },
-  {
-   "v": 41,
-   "title": "Phosphor repaint",
-   "verdict": "kept",
-   "lesson": "The sweep only reads as 'drones painting' when the drone row and the wipe use the same timing: start the drones on viewTransition.ready, and use linear motion for both. All four schemes pass AA on 95 checked elements."
-  },
-  {
-   "v": 42,
-   "title": "Dispatch",
-   "verdict": "kept",
-   "lesson": "The tag line shifts every word in a matched card, so cards scatter a little more mid-flight than plain sorts do; the result settles cleanly. Skills that aren't tagged on any role get an honest note instead of an empty carry."
-  },
-  {
-   "v": 43,
-   "title": "Text changelog",
-   "verdict": "kept",
-   "lesson": "The archive bar is a single script that every snapshot loads, so restyling it updates all 43 archived versions at once. On phones it now sits above the bottom nav instead of covering the header."
-  },
-  {
-   "v": 44,
-   "title": "Hive orders",
-   "verdict": "kept",
-   "lesson": "The skip button stays visible until every block has rained (often never on long pages), so hiding the hive while skip showed hid it almost permanently. Moving skip to the left on phones fixed the overlap instead."
-  },
-  {
-   "v": 45,
-   "title": "Ambient rain",
-   "verdict": "kept",
-   "lesson": "Capping it at about 20 fps and stopping on idle keeps the cost negligible (frames stay at 60 with a worst frame of 17 ms). Damping it to 40% inside the reading column was what made it atmosphere rather than noise."
-  },
-  {
-   "v": 46,
-   "title": "Hail relay",
-   "verdict": "kept",
-   "lesson": "Reserving the button width keeps '[ copy ]' → '[ copied ]' from shifting the line. Splitting the address into six-character chunks reads better than one long string flying."
-  },
-  {
-   "v": 47,
-   "title": "Ship-shape",
-   "verdict": "kept",
-   "lesson": "The share card renders from the same resume-data.js as the page, so it can't drift from the résumé (it caught a wrong field name on the first render)."
-  },
-  {
-   "v": 48,
-   "title": "Final polish",
-   "verdict": "kept",
-   "lesson": "Two skills share a name across groups (SQL appears under Languages and under Data & Messaging). Dispatch handles that fine, but it's worth a tidy-up in resume-data.js."
-  }
- ],
- "cycle_reviews": [
-  {
-   "cycle": 1,
-   "versions": "v1–v6",
-   "biggest_wins": [
-    "v1 replaced a chooser with a first-screen interaction that answers who/what/now",
-    "v3 turned skills into a filter with shareable deep links",
-    "v5 made the wall specific to Samuel (round two knot, 99% send) and cut CLS to 0"
-   ],
-   "directions_tried": [
-    "Learning Curve climbing wall (v1–v3, v5, v6)",
-    "Patch Bay hardware matching game (v4, rejected)"
-   ],
-   "getting_repetitive": "Bolting more widgets onto the route card (summit strip, compare view, send tag). The card is near capacity on phones.",
-   "next_cycle_ambition": "Test the third design direction (Pull a Print zine) for real, then rework the phone hero as its own layout instead of a squeezed desktop grid, and try a navigation change (pitch-by-pitch scrolling)."
-  },
-  {
-   "cycle": 2,
-   "versions": "v7–v12",
-   "biggest_wins": [
-    "v8 gave phones their own geometry (horizontal learning curve) instead of a shrunken desktop",
-    "v11 pitch bar plus the fix for a hidden viewport-widening bug that had been pushing fixed UI off-screen since v8",
-    "v9 proved a losing direction (the zine) can donate its best idea to the winner"
-   ],
-   "directions_tried": [
-    "Pull a Print editorial zine (v7, rejected)",
-    "Phone-first horizontal layout (v8)",
-    "Persistent section navigation (v11)"
-   ],
-   "getting_repetitive": "Small add-on layers (help overlay, compare toggle, register polish). Useful, but each adds less.",
-   "next_cycle_ambition": "Try a different visual style (a night/headlamp mode), a different core interaction for passive visitors (an auto-belay story mode that climbs and narrates), and harden performance/offline. End with a full verification pass."
-  },
-  {
-   "cycle": 3,
-   "versions": "v13–v18",
-   "biggest_wins": [
-    "v14 auto-belay gave passive visitors (and screen-shares) a narrated climb with per-job skill deltas",
-    "v13 night climb added a second visual style without losing the identity (paper cards, same holds); contrast verified 9.8–15.8:1",
-    "v16 turned the per-round test scripts into a regression suite that now gates every change"
-   ],
-   "directions_tried": [
-    "Night/headlamp visual style (v13)",
-    "Hands-off guided interaction (v14)",
-    "Offline + performance hardening (v15–v16)"
-   ],
-   "getting_repetitive": "Polish passes and add-on layers. The wall is close to feature-complete; more widgets would crowd it.",
-   "next_cycle_ambition": "Pay down the size budget for real (split night CSS and dev-layer JS into lazily loaded files), then pick one bold new direction to test against the wall."
-  },
-  {
-   "cycle": 4,
-   "run": 2,
-   "versions": "v19–v24",
-   "biggest_wins": [
-    "v19 replaced the climbing wall with a throttle that installs technology year by year, straight from the data",
-    "v22 story refits (legacy firmware, decode, tune gauge, re-commission ghost) made the distinctive résumé facts memorable",
-    "v20 target lock restored 'where did he use X?' with deep links"
-   ],
-   "directions_tried": [
-    "Four-panel cockpit with a time throttle (v19–v20, v22–v24)",
-    "Sensor Scope: one giant spatial radar (v21, rejected)"
-   ],
-   "getting_repetitive": "Adding more widgets to the four MFDs; the mission card is getting busy on MARCO (gauge + bullets).",
-   "next_cycle_ambition": "Test the Hangar Refit direction (a scroll-driven story, very different navigation), then build deeper play: per-job mission briefings, achievements, gamepad, a loadout screen, and a light 'hangar day' theme."
-  },
-  {
-   "cycle": 5,
-   "run": 2,
-   "versions": "v25–v30",
-   "biggest_wins": [
-    "v26 mission briefings gave each job a focused, shareable view, plus swipe-to-step on phones",
-    "v30 hangar day theme with a full contrast audit, zero failures in both themes",
-    "v27 achievements turned hidden features into a discovery trail"
-   ],
-   "directions_tried": [
-    "Hangar Refit scroll story (v25, rejected)",
-    "Deeper play layers on the cockpit: briefings, achievements, gamepad, loadout (v26–v29)",
-    "Light visual theme (v30)"
-   ],
-   "getting_repetitive": "Modal overlays: briefing, loadout, reference card and pilot record are all dialogs. The brow is filling with buttons.",
-   "next_cycle_ambition": "Consolidate the brow, harden performance and offline for the cockpit, refresh the share card, and try one more substantially different core interaction (a narrated 'comms channel' mode for passive visitors)."
-  },
-  {
-   "cycle": 7,
-   "run": 3,
-   "versions": "v31–v36",
-   "biggest_wins": [
-    "v31 Text Rain + drone escort: real text underneath, rain painted on top, CLS 0",
-    "v32 living swarm: pointer flock, click-to-scramble, idle DOOG formation",
-    "v34 type-to-find with drones hovering over every match (borrowed from the rejected REPL)"
-   ],
-   "directions_tried": [
-    "Raining document with a living swarm (v31–v32, v34–v36)",
-    "Conversational REPL (v33, rejected)"
-   ],
-   "getting_repetitive": "Each feature adds another keyboard shortcut; the key map is the only place they're explained.",
-   "next_cycle_ambition": "Try a substantially different visual/layout direction (e.g. split-screen 'code waterfall' columns with the résumé surfacing out of the rain), phosphor themes, a replay/rewind control, ambient background rain that parts around the pointer, and bring the Service Log + rooms into the text style."
-  },
-  {
-   "cycle": 8,
-   "run": 3,
-   "versions": "v37–v42",
-   "biggest_wins": [
-    "v37 Drone carry: squads physically move whole blocks; one engine animates any DOM rearrangement",
-    "v40 Gather: the swarm tows search results to you",
-    "v41 Phosphor repaint: four AA-checked themes painted on by a drone sweep"
-   ],
-   "directions_tried": [
-    "Swarm moves text within the document (carry, gather, dispatch, recall)",
-    "Swarm Board: the résumé as a card table instead of a page (v38)",
-    "Colour and atmosphere (v41 phosphor themes)"
-   ],
-   "getting_repetitive": "The header is filling up with bracketed controls ([ green ] [ replay ] [ find ] [ hail ] plus view), and almost every feature relies on carry. The drones are always ▸ glyphs that behave the same way.",
-   "next_cycle_ambition": "Finish strong: reskin the Service Log, version bar and rooms bar into the text style so the whole site is one world; give the swarm more personality (formations, a ship-to-ship 'handoff'); add an ambient background rain that parts around the pointer; tidy the header into one [ ≡ swarm ] command menu; regenerate og.png and the README; run a full regression pass and verify every featured version."
-  }
- ],
- "owner_feedback": [
-  "2026-11-22: Owner rejected the climbing metaphor ('I do not like climbing, I like learning new technologies'). Requested a complete redesign as a mech cockpit, as interactive and fun as possible.",
-  "2026-11-22 15:19: Owner scrapped the cockpit (and the unfinished Radio round v31): 'I want the website to be pure text based, with influences from the Matrix. All of the text should come in from the top and drop into place.' Asked for extra fun/interactivity ideas.",
-  "2026-11-22 15:21: Owner added: text ushered into place by a little drone army of mini-cursor-text-things, like sci-fi drone swarms moving the text around the screen. Confirmed 18 rounds (one run of 3 cycles x 6).",
-  "2026-11-22 17:30: Owner repeated: text should be ushered into place by a drone army of mini cursor things that MOVE THE TEXT AROUND THE SCREEN (swarm-pod style). Weight remaining rounds toward drones physically carrying words/lines, not just escorting."
- ],
- "next_invocation_brief": {
-  "start_from": "v48 (current default, Text Rain)",
-  "target": 66,
-  "owner_wants": "Pure text, Matrix-influenced (original designs only), text dropping into place, and a drone swarm of mini-cursors that physically moves text around. Fun and interactive first.",
-  "protect": [
-   "text rain + drone escort",
-   "carry engine (sort, board, gather, dispatch)",
-   "hive orders menu",
-   "phosphor themes (AA on all four)",
-   "ambient rain",
-   "hail relay copy",
-   "changelog + archive bar",
-   "reduced-motion / keyboard / print parity"
+  "history": [
+    {
+      "v": 0,
+      "title": "Three concepts",
+      "verdict": "baseline",
+      "lesson": "Content model is solid; the front door is a chooser."
+    },
+    {
+      "v": 1,
+      "title": "The Learning Curve",
+      "verdict": "kept",
+      "lesson": "One strong interaction beats a menu. Drag, keyboard, rail and hold-taps all work. Weak spots: CLS 0.10 on desktop from font swap, chalk bag clips mid-row, the bag change is instant so the skill story is easy to miss."
+    },
+    {
+      "v": 2,
+      "title": "Skills you can watch pile up",
+      "verdict": "kept",
+      "lesson": "Motion that carries meaning works: chips make the curve's y-axis legible. Kept it cheap (WAAPI, no library) and fully skipped under reduced motion. On phones the summit CTA duplicated the main buttons, so it shrinks to just Copy address."
+    },
+    {
+      "v": 3,
+      "title": "Spotlight a skill, share the view",
+      "verdict": "kept",
+      "lesson": "Making the rack a filter for the wall connects the below-the-fold content to the hero. Found and fixed a race: the idle hint was yanking the token back after a spotlight. Long unbroken tokens in bullets needed overflow-wrap on phones."
+    },
+    {
+      "v": 4,
+      "title": "Patch Bay (alternate direction)",
+      "verdict": "rejected",
+      "lesson": "A puzzle in front of the facts slows recruiters, and a matrix of 32 cables is less legible than one spotlight. The 'NO CARRIER: COBOL lives at …' microcopy is worth stealing for the spotlight. The Learning Curve stays the foundation."
+    },
+    {
+      "v": 5,
+      "title": "Round two & the 99% send",
+      "verdict": "kept",
+      "lesson": "Specific beats generic. The floating badge crowds the narrow phone route, so on phones the 99% moves into the card instead. Measuring CLS sources showed the real culprit was late-filled text in a centered grid, not fonts."
+    },
+    {
+      "v": 6,
+      "title": "Scrub the register",
+      "verdict": "kept",
+      "lesson": "Previews make the archive worth visiting. Lazy-loading the iframe only when the section is on screen kept the home page light, and embedded previews skip their own register to avoid nesting."
+    },
+    {
+      "v": 7,
+      "title": "Pull a Print (alternate direction)",
+      "verdict": "rejected",
+      "lesson": "Typography and one-job-per-page pacing are the zine's real wins. The pull is delightful but hides essentials. Rapid page flips needed a pending-target fix. Worth merging: a calm pitch-by-pitch reading mode for the résumé section."
+    },
+    {
+      "v": 8,
+      "title": "Phone-first: the curve on its side",
+      "verdict": "kept",
+      "lesson": "Designing for the thumb beat shrinking the desktop. Separating horizontal-scrub from vertical-scroll intent (8px, dominant axis) was essential; tested with real touch events. On a phone the horizontal curve reads even more like a learning curve than the vertical climb."
+    },
+    {
+      "v": 9,
+      "title": "Pitches, borrowed from the zine",
+      "verdict": "kept",
+      "lesson": "Borrowing one idea from a losing direction strengthened the winner. Testing print with a real PDF exposed that the first check had been rendered in screen mode by mistake; under print media it went 3 → 2 pages after trimming the intro."
+    },
+    {
+      "v": 10,
+      "title": "climb --help & belay check",
+      "verdict": "kept",
+      "lesson": "Hidden layers add delight at near-zero cost to the main path. Native <dialog> gave focus trap + Esc for free. The belay zones made the drag snapping logic visible, which is useful for tuning too."
+    },
+    {
+      "v": 11,
+      "title": "Pitch bar navigation",
+      "verdict": "kept",
+      "lesson": "A persistent section index is worth its 56px on phones. The bigger win was the bug it surfaced: test fixed elements after scrolling, not just at load. Also fixed: rack chip rows were not wrapping on phones since v1."
+    },
+    {
+      "v": 12,
+      "title": "Compare any version with the summit",
+      "verdict": "kept",
+      "lesson": "Side-by-side previews make 'why it changed' land faster than prose. Scaling two 1280px iframes into half-width boxes stays sharp enough to read headings."
+    },
+    {
+      "v": 13,
+      "title": "Night climb",
+      "verdict": "kept",
+      "lesson": "Keeping the paper cards made the dark theme feel like the same site. Caught a CSS gotcha: a background shorthand with a color in a non-final layer is invalid and silently dropped; measured contrast exposed it immediately."
+    },
+    {
+      "v": 14,
+      "title": "Auto-belay (watch it climb)",
+      "verdict": "kept",
+      "lesson": "A guided mode complements rather than duplicates when it adds information (the captions). Same trap as v5's knot: buttons inside the route must be excluded from drag-start. On phones, caption placement needed the empty lower-right of the curve so it never covers holds."
+    },
+    {
+      "v": 15,
+      "title": "Works offline",
+      "verdict": "kept",
+      "lesson": "Network-first for everything is the safe default for a site that changes every round; cache-first assets would have paired fresh HTML with stale JS after deploys. The size budget is now the clearest technical debt: the night theme and accumulated features doubled the CSS."
+    },
+    {
+      "v": 16,
+      "title": "Weight diet (regression-tested)",
+      "verdict": "kept",
+      "lesson": "Cruft was small; features are the weight. A standing regression suite (one action script per round) made the cleanup safe, and it's now the gate for every future round. Remaining budget gap (~86381 vs 60000 bytes uncompressed, ~25KB gzipped) is recorded as known debt."
+    },
+    {
+      "v": 17,
+      "title": "One site, many rooms",
+      "verdict": "kept",
+      "lesson": "Consistent wayfinding is cheap and makes the modes feel like part of one site. Inside archived snapshots, links to the register must escape the snapshot folder; the bar now detects that."
+    },
+    {
+      "v": 18,
+      "title": "Share card",
+      "verdict": "kept",
+      "lesson": "The first impression extends to places the site doesn't control. The OG image is a snapshot of data, so it must be regenerated when the résumé changes (documented in tools/og-card.html)."
+    },
+    {
+      "v": 19,
+      "title": "Cockpit: Frame AUTODIDACT",
+      "verdict": "kept",
+      "lesson": "The install log maps onto the data with zero invention: contact counts equal the cumulative skill count at every sortie, verified going up and down. CLS needed three fixes: reserved space for JS-filled readouts, transform-only throttle movement, and a console with fixed line slots instead of appended rows."
+    },
+    {
+      "v": 20,
+      "title": "Target lock + cold start",
+      "verdict": "kept",
+      "lesson": "Lock-on makes the skills data part of the cockpit instead of a list. Honest edge case: untagged skills (Kentico, WordPress) say 'listed in the system bays, not tied to one sortie' rather than faking a location. The boot is opacity-only so CLS stays 0."
+    },
+    {
+      "v": 21,
+      "title": "Sensor Scope (alternate direction)",
+      "verdict": "rejected",
+      "lesson": "A map shows everything at once but tells no story; the throttle's sequence is what makes learning feel like progress. Worth keeping: tap-to-ping as a playful way to lock contacts on the cockpit's own scope."
+    },
+    {
+      "v": 22,
+      "title": "Story refits",
+      "verdict": "kept",
+      "lesson": "Set pieces make specific facts stick. The decode stays reflow-free by overlaying an absolutely positioned scramble on transparent real text, so screen readers only ever get the real text and the box never resizes. Borrowing the rejected v21's ping worked well."
+    },
+    {
+      "v": 23,
+      "title": "Sound, reference card, overdrive",
+      "verdict": "kept",
+      "lesson": "Opt-in sound with zero audio until the first gesture keeps the page polite. The throttle-slam trigger needed loosening (3 extremes, not 4) to be findable by hand."
+    },
+    {
+      "v": 24,
+      "title": "Service Log & archived frames",
+      "verdict": "kept",
+      "lesson": "Consistent naming and palette across every page makes the redesign feel complete. Known issue noticed: the git-log room has its own layout shift on load (unchanged since v0)."
+    },
+    {
+      "v": 25,
+      "title": "Hangar Refit (alternate direction)",
+      "verdict": "rejected",
+      "lesson": "Scrolling is the easiest navigation, but 'fun' in this brief means hands-on control. Worth merging: one crate per installed system on the frame schematic is a more satisfying counter than per-bay hardpoints."
+    },
+    {
+      "v": 26,
+      "title": "Mission briefings + crate frame",
+      "verdict": "kept",
+      "lesson": "A focused, shareable per-job view helps recruiters who want one role in detail. Hash-change navigation needed the same briefing handling as a fresh load. Crates per system make the frame a truthful progress bar."
+    },
+    {
+      "v": 27,
+      "title": "Pilot record (achievements)",
+      "verdict": "kept",
+      "lesson": "Hints in the record double as a discovery guide for the hidden features. Guarded 'Full systems' so the 6-second autopilot can't award it."
+    },
+    {
+      "v": 28,
+      "title": "Controller linked",
+      "verdict": "kept",
+      "lesson": "Edge-triggered buttons plus a continuous stick that settles on release feels right. Verified with a simulated gamepad (axes and buttons injected); real hardware is untested."
+    },
+    {
+      "v": 29,
+      "title": "Loadout screen",
+      "verdict": "kept",
+      "lesson": "Provenance ('arrived in sortie 4, used in 4') answers both 'what' and 'how deep' at a glance. Untagged skills honestly say 'on file'."
+    },
+    {
+      "v": 30,
+      "title": "Hangar day",
+      "verdict": "kept",
+      "lesson": "Theme tokens made the light variant mostly a palette swap; the exceptions were hard-coded dark surfaces and text on amber/green fills. An automated contrast audit (~150 elements per theme) is now part of the suite."
+    },
+    {
+      "v": 31,
+      "title": "Text Rain + drone escort",
+      "verdict": "kept",
+      "lesson": "Measuring each word with Range rects lets the canvas land glyphs exactly where the DOM text sits, so the hand-off is seamless. Drones needed easing (swoop, then ride) to read as a swarm rather than markers. Hero lands in ~1.1–1.4 s."
+    },
+    {
+      "v": 32,
+      "title": "The swarm comes alive",
+      "verdict": "kept",
+      "lesson": "Wrapping the clicked word in a temporary span (then unwrapping and normalizing) lets the canvas scramble it without touching layout; verified the text is identical afterwards. Sampling the handle from an offscreen canvas gives a formation for any handle without a hand-made pixel font."
+    },
+    {
+      "v": 33,
+      "title": "Résumé REPL (alternate direction)",
+      "verdict": "rejected",
+      "lesson": "Commands are great for precise questions ('where did he use Drupal?') but bad as the only way in. Keep the document; borrow the find-a-skill answer for a type-to-find feature on it."
+    },
+    {
+      "v": 34,
+      "title": "Type to find (swarm-assisted)",
+      "verdict": "kept",
+      "lesson": "Borrowing the REPL's best idea onto the document beat the REPL itself. Moved the drone hive to the bottom-right so it no longer covers the header controls."
+    },
+    {
+      "v": 35,
+      "title": "Channel switching",
+      "verdict": "kept",
+      "lesson": "Re-raining the destination turns navigation into part of the show at almost no cost (it reuses the entrance engine in quick mode). Phones still lack a section index; that's a gap to fill."
+    },
+    {
+      "v": 36,
+      "title": "Cheap enough to keep",
+      "verdict": "kept",
+      "lesson": "Decorative idle motion is the usual reason an animation loop never stops. The remaining hitch is measurement of big sections at once; chunking that is a candidate for a later round."
+    },
+    {
+      "v": 37,
+      "title": "Drone carry",
+      "verdict": "kept",
+      "lesson": "A first pass moved every word on its own arc and dissolved into a word cloud; carrying each block as one unit with a visible four-drone squad reads as 'the swarm is moving this'. Staggering blocks 120 ms apart keeps the paths readable."
+    },
+    {
+      "v": 38,
+      "title": "Swarm Board",
+      "verdict": "kept",
+      "lesson": "Reusing the measure-mutate-fly engine made a whole layout change cost almost nothing: anything the DOM can do, the swarm can animate. The board stays opt-in because the document is still faster to scan."
+    },
+    {
+      "v": 39,
+      "title": "Recall",
+      "verdict": "kept",
+      "lesson": "Shift+R clashed with type-to-find (capital letters start a search), so replay moved to 0, next to the 1–4 channel keys. Lift words need their glyph arrays initialised like falling ones."
+    },
+    {
+      "v": 40,
+      "title": "Gather",
+      "verdict": "kept",
+      "lesson": "getComputedStyle is live: read the colour before adding the class that hides the target, or the flying copy is invisible. The find bar needed flex-wrap so the list sits under the input instead of squeezing it."
+    },
+    {
+      "v": 41,
+      "title": "Phosphor repaint",
+      "verdict": "kept",
+      "lesson": "The sweep only reads as 'drones painting' when the drone row and the wipe use the same timing: start the drones on viewTransition.ready, and use linear motion for both. All four schemes pass AA on 95 checked elements."
+    },
+    {
+      "v": 42,
+      "title": "Dispatch",
+      "verdict": "kept",
+      "lesson": "The tag line shifts every word in a matched card, so cards scatter a little more mid-flight than plain sorts do; the result settles cleanly. Skills that aren't tagged on any role get an honest note instead of an empty carry."
+    },
+    {
+      "v": 43,
+      "title": "Text changelog",
+      "verdict": "kept",
+      "lesson": "The archive bar is a single script that every snapshot loads, so restyling it updates all 43 archived versions at once. On phones it now sits above the bottom nav instead of covering the header."
+    },
+    {
+      "v": 44,
+      "title": "Hive orders",
+      "verdict": "kept",
+      "lesson": "The skip button stays visible until every block has rained (often never on long pages), so hiding the hive while skip showed hid it almost permanently. Moving skip to the left on phones fixed the overlap instead."
+    },
+    {
+      "v": 45,
+      "title": "Ambient rain",
+      "verdict": "kept",
+      "lesson": "Capping it at about 20 fps and stopping on idle keeps the cost negligible (frames stay at 60 with a worst frame of 17 ms). Damping it to 40% inside the reading column was what made it atmosphere rather than noise."
+    },
+    {
+      "v": 46,
+      "title": "Hail relay",
+      "verdict": "kept",
+      "lesson": "Reserving the button width keeps '[ copy ]' → '[ copied ]' from shifting the line. Splitting the address into six-character chunks reads better than one long string flying."
+    },
+    {
+      "v": 47,
+      "title": "Ship-shape",
+      "verdict": "kept",
+      "lesson": "The share card renders from the same resume-data.js as the page, so it can't drift from the résumé (it caught a wrong field name on the first render)."
+    },
+    {
+      "v": 48,
+      "title": "Final polish",
+      "verdict": "kept",
+      "lesson": "Two skills share a name across groups (SQL appears under Languages and under Data & Messaging). Dispatch handles that fine, but it's worth a tidy-up in resume-data.js."
+    },
+    {
+      "v": 49,
+      "title": "Swarm build",
+      "verdict": "kept",
+      "lesson": "Drones that went straight back to the hive after the huddle made the build look like it started from a corner. Holding them in place for a moment lets the nearest drones claim the first elements straight from the centre."
+    }
   ],
-  "candidates": [
-   "Reskin or retire /terminal, /gitlog (CLS ~0.6 on load), /desktop",
-   "Real-device testing (iOS Safari, Android) and a screen-reader pass",
-   "Opt-in terminal sound",
-   "Skill constellation view carried by the swarm",
-   "Deduplicate SQL in resume-data skills; real AgFirst bullets/tags; reword tagline"
+  "cycle_reviews": [
+    {
+      "cycle": 1,
+      "versions": "v1–v6",
+      "biggest_wins": [
+        "v1 replaced a chooser with a first-screen interaction that answers who/what/now",
+        "v3 turned skills into a filter with shareable deep links",
+        "v5 made the wall specific to Samuel (round two knot, 99% send) and cut CLS to 0"
+      ],
+      "directions_tried": [
+        "Learning Curve climbing wall (v1–v3, v5, v6)",
+        "Patch Bay hardware matching game (v4, rejected)"
+      ],
+      "getting_repetitive": "Bolting more widgets onto the route card (summit strip, compare view, send tag). The card is near capacity on phones.",
+      "next_cycle_ambition": "Test the third design direction (Pull a Print zine) for real, then rework the phone hero as its own layout instead of a squeezed desktop grid, and try a navigation change (pitch-by-pitch scrolling)."
+    },
+    {
+      "cycle": 2,
+      "versions": "v7–v12",
+      "biggest_wins": [
+        "v8 gave phones their own geometry (horizontal learning curve) instead of a shrunken desktop",
+        "v11 pitch bar plus the fix for a hidden viewport-widening bug that had been pushing fixed UI off-screen since v8",
+        "v9 proved a losing direction (the zine) can donate its best idea to the winner"
+      ],
+      "directions_tried": [
+        "Pull a Print editorial zine (v7, rejected)",
+        "Phone-first horizontal layout (v8)",
+        "Persistent section navigation (v11)"
+      ],
+      "getting_repetitive": "Small add-on layers (help overlay, compare toggle, register polish). Useful, but each adds less.",
+      "next_cycle_ambition": "Try a different visual style (a night/headlamp mode), a different core interaction for passive visitors (an auto-belay story mode that climbs and narrates), and harden performance/offline. End with a full verification pass."
+    },
+    {
+      "cycle": 3,
+      "versions": "v13–v18",
+      "biggest_wins": [
+        "v14 auto-belay gave passive visitors (and screen-shares) a narrated climb with per-job skill deltas",
+        "v13 night climb added a second visual style without losing the identity (paper cards, same holds); contrast verified 9.8–15.8:1",
+        "v16 turned the per-round test scripts into a regression suite that now gates every change"
+      ],
+      "directions_tried": [
+        "Night/headlamp visual style (v13)",
+        "Hands-off guided interaction (v14)",
+        "Offline + performance hardening (v15–v16)"
+      ],
+      "getting_repetitive": "Polish passes and add-on layers. The wall is close to feature-complete; more widgets would crowd it.",
+      "next_cycle_ambition": "Pay down the size budget for real (split night CSS and dev-layer JS into lazily loaded files), then pick one bold new direction to test against the wall."
+    },
+    {
+      "cycle": 4,
+      "run": 2,
+      "versions": "v19–v24",
+      "biggest_wins": [
+        "v19 replaced the climbing wall with a throttle that installs technology year by year, straight from the data",
+        "v22 story refits (legacy firmware, decode, tune gauge, re-commission ghost) made the distinctive résumé facts memorable",
+        "v20 target lock restored 'where did he use X?' with deep links"
+      ],
+      "directions_tried": [
+        "Four-panel cockpit with a time throttle (v19–v20, v22–v24)",
+        "Sensor Scope: one giant spatial radar (v21, rejected)"
+      ],
+      "getting_repetitive": "Adding more widgets to the four MFDs; the mission card is getting busy on MARCO (gauge + bullets).",
+      "next_cycle_ambition": "Test the Hangar Refit direction (a scroll-driven story, very different navigation), then build deeper play: per-job mission briefings, achievements, gamepad, a loadout screen, and a light 'hangar day' theme."
+    },
+    {
+      "cycle": 5,
+      "run": 2,
+      "versions": "v25–v30",
+      "biggest_wins": [
+        "v26 mission briefings gave each job a focused, shareable view, plus swipe-to-step on phones",
+        "v30 hangar day theme with a full contrast audit, zero failures in both themes",
+        "v27 achievements turned hidden features into a discovery trail"
+      ],
+      "directions_tried": [
+        "Hangar Refit scroll story (v25, rejected)",
+        "Deeper play layers on the cockpit: briefings, achievements, gamepad, loadout (v26–v29)",
+        "Light visual theme (v30)"
+      ],
+      "getting_repetitive": "Modal overlays: briefing, loadout, reference card and pilot record are all dialogs. The brow is filling with buttons.",
+      "next_cycle_ambition": "Consolidate the brow, harden performance and offline for the cockpit, refresh the share card, and try one more substantially different core interaction (a narrated 'comms channel' mode for passive visitors)."
+    },
+    {
+      "cycle": 7,
+      "run": 3,
+      "versions": "v31–v36",
+      "biggest_wins": [
+        "v31 Text Rain + drone escort: real text underneath, rain painted on top, CLS 0",
+        "v32 living swarm: pointer flock, click-to-scramble, idle DOOG formation",
+        "v34 type-to-find with drones hovering over every match (borrowed from the rejected REPL)"
+      ],
+      "directions_tried": [
+        "Raining document with a living swarm (v31–v32, v34–v36)",
+        "Conversational REPL (v33, rejected)"
+      ],
+      "getting_repetitive": "Each feature adds another keyboard shortcut; the key map is the only place they're explained.",
+      "next_cycle_ambition": "Try a substantially different visual/layout direction (e.g. split-screen 'code waterfall' columns with the résumé surfacing out of the rain), phosphor themes, a replay/rewind control, ambient background rain that parts around the pointer, and bring the Service Log + rooms into the text style."
+    },
+    {
+      "cycle": 8,
+      "run": 3,
+      "versions": "v37–v42",
+      "biggest_wins": [
+        "v37 Drone carry: squads physically move whole blocks; one engine animates any DOM rearrangement",
+        "v40 Gather: the swarm tows search results to you",
+        "v41 Phosphor repaint: four AA-checked themes painted on by a drone sweep"
+      ],
+      "directions_tried": [
+        "Swarm moves text within the document (carry, gather, dispatch, recall)",
+        "Swarm Board: the résumé as a card table instead of a page (v38)",
+        "Colour and atmosphere (v41 phosphor themes)"
+      ],
+      "getting_repetitive": "The header is filling up with bracketed controls ([ green ] [ replay ] [ find ] [ hail ] plus view), and almost every feature relies on carry. The drones are always ▸ glyphs that behave the same way.",
+      "next_cycle_ambition": "Finish strong: reskin the Service Log, version bar and rooms bar into the text style so the whole site is one world; give the swarm more personality (formations, a ship-to-ship 'handoff'); add an ambient background rain that parts around the pointer; tidy the header into one [ ≡ swarm ] command menu; regenerate og.png and the README; run a full regression pass and verify every featured version."
+    }
   ],
-  "owner_todos": [
-   "Push the repo",
-   "Delete stale files: assets/wall.css, wall.js, cockpit.css, cockpit.js and the etis-*.tgz files in DoogSite_Claude",
-   "Fill in AgFirst bullets/tags and reword the 'climbing learning curves' tagline"
-  ]
- }
+  "owner_feedback": [
+    "2026-11-22: Owner rejected the climbing metaphor ('I do not like climbing, I like learning new technologies'). Requested a complete redesign as a mech cockpit, as interactive and fun as possible.",
+    "2026-11-22 15:19: Owner scrapped the cockpit (and the unfinished Radio round v31): 'I want the website to be pure text based, with influences from the Matrix. All of the text should come in from the top and drop into place.' Asked for extra fun/interactivity ideas.",
+    "2026-11-22 15:21: Owner added: text ushered into place by a little drone army of mini-cursor-text-things, like sci-fi drone swarms moving the text around the screen. Confirmed 18 rounds (one run of 3 cycles x 6).",
+    "2026-11-22 17:30: Owner repeated: text should be ushered into place by a drone army of mini cursor things that MOVE THE TEXT AROUND THE SCREEN (swarm-pod style). Weight remaining rounds toward drones physically carrying words/lines, not just escorting."
+  ],
+  "next_invocation_brief": {
+    "start_from": "v48 (current default, Text Rain)",
+    "target": 66,
+    "owner_wants": "Pure text, Matrix-influenced (original designs only), text dropping into place, and a drone swarm of mini-cursors that physically moves text around. Fun and interactive first.",
+    "protect": [
+      "text rain + drone escort",
+      "carry engine (sort, board, gather, dispatch)",
+      "hive orders menu",
+      "phosphor themes (AA on all four)",
+      "ambient rain",
+      "hail relay copy",
+      "changelog + archive bar",
+      "reduced-motion / keyboard / print parity"
+    ],
+    "candidates": [
+      "Reskin or retire /terminal, /gitlog (CLS ~0.6 on load), /desktop",
+      "Real-device testing (iOS Safari, Android) and a screen-reader pass",
+      "Opt-in terminal sound",
+      "Skill constellation view carried by the swarm",
+      "Deduplicate SQL in resume-data skills; real AgFirst bullets/tags; reword tagline"
+    ],
+    "owner_todos": [
+      "Push the repo",
+      "Delete stale files: assets/wall.css, wall.js, cockpit.css, cockpit.js and the etis-*.tgz files in DoogSite_Claude",
+      "Fill in AgFirst bullets/tags and reword the 'climbing learning curves' tagline"
+    ]
+  }
 }

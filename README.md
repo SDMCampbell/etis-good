@@ -50,9 +50,10 @@ tools/og-card.html    share-card generator
 tools/tests/          regression suite (Playwright)
 ```
 
+How the build intro works: on a fresh visit the drones huddle round a `[ doog ]` badge, then break off. Each one claims an element, flies to its corner and drags out a selection box with a live `W × H` readout, and the element's words then fall into the box. Sections further down build as you scroll to them, and fast scrolling speeds the build up and calls in extra drones. Skip with the button, Esc or any key. This is our own implementation of the idea behind [swarm-intro](https://github.com/swarnadeep31/swarm-intro) (MIT, by Swarnadeep Roy), adapted to the falling-text engine rather than using the package itself.
+
 How the text rain works: the real text is in the DOM from the first frame (so layout never shifts and screen readers, search and copy/paste work), hidden with transparent colour until its words land. A canvas on top paints the falling glyphs at exactly the positions measured from the live text. The same measure → change the DOM → measure again → fly every word between the two positions engine powers sorting, the board view, gather and dispatch.
 
-Unused files from older directions (`assets/wall.*`, `assets/cockpit.*`) are no longer referenced and can be deleted.
 
 ## Running locally
 
