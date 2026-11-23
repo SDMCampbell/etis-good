@@ -41,9 +41,13 @@
     // Modes: each one is a different way of using the swarm library to show the content.
     // Picked with the switch at the top right (remembered) or a link ending in #mode=NAME.
     var MODE = window.MODE;                       // worked out in <head>, so the background can match before first paint
-    document.querySelectorAll("[data-mode]").forEach(function (b) {
+    document.querySelectorAll(".modes [data-mode]").forEach(function (b) {
       b.setAttribute("aria-pressed", b.dataset.mode === MODE);
-      b.onclick = function () { try { localStorage.setItem("mode", b.dataset.mode); } catch (e) {} location.hash = ""; location.reload(); };
+      b.onclick = function () {
+        // the hash carries the choice through the reload (storage isn't available everywhere, e.g. sandboxed frames)
+        try { localStorage.setItem("mode", b.dataset.mode); } catch (e) {}
+        location.hash = "mode=" + b.dataset.mode; location.reload();
+      };
     });
 
     if (!window.MOTION) {
