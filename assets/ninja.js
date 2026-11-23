@@ -8,10 +8,12 @@
 //   moving up       -> a tucked somersault, spinning as it rises
 //   moving down     -> a drop, legs ready for the landing, arms up and out, headband tails streaming up
 //   building        -> a crouched throwing stance, snapping shuriken into the selection box one after another
-//   idle            -> vanishes in a puff of smoke and lurks at the edge of the screen, almost invisible but for its eyes
+//   idle            -> vanishes in a puff of smoke and lurks at the edge of the screen, almost invisible but for its eyes:
+//                      flat against a side wall with its back to it, gripping the wall behind, or crouched along the bottom.
+//                      If the pointer comes near, it vanishes again at once.
 // Overlapping ninjas shove apart; a fast meeting knocks both back with a spark.
 (function () {
-  var SVGNS = "http://www.w3.org/2000/svg", TAU = Math.PI * 2;
+  var SVGNS = "http://www.w3.org/2000/svg", TAU = Math.PI * 2, K = .7;    // K: ninjas are drawn at 70% of the other figures' size
   // joint angles: 0 = straight down, positive = forward (the way the ninja faces)
   var POSES = {
     idle:  { lean: .25, tF: .55, kF: -.9, tB: -.35, kB: -.5, aF: .9, eF: .9, aB: -.4, eB: .6 },
@@ -19,7 +21,8 @@
     up:    { lean: .1, tF: 1.7, kF: -2.5, tB: 1.4, kB: -2.4, aF: 1.4, eF: 1.3, aB: 1.1, eB: 1.5 },   // tucked for the flip
     down:  { lean: .12, tF: .35, kF: -.3, tB: -.3, kB: -.05, aF: 2.0, eF: .25, aB: -2.0, eB: -.25 },
     throw: { lean: .3, tF: .75, kF: -1.0, tB: -.6, kB: -.25, aF: 1.6, eF: 0, aB: 1.1, eB: 1.6 },
-    lurk:  { lean: .5, tF: 1.05, kF: -2.1, tB: .25, kB: -1.7, aF: .7, eF: 1.5, aB: -.15, eB: .9 }
+    lurk:  { lean: .5, tF: 1.05, kF: -2.1, tB: .25, kB: -1.7, aF: .7, eF: 1.5, aB: -.15, eB: .9 },
+    wall:  { lean: -.12, tF: .08, kF: -.05, tB: .5, kB: -2.2, aF: -1.25, eF: -.2, aB: -2.1, eB: .35 }   // back to the wall, hands gripping it behind, one foot up against it
   };
   function dir(p, a, l) { return [p[0] + Math.sin(a) * l, p[1] + Math.cos(a) * l]; }
   function add(p, v, k) { return [p[0] + v[0] * k, p[1] + v[1] * k]; }
@@ -83,11 +86,11 @@
     var guard = add(sw0, sd, .72), gn = [-sd[1] / sl, sd[0] / sl];
     s.p.sword.setAttribute("d", seg(sw0, sw1) + seg(add(guard, gn, 1.6), add(guard, gn, -1.6)));
     // lurking: the figure all but disappears into the dark; only the eyes are left
-    s.fade += ((st === "lurk" ? .16 : 1) - s.fade) * .08;
+    s.fade += ((st === "lurk" || st === "wall" ? .16 : 1) - s.fade) * .08;
     s.shade.setAttribute("opacity", s.fade.toFixed(2));
     // the flip: spin forward around the middle of the body while rising, and settle upright otherwise
     var c = add(hip, up, 3);
-    s.g.setAttribute("transform", "translate(" + s.ox.toFixed(1) + " " + s.oy.toFixed(1) + ") scale(" + s.face + " 1) rotate(" + (s.spin * 180 / Math.PI).toFixed(1) + " " + f1(c) + ")");
+    s.g.setAttribute("transform", "translate(" + s.ox.toFixed(1) + " " + s.oy.toFixed(1) + ") scale(" + (s.face * K).toFixed(2) + " " + K + ") rotate(" + (s.spin * 180 / Math.PI).toFixed(1) + " " + f1(c) + ")");
   }
 
   window.ninjaMode = function () {
@@ -106,7 +109,7 @@
         var p = posOf(c); if (!p) return;
         if (s.x !== null) {
           var jump = Math.hypot(p[0] - s.x, p[1] - s.y);
-          if (jump > 90 && dt < 120) { smoke(s.x + s.ox, s.y + s.oy); smoke(p[0], p[1]); s.vx = s.vy = 0; s.x = p[0]; s.y = p[1]; }   // vanished and reappeared
+          if (jump > 70 && dt < 120) { smoke(s.x + s.ox, s.y + s.oy); smoke(p[0], p[1]); s.vx = s.vy = 0; s.x = p[0]; s.y = p[1]; }   // vanished and reappeared
           var vx = (p[0] - s.x) / dt, vy = (p[1] - s.y) / dt;
           s.vx += (vx - s.vx) * .35; s.vy += (vy - s.vy) * .35;
           s.phase += Math.abs(p[0] - s.x) * .2 + Math.abs(p[1] - s.y) * .06;
@@ -114,22 +117,22 @@
         s.x = p[0]; s.y = p[1];
         var speed = Math.hypot(s.vx, s.vy), prev = s.state;
         if (c._box) s.state = "throw";
-        else if (speed < .05 && c.dataset.rest && now - c.dataset.rest < 500) s.state = "lurk";
+        else if (speed < .05 && c.dataset.rest && now - c.dataset.rest < 500) s.state = c.dataset.wall ? "wall" : "lurk";
         else if (speed < .04) s.state = "idle";
         else if (Math.abs(s.vx) >= Math.abs(s.vy) * .7) s.state = "run";
         else s.state = s.vy < 0 ? "up" : "down";
         if (s.state === "throw") {
           var b = c._box, bl = parseFloat(b.style.left), bt = parseFloat(b.style.top), bw = parseFloat(b.style.width) || 0, bh = parseFloat(b.style.height) || 0;
           s.face = bl + bw / 2 >= s.x ? 1 : -1;
-          s.target = [(bl + bw / 2 - s.x - s.ox) * s.face, bt + bh / 2 - s.y - s.oy];
+          s.target = [(bl + bw / 2 - s.x - s.ox) * s.face / K, (bt + bh / 2 - s.y - s.oy) / K];      // in the sprite's own (flipped, scaled) frame
           if (prev !== "throw" || now - s.throwT > 170) {            // another shuriken, into the open part of the box
             s.throwT = now;
-            var from = [s.x + s.ox + s.hand[0] * s.face, s.y + s.oy + s.hand[1]];
+            var from = [s.x + s.ox + s.hand[0] * s.face * K, s.y + s.oy + s.hand[1] * K];
             throwStar(from, [bl + bw * (.35 + Math.random() * .65), bt + bh * Math.random()]);
           }
         } else {
           s.target = null;
-          if (s.state === "lurk") s.face = c.dataset.face ? +c.dataset.face : s.face;
+          if (s.state === "lurk" || s.state === "wall") s.face = c.dataset.face ? +c.dataset.face : s.face;
           else if (Math.abs(s.vx) > .03) s.face = s.vx > 0 ? 1 : -1;
         }
         lerp(s.pose, POSES[s.state], s.state === "throw" ? .45 : .22);
@@ -160,7 +163,7 @@
     }
     function smoke(x, y) {
       var w = world(); if (!w) return;
-      var e = document.createElement("div"); e.className = "nj-smoke"; e.style.left = x + "px"; e.style.top = (y - 14) + "px";
+      var e = document.createElement("div"); e.className = "nj-smoke"; e.style.left = x + "px"; e.style.top = (y - 10) + "px";
       e.innerHTML = "<i></i><i></i><i></i><i></i><i></i>"; w.appendChild(e);
       setTimeout(function () { e.remove(); }, 650);
     }
@@ -173,7 +176,7 @@
     }
 
     // collisions (as in the other modes): a springy offset from the cursor, since swarm-intro owns the real routes
-    var R = 14;
+    var R = 10;
     function collide(now, dt, w) {
       var list = []; sprites.forEach(function (s) { if (s.x !== null) list.push(s); });
       for (var i = 0; i < list.length; i++) for (var j = i + 1; j < list.length; j++) {
@@ -190,7 +193,7 @@
           var kick = Math.min(4, closing * 6);
           if (!aFixed) { a.ovx -= nx * kick; a.ovy -= ny * kick; a.recoil = now + 220; }
           if (!bFixed) { b.ovx += nx * kick; b.ovy += ny * kick; b.recoil = now + 220; }
-          if (w) spark(w, a.x + a.ox + dx / 2, a.y + a.oy + dy / 2 - 20);
+          if (w) spark(w, a.x + a.ox + dx / 2, a.y + a.oy + dy / 2 - 14);
         }
       }
       var k = Math.min(1, dt / 16);
