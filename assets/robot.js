@@ -83,8 +83,10 @@
     if (st === "up") f += flame(hF, 0, 6, 2.2) + flame(hB, 0, 6, 2.2);
     s.p.flame.setAttribute("d", f);
     // the beam: from the palm to the middle of the element, with a flare at both ends
-    if (st === "blast" && s.target) {
-      var k = Math.min(1, (now - s.blastT) / 90), end = add(hF, [s.target[0] - hF[0], s.target[1] - hF[1]], k);
+    // zapping the pointer fires in bursts; building is one steady beam
+    var on = !s.zapping || (now - s.blastT) % 480 < 300;
+    if (st === "blast" && s.target && on) {
+      var k = Math.min(1, ((now - s.blastT) % 480) / 90), end = add(hF, [s.target[0] - hF[0], s.target[1] - hF[1]], k);
       var jit = function () { return (Math.random() - .5) * 1.4; };
       s.p.beam.setAttribute("d", seg(hF, [end[0] + jit(), end[1] + jit()]));
       s.p.core.setAttribute("cx", end[0].toFixed(1)); s.p.core.setAttribute("cy", end[1].toFixed(1)); s.p.core.setAttribute("r", (3 + Math.random() * 3).toFixed(1));
@@ -111,13 +113,17 @@
         }
         s.x = p[0]; s.y = p[1];
         var speed = Math.hypot(s.vx, s.vy), prev = s.state;
-        if (c._box) s.state = "blast";
+        // a zap: while wandering, a robot that the mouse pointer comes near stops and fires at it (set by the idle behaviour)
+        var zapping = !c._box && c.dataset.zap && now - c.dataset.zap < 300;
+        if (c._box || zapping) s.state = "blast";
         else if (speed < .04) s.state = "idle";
         else if (Math.abs(s.vx) >= Math.abs(s.vy) * .7) s.state = "fly";
         else s.state = s.vy < 0 ? "up" : "down";
+        if (c.dataset.state !== s.state) c.dataset.state = s.state;
         if (s.state === "blast") {
           if (prev !== "blast") s.blastT = now;
-          var b = c._box, bx = parseFloat(b.style.left) + (parseFloat(b.style.width) || 0) / 2, by = parseFloat(b.style.top) + (parseFloat(b.style.height) || 0) / 2;
+          var b = c._box, bx = b ? parseFloat(b.style.left) + (parseFloat(b.style.width) || 0) / 2 : +c.dataset.zx, by = b ? parseFloat(b.style.top) + (parseFloat(b.style.height) || 0) / 2 : +c.dataset.zy;
+          s.zapping = zapping;
           s.face = bx >= s.x ? 1 : -1;
           s.target = [(bx - s.x - s.ox) * s.face, by - s.y - s.oy];          // in the sprite's own (flipped) frame
         } else { s.target = null; if (Math.abs(s.vx) > .03) s.face = s.vx > 0 ? 1 : -1; }

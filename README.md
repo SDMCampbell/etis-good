@@ -35,8 +35,8 @@ Each mode is a different way of using the swarm library. Pick one with the switc
 
 **When there's nothing to build**, the swarm now stays on screen (Esc or Skip dismisses it) and each mode idles its own way:
 **normal** circles the mouse pointer in two rings turning opposite ways (or the middle of the screen when the pointer isn't on it);
-**samurai** walk to a neat line down the right side of the screen and wait poised in a low iaijutsu stance, katana sheathed at the hip with one hand on the hilt, ready to draw;
-**robot** wander the screen as before;
+**samurai** pair off for training duels on the lower part of the screen: swords drawn and facing each other, they take turns winding up and striking while the other blocks overhead, with a spark where the blades meet. With an odd swarm, the one left over walks to a neat line down the right side and waits poised in a low iaijutsu stance, katana sheathed at the hip, ready to draw;
+**robot** wander the screen, and any robot the mouse pointer comes near stops, turns and fires bursts of its laser at it;
 **wizard** drift into an evenly spaced horizontal line across the screen (halfway up, or level with the mouse pointer while it's on the page) and float there cross-legged in meditation, staff hovering beside them, while a wave rolls endlessly along the line;
 **ninja** vanish in a puff of smoke and lurk at the edges of the screen, almost invisible but for their eyes: flat against a side wall with their backs to it, gripping it behind them, or crouched along the bottom. Every few seconds, or the moment the mouse pointer comes near, they vanish again and turn up somewhere else, away from the pointer. This needed a small patch to `swarm-intro.js`, marked "etis-good patch": an `idle` option that
 says where an idle cursor goes, and a `persist` option that keeps the swarm after the page is built.
