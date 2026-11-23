@@ -8,6 +8,7 @@
 //   moving up       -> levitating: upright, legs hanging, arms eased out, faint lift lines under the feet
 //   moving down     -> a controlled descent in a crouched ready stance, hand on the hilt
 //   building        -> draws the sword and slashes across the element; sheathes it again when done
+//   clashing        -> two samurai that run into each other turn, block with drawn swords, then push apart and run on
 (function () {
   var SVGNS = "http://www.w3.org/2000/svg";
   // running is a full sprint: torso pitched far forward, both arms swept straight back
@@ -19,6 +20,8 @@
     up:   { lean: 0, tF: .1, kF: -.18, tB: -.05, kB: -.12, aF: .5, eF: .2, aB: -.5, eB: -.2 },
     // dropping: a controlled descent in a crouched ready stance, hand on the hilt, the other arm out for balance
     down: { lean: .18, tF: .9, kF: -1.55, tB: -.3, kB: -.85, aF: .75, eF: 1.25, aB: -.75, eB: .35 },
+    // clash: braced, sword drawn and held up across the body to take the hit
+    guard: { lean: -.12, tF: .6, kF: -.55, tB: -.5, kB: .2, aF: 1.9, eF: .5, aB: 1.6, eB: .9 },
     slash: { lean: .45, tF: 1.0, kF: -.6, tB: -.85, kB: .15, aF: 1.45, eF: .05, aB: 1.35, eB: .1 }
   };
   function dir(p, a, l) { return [p[0] + Math.sin(a) * l, p[1] + Math.cos(a) * l]; }
@@ -38,7 +41,7 @@
       aura: el("path", { "stroke-width": 1, opacity: .45 })        // faint lift lines under the feet when rising
     };
     svg.appendChild(g); cursor.appendChild(svg);
-    return { g: g, p: parts, pose: JSON.parse(JSON.stringify(POSES.idle)), phase: 0, face: 1, x: null, y: null, vx: 0, vy: 0, slashT: 0, state: "idle", ox: 0, oy: 0, ovx: 0, ovy: 0, recoil: 0, lastClash: 0 };
+    return { g: g, p: parts, pose: JSON.parse(JSON.stringify(POSES.idle)), phase: 0, face: 1, x: null, y: null, vx: 0, vy: 0, slashT: 0, state: "idle", ox: 0, oy: 0, ovx: 0, ovy: 0, lastClash: 0, guardUntil: 0, guardFace: 1, anchor: null, pushAt: 0, pvx: 0, pvy: 0 };
   }
 
   function render(s, now) {
@@ -60,7 +63,10 @@
     s.p.knot.setAttribute("d", seg(dir(head, Math.PI - P.lean + .6, 3.2), dir(head, Math.PI - P.lean + 1.3, 6)));
     // scabbard sits on the hip, angled back; the hilt pokes forward to where the hand rests
     var sHip = [hip[0] + 1, hip[1] - 1], sTip = dir(sHip, -1.05 - P.lean * .55, 12), hilt = dir(sHip, 2.1, 4);
-    if (st === "slash") {
+    if (st === "guard") {
+      s.p.saya.setAttribute("d", seg(sHip, sTip));
+      s.p.blade.setAttribute("d", seg(hF, dir(hF, 2.5, 16)));       // blade angled up and forward, so two guards cross
+    } else if (st === "slash") {
       // the draw: the blade sweeps from over the shoulder down through the cut in the first ~220 ms
       var k = Math.min(1, (now - s.slashT) / 220), a = -2.4 + k * 3.7;
       s.p.saya.setAttribute("d", seg(sHip, sTip));
@@ -98,15 +104,16 @@
         s.x = p[0]; s.y = p[1];
         var speed = Math.hypot(s.vx, s.vy), prev = s.state;
         if (c.classList.contains("slash")) s.state = "slash";
+        else if (now < s.guardUntil) s.state = "guard";
         else if (speed < .04) s.state = "idle";
         else if (Math.abs(s.vx) >= Math.abs(s.vy) * .7) s.state = "run";
         else s.state = s.vy < 0 ? "up" : "down";
         if (s.state === "slash" && prev !== "slash") s.slashT = now;
-        if (s.state !== "slash" && Math.abs(s.vx) > .03) s.face = s.vx > 0 ? 1 : -1;
+        if (s.state === "guard") s.face = s.guardFace;
+        else if (s.state !== "slash" && Math.abs(s.vx) > .03) s.face = s.vx > 0 ? 1 : -1;
         if (s.state === "slash") s.face = 1;                                // the cut always runs to the bottom-right
         if (s.state === "run") lerp(s.pose, RUN, .3);
-        else lerp(s.pose, POSES[s.state], s.state === "slash" ? .45 : .22);
-        if (now < s.recoil) { s.pose.lean += (-.45 - s.pose.lean) * .5; s.pose.aB += (-1.2 - s.pose.aB) * .5; }   // knocked back by a clash
+        else lerp(s.pose, POSES[s.state], s.state === "slash" || s.state === "guard" ? .5 : .22);
       });
       collide(now, dt, document.querySelector(".swarm-intro-world"));
       sprites.forEach(function (s, c) { if (!c.isConnected) sprites.delete(c); else render(s, now); });
@@ -127,15 +134,25 @@
         if (!aFixed) { a.ox -= nx * push * (bFixed ? 2 : 1); a.oy -= ny * push * (bFixed ? 2 : 1); }
         if (!bFixed) { b.ox += nx * push * (aFixed ? 2 : 1); b.oy += ny * push * (aFixed ? 2 : 1); }
         var closing = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;               // how fast they're running into each other
-        if (closing > .4 && now - a.lastClash > 1100 && now - b.lastClash > 1100) {
+        if (!aFixed && !bFixed && closing > .4 && now - a.lastClash > 1300 && now - b.lastClash > 1300) {
+          // clash: both turn to face each other and raise their swords to block, hold it for a beat,
+          // then are pushed a little apart before running on
           a.lastClash = b.lastClash = now;
-          var kick = Math.min(4, closing * 6);
-          if (!aFixed) { a.ovx -= nx * kick; a.ovy -= ny * kick; a.recoil = now + 220; }
-          if (!bFixed) { b.ovx += nx * kick; b.ovy += ny * kick; b.recoil = now + 220; }
-          if (world) spark(world, a.x + a.ox + dx / 2, a.y + a.oy + dy / 2 - 22);
+          var kick = Math.min(3.2, 1.4 + closing * 3);
+          [[a, -1], [b, 1]].forEach(function (e) {
+            var s = e[0], sg = e[1];
+            s.guardUntil = now + 380; s.guardFace = sg * nx > 0 ? -1 : 1; if (Math.abs(nx) < .2) s.guardFace = sg > 0 ? -1 : 1;
+            s.anchor = [s.x + s.ox, s.y + s.oy]; s.pushAt = now + 300; s.pvx = sg * nx * kick; s.pvy = sg * ny * kick * .5;
+          });
+          if (world) spark(world, a.x + a.ox + dx / 2, a.y + a.oy + dy / 2 - 24);
         }
       }
       var k = Math.min(1, dt / 16);
+      list.forEach(function (s) {
+        if (s.anchor && now < s.guardUntil) { s.ox = s.anchor[0] - s.x; s.oy = s.anchor[1] - s.y; s.ovx = s.ovy = 0; return; }   // hold the block
+        s.anchor = null;
+        if (s.pushAt && now >= s.pushAt) { s.ovx += s.pvx; s.ovy += s.pvy; s.pushAt = 0; }     // then a small push apart
+      });
       list.forEach(function (s) {                                            // knockback drifts, then springs home
         s.ox += s.ovx * k; s.oy += s.ovy * k; s.ovx *= Math.pow(.82, k); s.ovy *= Math.pow(.82, k);
         s.ox -= s.ox * .06 * k; s.oy -= s.oy * .06 * k;
