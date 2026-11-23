@@ -1,19 +1,19 @@
-// Mech mode: swarm-intro still moves the cursors and builds the page; this file turns each cursor into an
-// animated stick-figure mech in a jet-powered suit (an original design) that blasts each element into existence.
+// Robot mode: swarm-intro still moves the cursors and builds the page; this file turns each cursor into an
+// animated stick-figure robot in a jet-powered suit (an original design) that blasts each element into existence.
 //
-// Each frame a mech's real on-screen velocity picks its pose:
+// Each frame a robot's real on-screen velocity picks its pose:
 //   hovering        -> standing on boot jets just off the ground, a slow bob
-//   moving sideways -> flying flat out: body horizontal, arms trailing back, boot jets streaming behind
+//   moving sideways -> boosting: stays upright with a slight forward lean, boot and back boosters angled back to push it along
 //   moving up       -> rising: upright, arms down and slightly out, palm and boot jets firing downward
 //   moving down     -> a powered descent: knees bent, boot jets braking, arms out for balance
 //   building        -> braces, aims a palm at the element and fires a beam until it's built
-// Overlapping mechs shove apart; a fast meeting knocks both back with a spark.
+// Overlapping robots shove apart; a fast meeting knocks both back with a spark.
 (function () {
   var SVGNS = "http://www.w3.org/2000/svg";
-  // joint angles: 0 = straight down, positive = forward (the way the mech faces)
+  // joint angles: 0 = straight down, positive = forward (the way the robot faces)
   var POSES = {
     idle:  { lean: 0, tF: .14, kF: -.15, tB: -.14, kB: -.1, aF: .35, eF: .45, aB: -.25, eB: .3 },
-    fly:   { lean: 1.38, tF: -1.25, kF: .05, tB: -1.45, kB: .1, aF: -1.25, eF: -.05, aB: -1.4, eB: .05 },
+    fly:   { lean: .28, tF: -.12, kF: .25, tB: -.42, kB: .2, aF: -.35, eF: .25, aB: -.55, eB: .2 },
     up:    { lean: 0, tF: .05, kF: 0, tB: -.05, kB: 0, aF: .4, eF: -.1, aB: -.4, eB: .1 },
     down:  { lean: .06, tF: .6, kF: -1.0, tB: -.25, kB: -.55, aF: .75, eF: .3, aB: -.65, eB: -.2 },
     blast: { lean: -.12, tF: .5, kF: -.3, tB: -.6, kB: .2, aF: 1.5, eF: 0, aB: .9, eB: 1.2 }
@@ -25,7 +25,7 @@
 
   function makeSprite(cursor) {
     var svg = document.createElementNS(SVGNS, "svg");
-    svg.setAttribute("class", "mech"); svg.setAttribute("viewBox", "-26 -40 52 46"); svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("class", "robot"); svg.setAttribute("viewBox", "-26 -40 52 46"); svg.setAttribute("aria-hidden", "true");
     var g = document.createElementNS(SVGNS, "g");
     function el(tag, attrs) { var e = document.createElementNS(SVGNS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); g.appendChild(e); return e; }
     var parts = {
@@ -53,7 +53,7 @@
 
   function render(s, now) {
     var P = s.pose, st = s.state;
-    var hover = st === "idle" ? 4 + Math.sin(now / 380) * 1.2 : st === "up" ? 5 : st === "down" ? 3 : st === "fly" ? 6 : 0;
+    var hover = st === "idle" ? 4 + Math.sin(now / 380) * 1.2 : st === "up" ? 5 : st === "down" ? 3 : st === "fly" ? 5 : 0;
     var hip = [0, -14 - hover];
     var up = [Math.sin(P.lean), -Math.cos(P.lean)], fwd = [Math.cos(P.lean), Math.sin(P.lean)];
     var neck = add(hip, up, 11);
@@ -75,10 +75,11 @@
     s.p.pack.setAttribute("d", seg(packTop, packBot));
     // jets: boots always fire (hover/brake/lift/thrust); the pack and palms join in by state
     var f = "", shinF = P.tF + P.kF, shinB = P.tB + P.kB;
-    var bootLen = st === "fly" ? 12 : st === "up" ? 11 : st === "down" ? 6 : 4, bootW = st === "fly" || st === "up" ? 3.4 : 2.6;
-    if (st !== "blast") { f += flame(fF, shinF, bootLen, bootW) + flame(fB, shinB, bootLen, bootW); }
+    var bootLen = st === "fly" ? 10 : st === "up" ? 11 : st === "down" ? 6 : 4, bootW = st === "fly" || st === "up" ? 3.4 : 2.6;
+    if (st === "fly") { f += flame(fF, -.75, bootLen, bootW) + flame(fB, -.8, bootLen, bootW); }       // boosters angled back to drive it forward
+    else if (st !== "blast") { f += flame(fF, shinF, bootLen, bootW) + flame(fB, shinB, bootLen, bootW); }
     else f += flame(fF, shinF, 3, 2.2) + flame(fB, shinB, 3, 2.2);
-    if (st === "fly") f += flame(packBot, Math.atan2(-up[0], -up[1]), 14, 4);
+    if (st === "fly") f += flame(packBot, -.95, 13, 4) + flame(hB, -1.0, 5, 2);
     if (st === "up") f += flame(hF, 0, 6, 2.2) + flame(hB, 0, 6, 2.2);
     s.p.flame.setAttribute("d", f);
     // the beam: from the palm to the middle of the element, with a flare at both ends
@@ -91,8 +92,8 @@
     s.g.setAttribute("transform", "translate(" + s.ox.toFixed(1) + " " + s.oy.toFixed(1) + ") scale(" + s.face + " 1)");
   }
 
-  window.mechMode = function () {
-    var root = document.documentElement; root.classList.add("mech");
+  window.robotMode = function () {
+    var root = document.documentElement; root.classList.add("robot");
     var sprites = new Map(), raf = 0, last = performance.now();
     function posOf(c) {
       var v = /matrix\(([^)]+)\)/.exec(getComputedStyle(c).transform);
@@ -139,7 +140,7 @@
         var dx = (b.x + b.ox) - (a.x + a.ox), dy = (b.y + b.oy) - (a.y + a.oy), d = Math.hypot(dx, dy);
         if (d >= R * 2 || d < .01) { if (d < .01) { a.ox -= .5; b.ox += .5; } continue; }
         var nx = dx / d, ny = dy / d, push = (R * 2 - d) / 2;
-        var aFixed = a.state === "blast", bFixed = b.state === "blast";      // a mech that's firing holds its ground
+        var aFixed = a.state === "blast", bFixed = b.state === "blast";      // a robot that's firing holds its ground
         if (!aFixed) { a.ox -= nx * push * (bFixed ? 2 : 1); a.oy -= ny * push * (bFixed ? 2 : 1); }
         if (!bFixed) { b.ox += nx * push * (aFixed ? 2 : 1); b.oy += ny * push * (aFixed ? 2 : 1); }
         var closing = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
@@ -165,7 +166,7 @@
       world.appendChild(e); setTimeout(function () { e.remove(); }, 380);
     }
 
-    // which mech is building which element: the library opens a box where its cursor has just been sent
+    // which robot is building which element: the library opens a box where its cursor has just been sent
     var trail = new Map();
     function note(c, tf) { var m = /translate\(([-\d.]+)px,\s*([-\d.]+)px\)/.exec(tf || ""); if (!m) return; var a = trail.get(c) || []; a.push([+m[1], +m[2]]); if (a.length > 4) a.shift(); trail.set(c, a); }
     function cursorAt(x, y) {
@@ -192,13 +193,13 @@
             if (n.classList.contains("swarm-intro-cursor")) wake();
             if (n.classList.contains("swarm-intro-box")) {
               var c = cursorAt(parseFloat(n.style.left), parseFloat(n.style.top));
-              if (c) { c._box = n; n._mech = c; }
+              if (c) { c._box = n; n._robot = c; }
             }
           });
           m.removedNodes.forEach(function (n) { if (n.nodeType === 1 && n.classList && n.classList.contains("swarm-intro-cursor")) trail.delete(n); });
         } else if (m.attributeName === "class") {
           var t = m.target;
-          if (t.classList.contains("swarm-intro-box") && t.classList.contains("is-done") && t._mech) { t._mech._box = null; t._mech = null; }
+          if (t.classList.contains("swarm-intro-box") && t.classList.contains("is-done") && t._robot) { t._robot._box = null; t._robot = null; }
         } else if (m.attributeName === "data-swarm-intro-pending" && !m.target.hasAttribute("data-swarm-intro-pending")) blasted(m.target);
       });
     }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ["class", "style", "data-swarm-intro-pending"] });

@@ -55,26 +55,26 @@ html.samurai .swarm-intro-caret { visibility: hidden; }
 .swarm-size { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; }
 .swarm-size input { width: 110px; accent-color: var(--accent); }
 .swarm-size output { min-width: 2ch; color: var(--accent); }
-:is(html.samurai, html.mech) .sam-clash { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; pointer-events: none; animation: sam-clash .38s ease-out forwards; }
-:is(html.samurai, html.mech) .sam-clash svg { width: 100%; height: 100%; fill: none; stroke: var(--swarm-intro-fg); stroke-width: 1.6; stroke-linecap: round; filter: drop-shadow(0 0 3px var(--swarm-intro-fg)); }
+:is(html.samurai, html.robot) .sam-clash { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; pointer-events: none; animation: sam-clash .38s ease-out forwards; }
+:is(html.samurai, html.robot) .sam-clash svg { width: 100%; height: 100%; fill: none; stroke: var(--swarm-intro-fg); stroke-width: 1.6; stroke-linecap: round; filter: drop-shadow(0 0 3px var(--swarm-intro-fg)); }
 @keyframes sam-clash { from { transform: scale(.4) rotate(0); opacity: 1; } to { transform: scale(1.5) rotate(20deg); opacity: 0; } }
 
-/* ---------- mech mode ----------
-   The swarm-intro cursors become animated stick-figure mechs (drawn and posed by mech.js). The library's
+/* ---------- robot mode ----------
+   The swarm-intro cursors become animated stick-figure robots (drawn and posed by robot.js). The library's
    selection box becomes the energy field the beam is building: a glowing frame with faint scanlines. */
-html.mech .swarm-intro-cursor > svg:not(.mech) { display: none; }
-html.mech .swarm-intro-cursor { filter: none; }
-html.mech .mech { position: absolute; left: -26px; top: -40px; width: 52px; height: 46px; overflow: visible; fill: none; stroke: var(--swarm-intro-fg); stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 2px rgb(0 0 0 / .5)); }
-html.mech .mech .plate { fill: var(--swarm-intro-fg); }
-html.mech .mech .slit { stroke: var(--swarm-intro-bg); }
-html.mech .mech .jet { fill: #EAFFE7; stroke: none; opacity: .9; filter: drop-shadow(0 0 3px #39FF7A); }
-html.mech .mech path.beam { stroke: #EAFFE7; stroke-width: 2.2; filter: drop-shadow(0 0 3px #39FF7A) drop-shadow(0 0 6px #39FF7A); }
-html.mech .mech circle.beam { fill: #EAFFE7; stroke: none; filter: drop-shadow(0 0 5px #39FF7A); }
-html.mech .swarm-intro-box { border: 1px solid var(--swarm-intro-fg); border-radius: 0; background: repeating-linear-gradient(0deg, rgb(57 255 122 / .07) 0 1px, transparent 1px 4px); box-shadow: 0 0 10px rgb(57 255 122 / .35), inset 0 0 10px rgb(57 255 122 / .2); }
-html.mech .swarm-intro-badge { display: none; }
-html.mech .swarm-intro-rest { color: inherit !important; }
-html.mech .swarm-intro-caret { visibility: hidden; }
+html.robot .swarm-intro-cursor > svg:not(.robot) { display: none; }
+html.robot .swarm-intro-cursor { filter: none; }
+html.robot .robot { position: absolute; left: -26px; top: -40px; width: 52px; height: 46px; overflow: visible; fill: none; stroke: var(--swarm-intro-fg); stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 2px rgb(0 0 0 / .5)); }
+html.robot .robot .plate { fill: var(--swarm-intro-fg); }
+html.robot .robot .slit { stroke: var(--swarm-intro-bg); }
+html.robot .robot .jet { fill: #EAFFE7; stroke: none; opacity: .9; filter: drop-shadow(0 0 3px #39FF7A); }
+html.robot .robot path.beam { stroke: #EAFFE7; stroke-width: 2.2; filter: drop-shadow(0 0 3px #39FF7A) drop-shadow(0 0 6px #39FF7A); }
+html.robot .robot circle.beam { fill: #EAFFE7; stroke: none; filter: drop-shadow(0 0 5px #39FF7A); }
+html.robot .swarm-intro-box { border: 1px solid var(--swarm-intro-fg); border-radius: 0; background: repeating-linear-gradient(0deg, rgb(57 255 122 / .07) 0 1px, transparent 1px 4px); box-shadow: 0 0 10px rgb(57 255 122 / .35), inset 0 0 10px rgb(57 255 122 / .2); }
+html.robot .swarm-intro-badge { display: none; }
+html.robot .swarm-intro-rest { color: inherit !important; }
+html.robot .swarm-intro-caret { visibility: hidden; }
 
 /* each mode's page ground, under its background animation */
 html[data-mode="samurai"] { --bg: #0c0709; }
-html[data-mode="mech"] { --bg: #03040a; }
+html[data-mode="robot"] { --bg: #03040a; }

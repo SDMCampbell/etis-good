@@ -2,7 +2,7 @@
 // the screen at different speeds, parting around the mouse pointer, and fainter behind the text column.
 //   normal  -> the matrix: columns of glyphs falling
 //   samurai -> cherry blossom petals falling from a sakura branch in the top corner, tumbling as they drift
-//   mech    -> deep space: a twinkling starfield with asteroids tumbling down through it
+//   robot   -> deep space: a twinkling starfield with asteroids tumbling down through it
 // Runs at ~20-30 fps, pauses when the tab is hidden or after 20 s without input, and is off for visitors whose
 // device asks for reduced motion unless they chose "play it anyway".
 (function () {
@@ -108,15 +108,15 @@
     };
   })();
 
-  // ---------- mech: deep space ----------
+  // ---------- robot: deep space ----------
   var spaceScene = (function () {
     var stars = [], rocks = [];
     function newRock(top) {
-      var r = Math.random() < .25 ? rnd(18, 38) : rnd(7, 16), n = 7 + (Math.random() * 5 | 0), pts = [];
+      var r = Math.random() < .2 ? rnd(10, 18) : rnd(4, 9), n = 7 + (Math.random() * 5 | 0), pts = [];
       for (var i = 0; i < n; i++) { var a = i / n * 6.283, rr = r * rnd(.7, 1.1); pts.push([Math.cos(a) * rr, Math.sin(a) * rr]); }
       var craters = []; for (var k = 0; k < (r > 12 ? 3 : 1); k++) craters.push([rnd(-r * .4, r * .4), rnd(-r * .4, r * .4), rnd(r * .12, r * .25)]);
       return { x: rnd(-40, AW + 40), y: top ? rnd(-AH, AH) : -r - rnd(0, 120), r: r, pts: pts, craters: craters,
-        vy: rnd(18, 55) * (12 / r + .6), vx: rnd(-14, 14), rot: rnd(0, 6.3), vr: rnd(-.8, .8), shade: (70 + Math.random() * 40) | 0 };
+        vy: rnd(10, 28) * (8 / r + .6), vx: rnd(-14, 14), rot: rnd(0, 6.3), vr: rnd(-.8, .8), shade: (34 + Math.random() * 22) | 0 };
     }
     return {
       fps: 30,
@@ -136,13 +136,13 @@
         for (var j = 0; j < rocks.length; j++) {
           var r = rocks[j]; r.y += r.vy * dt; r.x += r.vx * dt; r.rot += r.vr * dt;
           if (r.y - r.r > AH || r.x < -80 || r.x > AW + 80) { rocks[j] = newRock(false); continue; }
-          var x = r.x + part(r.x, r.y, 110), dim = (x > DL && x < DR) ? .4 : 1;
+          var x = r.x + part(r.x, r.y, 110), dim = (x > DL && x < DR) ? .18 : .45;   // distant: faint, and fainter still behind the text
           c2.save(); c2.translate(x, r.y); c2.rotate(r.rot); c2.globalAlpha = dim;
           c2.beginPath(); r.pts.forEach(function (p, k) { k ? c2.lineTo(p[0], p[1]) : c2.moveTo(p[0], p[1]); }); c2.closePath();
           var g = c2.createLinearGradient(-r.r, -r.r, r.r, r.r);
           g.addColorStop(0, "rgb(" + (r.shade + 50) + "," + (r.shade + 52) + "," + (r.shade + 60) + ")"); g.addColorStop(1, "rgb(" + (r.shade * .4 | 0) + "," + (r.shade * .4 | 0) + "," + (r.shade * .5 | 0) + ")");
-          c2.fillStyle = g; c2.fill(); c2.strokeStyle = "rgba(200,220,255,.35)"; c2.lineWidth = 1.2; c2.stroke();
-          c2.fillStyle = "rgba(0,0,0,.28)"; r.craters.forEach(function (cr) { c2.beginPath(); c2.arc(cr[0], cr[1], cr[2], 0, 6.3); c2.fill(); });
+          c2.fillStyle = g; c2.fill(); c2.strokeStyle = "rgba(200,220,255,.08)"; c2.lineWidth = 1; c2.stroke();
+          c2.fillStyle = "rgba(0,0,0,.2)"; r.craters.forEach(function (cr) { c2.beginPath(); c2.arc(cr[0], cr[1], cr[2], 0, 6.3); c2.fill(); });
           c2.restore();
         }
         c2.globalAlpha = 1;
@@ -150,7 +150,7 @@
     };
   })();
 
-  var scene = MODE === "samurai" ? sakuraScene : MODE === "mech" ? spaceScene : glyphScene;
+  var scene = MODE === "samurai" ? sakuraScene : MODE === "robot" ? spaceScene : glyphScene;
   function size() {
     AW = innerWidth; AH = innerHeight; cv.width = AW * dpr; cv.height = AH * dpr; c2.setTransform(dpr, 0, 0, dpr, 0, 0);
     textColumn(); scene.size();
