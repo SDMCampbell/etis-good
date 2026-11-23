@@ -119,7 +119,7 @@
         else if (speed < .04) s.state = "idle";
         else if (Math.abs(s.vx) >= Math.abs(s.vy) * .7) s.state = "fly";
         else s.state = s.vy < 0 ? "up" : "down";
-        if (c.dataset.state !== s.state) c.dataset.state = s.state;
+        if (c.dataset.pose !== s.state) c.dataset.pose = s.state;   // how the figure is posed right now (data-state says what it's doing)
         if (s.state === "blast") {
           if (prev !== "blast") s.blastT = now;
           var b = c._box, bx = b ? parseFloat(b.style.left) + (parseFloat(b.style.width) || 0) / 2 : +c.dataset.zx, by = b ? parseFloat(b.style.top) + (parseFloat(b.style.height) || 0) / 2 : +c.dataset.zy;

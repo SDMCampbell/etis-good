@@ -8,9 +8,8 @@
 //   moving up       -> levitating: upright, legs hanging, arms eased out, faint lift lines under the feet
 //   moving down     -> a controlled descent in a crouched ready stance, hand on the hilt
 //   building        -> draws the sword and slashes across the element; sheathes it again when done
-//   nothing to do   -> pairs off for a training duel: swords drawn, facing each other, taking turns to wind up and
-//                      strike while the other blocks, with a spark where the blades meet. One left without a partner
-//                      lines up down the right side of the screen, poised in a low iaijutsu stance, sword sheathed.
+//   nothing to do   -> lines up down the right side of the screen, poised in a low iaijutsu stance: one hand on the
+//                      hilt, the other on the scabbard, sword sheathed and ready to draw
 (function () {
   var SVGNS = "http://www.w3.org/2000/svg";
   // running is a full sprint: torso pitched far forward, both arms swept straight back
@@ -24,11 +23,7 @@
     down: { lean: .18, tF: .9, kF: -1.55, tB: -.3, kB: -.85, aF: .75, eF: 1.25, aB: -.75, eB: .35 },
     // iaijutsu ready: low wide stance, leaning in, drawing hand on the hilt, the other gripping the scabbard at the hip
     meditate: { lean: .26, tF: .85, kF: -.95, tB: -.7, kB: .3, aF: .55, eF: 1.3, aB: .05, eB: 1.45 },
-    slash: { lean: .45, tF: 1.0, kF: -.6, tB: -.85, kB: .15, aF: 1.45, eF: .05, aB: 1.35, eB: .1 },
-    // duelling: a two-handed guard with the blade forward, a lunging strike, and an overhead block
-    guard:  { lean: .12, tF: .55, kF: -.55, tB: -.55, kB: .2, aF: 1.15, eF: .55, aB: 1.0, eB: .75 },
-    strike: { lean: .4, tF: 1.0, kF: -.7, tB: -.9, kB: .2, aF: 1.5, eF: .1, aB: 1.4, eB: .15 },
-    block:  { lean: -.08, tF: .35, kF: -.45, tB: -.7, kB: .35, aF: 2.55, eF: -.3, aB: 2.35, eB: -.15 }
+    slash: { lean: .45, tF: 1.0, kF: -.6, tB: -.85, kB: .15, aF: 1.45, eF: .05, aB: 1.35, eB: .1 }
   };
   function dir(p, a, l) { return [p[0] + Math.sin(a) * l, p[1] + Math.cos(a) * l]; }
   // two-bone IK: the elbow for an arm from shoulder s to hand h (segment lengths a, b), bending outward/down
@@ -53,7 +48,7 @@
       aura: el("path", { "stroke-width": 1, opacity: .45 })        // faint lift lines under the feet when rising
     };
     svg.appendChild(g); cursor.appendChild(svg);
-    return { g: g, p: parts, pose: JSON.parse(JSON.stringify(POSES.idle)), phase: 0, face: 1, x: null, y: null, vx: 0, vy: 0, slashT: 0, state: "idle", lunge: 0, bladeA: 2.3, sparkAt: 0, ox: 0, oy: 0, ovx: 0, ovy: 0, recoil: 0, lastClash: 0 };
+    return { g: g, p: parts, pose: JSON.parse(JSON.stringify(POSES.idle)), phase: 0, face: 1, x: null, y: null, vx: 0, vy: 0, slashT: 0, state: "idle", ox: 0, oy: 0, ovx: 0, ovy: 0, recoil: 0, lastClash: 0 };
   }
 
   function render(s, now) {
@@ -85,9 +80,6 @@
       s.p.body.setAttribute("d", seg(hip, neck) + seg(hip, kF, fF) + seg(hip, kB, fB) + seg(shoulder, eGrip, grip) + seg(shoulder, eMouth, mouth));
       s.p.saya.setAttribute("d", seg(guard, tail) + seg([guard[0] - sd[1] * 1.8, guard[1] + sd[0] * 1.8], [guard[0] + sd[1] * 1.8, guard[1] - sd[0] * 1.8]));
       s.p.blade.setAttribute("d", seg(guard, [guard[0] + sd[0] * 4, guard[1] + sd[1] * 4]));     // the grip, ahead of the guard (tsuba)
-    } else if (st === "duel") {
-      s.p.saya.setAttribute("d", seg(sHip, sTip));                     // the scabbard empty at the hip
-      s.p.blade.setAttribute("d", seg(hF, dir(hF, s.bladeA, 16)));
     } else if (st === "slash") {
       // the draw: the blade sweeps from over the shoulder down through the cut in the first ~220 ms
       var k = Math.min(1, (now - s.slashT) / 220), a = -2.4 + k * 3.7;
@@ -102,8 +94,7 @@
       s.p.aura.setAttribute("d", seg([fF[0] - 2, fF[1] + 2 + t * 4], [fF[0] - 2, fF[1] + 2 + t * 4 + l]) + seg([fB[0] + 2, fB[1] + 4 + ((t + .5) % 1) * 4], [fB[0] + 2, fB[1] + 4 + ((t + .5) % 1) * 4 + l]));
       s.p.aura.setAttribute("opacity", (.5 * (1 - t)).toFixed(2));
     } else s.p.aura.setAttribute("d", "");
-    var lx = st === "duel" ? s.lunge * s.face : 0;
-    s.g.setAttribute("transform", "translate(" + (s.ox + lx).toFixed(1) + " " + s.oy.toFixed(1) + ") scale(" + s.face + " 1)");
+    s.g.setAttribute("transform", "translate(" + s.ox.toFixed(1) + " " + s.oy.toFixed(1) + ") scale(" + s.face + " 1)");
   }
 
   window.samuraiMode = function () {
@@ -127,18 +118,16 @@
         s.x = p[0]; s.y = p[1];
         var speed = Math.hypot(s.vx, s.vy), prev = s.state;
         if (c.classList.contains("slash")) s.state = "slash";
-        else if (speed < .06 && c.dataset.duel && now - c.dataset.duel < 500) s.state = "duel";
         else if (speed < .04 && c.dataset.rest && now - c.dataset.rest < 500) s.state = "meditate";
         else if (speed < .04) s.state = "idle";
         else if (Math.abs(s.vx) >= Math.abs(s.vy) * .7) s.state = "run";
         else s.state = s.vy < 0 ? "up" : "down";
-        if (c.dataset.state !== s.state) c.dataset.state = s.state;
+        if (c.dataset.pose !== s.state) c.dataset.pose = s.state;   // how the figure is posed right now (data-state says what it's doing)
         if (s.state === "slash" && prev !== "slash") s.slashT = now;
         if (s.state !== "slash" && Math.abs(s.vx) > .03) s.face = s.vx > 0 ? 1 : -1;
         if (s.state === "slash") s.face = c.classList.contains("rev") ? -1 : 1;   // cuts run to the bottom-right; un-cuts back to the top-left
         if (s.state === "meditate") s.face = -1;                            // facing in towards the page
-        if (s.state === "duel") { s.face = +c.dataset.face; lerp(s.pose, POSES[duel(s, c, now)], .35); }
-        else if (s.state === "run") lerp(s.pose, RUN, .3);
+        if (s.state === "run") lerp(s.pose, RUN, .3);
         else lerp(s.pose, POSES[s.state], s.state === "slash" ? .45 : .22);
         if (now < s.recoil) { s.pose.lean += (-.45 - s.pose.lean) * .5; s.pose.aB += (-1.2 - s.pose.aB) * .5; }   // knocked back by a clash
       });
@@ -146,28 +135,6 @@
       sprites.forEach(function (s, c) { if (!c.isConnected) sprites.delete(c); else render(s, now); });
       if (document.querySelector(".swarm-intro-cursor")) raf = requestAnimationFrame(tick);
     }
-    // A training duel runs on a 2 s cycle shared by both partners; they take turns attacking. Within an attacker's turn
-    // (v from 0 to 1): wind up overhead while stepping in, strike down through the partner's block (the blades meet at
-    // v = .34, with a spark), then recover to guard. Returns the pose to ease towards; sets the blade angle and lunge.
-    function duel(s, c, now) {
-      var u = ((now + +c.dataset.t0) % 2000) / 2000, mine = (u < .5) === (c.dataset.side === "0"), v = (u % .5) / .5;
-      var GUARD = 2.3, UP = 3.7, DOWN = 1.0, BLOCK = 1.62, pose = "guard", a = GUARD, l = 0;
-      function mix(x, y, t) { return x + (y - x) * Math.max(0, Math.min(1, t)); }
-      if (mine) {
-        if (v < .25) { a = mix(GUARD, UP, v / .25); l = mix(0, 4, v / .25); pose = "strike"; }
-        else if (v < .4) { a = mix(UP, DOWN, (v - .25) / .15); l = mix(4, 10, (v - .25) / .15); pose = "strike"; }
-        else { a = mix(DOWN, GUARD, (v - .4) / .4); l = mix(10, 0, (v - .4) / .45); }
-        if (v > .34 && v < .5 && s.sparkAt !== Math.floor((now + +c.dataset.t0) / 1000)) {
-          s.sparkAt = Math.floor((now + +c.dataset.t0) / 1000);
-          var w = document.querySelector(".swarm-intro-world");
-          if (w) spark(w, s.x + s.ox + s.face * (l + 12), s.y + s.oy - 27);
-        }
-      } else if (v > .16 && v < .56) { a = BLOCK; pose = "block"; l = v > .3 ? mix(0, -3, (v - .3) / .1) : 0; }
-      s.bladeA += (a - s.bladeA) * (mine && v >= .25 && v < .4 ? .7 : .4);
-      s.lunge += (l - s.lunge) * .5;
-      return pose;
-    }
-
     // collisions: swarm-intro decides where every cursor goes, so the samurai can't change their real routes.
     // Instead each figure carries a small offset from its cursor: overlapping figures are shoved apart, a fast
     // meeting is a clash (a spark, and both are knocked back), and the offset springs back to zero afterwards.

@@ -81,27 +81,12 @@
           var ang = k / n * Math.PI * 2 + now * (ring ? -.0018 : .0026);
           return { x: scrollX + c.x + Math.cos(ang) * r, y: scrollY + c.y + Math.sin(ang) * r, ms: 160, wait: 90 };
         },
-        // samurai: pair off for training duels. Partners (slots 0+1, 2+3, ...) take a spot side by side on the lower part of
-        // the screen, facing each other, once both are free; samurai.js plays the duel. One without a free partner (with an
-        // odd swarm, there's always one) walks to a neat line down the right side and waits there, poised to draw.
-        samurai: function (a, now) {
-          var i = slotOf(a), p = i >> 1, partner = null;
-          a._idleT = now;
-          slots.forEach(function (j, b) { if (j === (i ^ 1)) partner = b; });
-          var x, y, d;
-          if (partner && partner._idleT && now - partner._idleT < 400) {
-            var P = Math.max(1, Math.floor(Math.max(size, slots.size) / 2)), perRow = Math.max(1, Math.floor((innerWidth - 80) / 150));
-            var row = Math.floor(p / perRow), inRow = Math.min(perRow, P - row * perRow), col = p % perRow;
-            x = scrollX + 40 + (col + .5) / inRow * (innerWidth - 80) + (i % 2 ? 24 : -24);
-            y = scrollY + innerHeight - 70 - row * 90;
-            a.el.dataset.duel = now; a.el.dataset.side = i % 2; a.el.dataset.face = i % 2 ? -1 : 1; a.el.dataset.t0 = p * 530;
-          } else {
-            var perCol = Math.max(4, Math.floor((innerHeight - 120) / 58)), col2 = Math.floor(p / perCol), row2 = p % perCol;
-            x = scrollX + innerWidth - (narrow ? 30 : 70) - col2 * 46; y = scrollY + 110 + row2 * 58;
-            a.el.dataset.duel = "";
-          }
-          a.el.dataset.rest = now;
-          d = Math.hypot(x - a.x, y - a.y);
+        // samurai: walk to a place in a neat line down the right side of the screen and sit in meditation
+        samurai: function (a) {
+          var i = slotOf(a), perCol = Math.max(4, Math.floor((innerHeight - 120) / 58)), col = Math.floor(i / perCol), row = i % perCol;
+          var x = scrollX + innerWidth - (narrow ? 30 : 70) - col * 46, y = scrollY + 110 + row * 58;
+          a.el.dataset.rest = performance.now();
+          var d = Math.hypot(x - a.x, y - a.y);
           return { x: x, y: y, ms: d < 2 ? 200 : Math.max(250, d * 1.6), wait: 150 };
         },
         // robot: wander the screen as before; but any robot the mouse pointer comes near stops and fires its laser at it
@@ -110,7 +95,7 @@
           var p = where(a), mx = scrollX + mouse.x, my = scrollY + mouse.y;
           if (Math.hypot(mx - p[0], my - (p[1] - 20)) > 190) return null;          // out of range: the library's own wandering
           a.el.dataset.zap = now; a.el.dataset.zx = mx; a.el.dataset.zy = my;
-          return { x: p[0], y: p[1], ms: 250, wait: 100 };                          // hold position and keep firing
+          return { x: p[0], y: p[1], ms: 250, wait: 100, state: "zapping" };        // hold position and keep firing
         },
         // wizard: drift into an evenly spaced horizontal line across the screen and sit in meditation on it. The line sits
         // halfway up the screen, or level with the mouse pointer while it's on the page. The wave rolling along the line is

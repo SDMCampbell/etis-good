@@ -121,6 +121,7 @@
         else if (speed < .04) s.state = "idle";
         else if (Math.abs(s.vx) >= Math.abs(s.vy) * .7) s.state = "run";
         else s.state = s.vy < 0 ? "up" : "down";
+        if (c.dataset.pose !== s.state) c.dataset.pose = s.state;   // how the figure is posed right now (data-state says what it's doing)
         if (s.state === "throw") {
           var b = c._box, bl = parseFloat(b.style.left), bt = parseFloat(b.style.top), bw = parseFloat(b.style.width) || 0, bh = parseFloat(b.style.height) || 0;
           s.face = bl + bw / 2 >= s.x ? 1 : -1;

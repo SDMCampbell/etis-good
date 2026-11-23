@@ -2,6 +2,8 @@
    Local patch (marked "etis-good patch" below), adding two options:
      idle(agent, now) -> {x, y, ms, wait} | null : where an idle cursor should go instead of wandering at random
      persist: true                                : keep the swarm on screen (idling) after the page is built
+   a state on every cursor, as agent.state and data-state on its element: "intro" (swarming the logo at the start),
+   "moving" (on its way to a job), "building", "unbuilding", or "idle" (or whatever more specific state the idle hook gives),
    and type: false (never type text in; just fade it in) or "all" (type every text element in, however long), and returning rework(el) from swarmIntro(): one cursor takes a built element apart (the build in reverse, from
    its bottom-right corner back to the top-left), then after a short pause another cursor builds it again.
 MIT License
@@ -159,9 +161,17 @@ function swarmIntro(options = {}) {
         el.style.transform = `translate(${x}px, ${y}px)`;
         world.appendChild(el);
         const agent = { el, x, y, idleUntil: 0 };
+        setState(agent, "intro");
         agents.push(agent);
         return agent;
     };
+    // etis-good patch: what each cursor is doing right now, readable from the page as data-state
+    function setState(a, st) {
+        if (a.state === st)
+            return;
+        a.state = st;
+        a.el.dataset.state = st;
+    }
     // Speeds up when a fast scroll leaves a long backlog
     const queue = [];
     const boost = () => clamp(1 + queue.length / 12, 1, 3);
@@ -258,9 +268,11 @@ function swarmIntro(options = {}) {
     /* Drag out a selection box over the element, then build it */
     const build = async (a, el) => {
         const r = docRect(el);
+        setState(a, "moving");
         await moveTo(a, r.x, r.y);
         if (stopped)
             return;
+        setState(a, "building");
         const box = document.createElement("div");
         box.className = "swarm-intro-box";
         box._cursor = a.el;  // etis-good patch: lets a mode see which cursor opened the box
@@ -304,9 +316,11 @@ function swarmIntro(options = {}) {
     };
     const unbuild = async (a, el) => {
         const r = docRect(el);
+        setState(a, "moving");
         await moveTo(a, r.x + r.w, r.y + r.h);
         if (stopped)
             return;
+        setState(a, "unbuilding");
         const box = document.createElement("div");
         box.className = "swarm-intro-box is-unbuild";
         box._cursor = a.el;
@@ -448,6 +462,7 @@ function swarmIntro(options = {}) {
         // etis-good patch: a custom idle behaviour, if given
         if (options.idle) {
             const t = options.idle(a, performance.now());
+            setState(a, (t && t.state) || "idle");
             if (t) {
                 a.idleUntil = 0;
                 moveTo(a, t.x, t.y, t.ms);
@@ -455,6 +470,8 @@ function swarmIntro(options = {}) {
                 return;
             }
         }
+        else
+            setState(a, "idle");
         if (performance.now() >= a.idleUntil) {
             const d = rand(900, 1700);
             a.idleUntil = performance.now() + d;

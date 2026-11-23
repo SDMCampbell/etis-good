@@ -145,7 +145,7 @@
         var onLine = c.dataset.line && now - c.dataset.line < 500 && s.state === "meditate";
         s.wa += ((onLine ? 1 : 0) - s.wa) * .06;
         s.wy = s.wa * Math.sin((s.x - scrollX) * .011 - now * .0021) * 16;
-        if (c.dataset.state !== s.state) c.dataset.state = s.state;
+        if (c.dataset.pose !== s.state) c.dataset.pose = s.state;   // how the figure is posed right now (data-state says what it's doing)
         if (now < s.recoil) { s.pose.lean += (-.5 - s.pose.lean) * .5; }
       });
       collide(now, dt, document.querySelector(".swarm-intro-world"));
