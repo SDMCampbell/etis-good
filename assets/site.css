@@ -74,3 +74,7 @@ html.mech .swarm-intro-box { border: 1px solid var(--swarm-intro-fg); border-rad
 html.mech .swarm-intro-badge { display: none; }
 html.mech .swarm-intro-rest { color: inherit !important; }
 html.mech .swarm-intro-caret { visibility: hidden; }
+
+/* each mode's page ground, under its background animation */
+html[data-mode="samurai"] { --bg: #0c0709; }
+html[data-mode="mech"] { --bg: #03040a; }

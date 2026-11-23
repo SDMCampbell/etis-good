@@ -19,6 +19,8 @@
   <link rel="stylesheet" href="assets/site.css">
   <!-- Motion: devices set to reduce motion get a still page unless the visitor opts in (remembered as motion=on).
        This mirrors swarm-intro's own preload, but with that opt-in: it keeps the page blank until the intro starts. -->
+  <!-- Mode: from a #mode=NAME link, else the last one picked, else normal. Sets html[data-mode] for the background. -->
+  <script>window.MODES=["normal","samurai","mech"];window.MODE=(function(){var m=(location.hash.match(/mode=(\w+)/)||[])[1];if(MODES.indexOf(m)<0){try{m=localStorage.getItem("mode")}catch(e){}}return MODES.indexOf(m)<0?"normal":m})();document.documentElement.setAttribute("data-mode",window.MODE);</script>
   <script>window.MOTION=(function(){try{var m=localStorage.getItem("motion");if(m==="on")return true;if(m==="off")return false}catch(e){}return !matchMedia("(prefers-reduced-motion: reduce)").matches})();(function(){try{if(!window.MOTION)return;var d=document.documentElement;d.setAttribute("data-swarm-intro","");var s=document.createElement("style");s.id="swarm-intro-preload";s.textContent="html[data-swarm-intro] body>*{opacity:0;animation:swarm-intro-failsafe 0s 4s forwards}@keyframes swarm-intro-failsafe{to{opacity:1}}";document.head.appendChild(s);}catch(e){}})();</script>
 </head>
 <body>
@@ -38,10 +40,7 @@
   <script>
     // Modes: each one is a different way of using the swarm library to show the content.
     // Picked with the switch at the top right (remembered) or a link ending in #mode=NAME.
-    var MODES = ["normal", "samurai", "mech"];
-    var MODE = (location.hash.match(/mode=(\w+)/) || [])[1];
-    if (MODES.indexOf(MODE) < 0) { try { MODE = localStorage.getItem("mode"); } catch (e) {} }
-    if (MODES.indexOf(MODE) < 0) MODE = "normal";
+    var MODE = window.MODE;                       // worked out in <head>, so the background can match before first paint
     document.querySelectorAll("[data-mode]").forEach(function (b) {
       b.setAttribute("aria-pressed", b.dataset.mode === MODE);
       b.onclick = function () { try { localStorage.setItem("mode", b.dataset.mode); } catch (e) {} location.hash = ""; location.reload(); };
