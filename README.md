@@ -12,6 +12,7 @@ assets/content.js        renders the content into plain HTML
 assets/matrix.js         the scrolling glyph background
 assets/swarm-intro.js    swarm-intro (MIT, Swarnadeep Roy), compiled unmodified from its src/index.ts
 assets/samurai.js        the "samurai" mode
+assets/mech.js           the "mech" mode
 assets/site.css          styles
 assets/og.png            share image
 sw.js                    removes the old site's service worker for returning visitors
@@ -26,7 +27,9 @@ Each mode is a different way of using the swarm library. Pick one with the switc
 
 **Swarm size**: the slider next to the mode switch sets how many cursors there are (1–30, remembered; more than that is just clutter). swarm-intro fixes its cursor count when it starts and can't add cursors to a running build, so moving the slider tears down the current swarm and rebuilds the page with the new count straight away.
 
-In samurai mode the figures also collide: overlapping samurai shove each other apart, and two that run into each other fast clash, with a spark and both knocked back. swarm-intro still decides every cursor's real route, so this is done with a small offset on each figure that springs back to its cursor; a samurai mid-cut holds its line.
+- **mech** (`#mode=mech`): every cursor is an animated stick-figure mech in a jet-powered suit (an original design): a solid helmet with a visor slit, an armoured chest and a thruster pack. Hovering on boot jets when still, flying flat out with arms trailing back when moving sideways, rising upright with palm and boot jets firing down, and dropping in a powered crouch with the jets braking. To build an element it braces, aims a palm and fires a beam into a glowing energy frame until the element blasts into existence.
+
+In samurai and mech modes the figures also collide: overlapping samurai shove each other apart, and two that run into each other fast clash, with a spark and both knocked back. swarm-intro still decides every cursor's real route, so this is done with a small offset on each figure that springs back to its cursor; a figure that's mid-cut or firing holds its line.
 
 To add a mode: add its name to `MODES` in `index.html`, a button in the `.modes` nav, and its setup in the script below.
 
