@@ -1,0 +1,10 @@
+.repl { min-height: calc(100svh - var(--bar)); display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 90px; }
+.out > div { margin: 0 0 14px; white-space: pre-wrap; }
+.out .echo { color: var(--dim); }
+.out b { color: var(--hi); }
+.prompt { display: flex; gap: 1ch; align-items: baseline; }
+.prompt label { color: var(--accent); white-space: nowrap; }
+.prompt input { flex: 1; min-width: 0; background: none; border: 0; color: var(--hi); font: inherit; outline: none; caret-color: var(--accent); min-height: 32px; }
+.sugg { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.sugg button { font: inherit; font-size: 13px; color: var(--accent); background: none; border: 1px dashed #1d4a27; padding: 4px 10px; min-height: 36px; cursor: pointer; }
+.sugg button:hover { border-style: solid; color: var(--hi); }

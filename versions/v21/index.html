@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" data-concept="home">
+<head>
+  <meta name="robots" content="noindex">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Samuel Campbell · Full Stack Web Developer</title>
+  <meta name="description" content="Samuel Campbell, Full Stack Web Developer in Lexington, SC. Ping the sensor scope to find every job and every technology he has picked up.">
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@600;700&family=Atkinson+Hyperlegible:wght@400;700&family=Space+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/scope.css">
+</head>
+<body>
+  <header class="strip">
+    <div class="plate"><b id="pilotName">Samuel Campbell</b><span id="pilotSub"></span></div>
+    <a class="hail" id="hail" href="#contact">✉ Hail</a>
+  </header>
+  <main class="deck">
+    <section class="scope-wrap" aria-label="Sensor scope">
+      <svg class="scope" id="scope" viewBox="-110 -110 220 220" tabindex="0" role="application" aria-label="Sensor scope. Click or tap to ping. Arrow keys cycle contacts, Space pings."></svg>
+      <div class="scrub">
+        <label for="yearScrub" class="mono">Online by</label>
+        <input type="range" id="yearScrub">
+        <output id="yearOut" class="mono"></output>
+      </div>
+    </section>
+    <aside class="readout" id="readout" aria-live="polite"></aside>
+  </main>
+  <section class="lists" id="contact">
+    <h2>Contacts on file</h2>
+    <ol id="jobList"></ol>
+    <h2>Systems by bay</h2>
+    <div id="bayList"></div>
+    <p id="contactLine"></p>
+  </section>
+  <script src="assets/resume-data.js"></script>
+  <script src="assets/derive.js"></script>
+  <script src="assets/scope.js"></script>
+  <script src="assets/switcher.js"></script>
+<script data-version-bar data-v="21" src="../../timeline/version-bar.js"></script>
+</body>
+</html>

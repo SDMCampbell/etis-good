@@ -1,21 +1,22 @@
 """Round test harness. Usage: python3 check.py <tag> <path> [actions.py]
 actions.py defines async def run(page, mode, shot) with mode in {'desktop','mobile','reduced'}"""
 import asyncio, sys, subprocess, time, json, importlib.util, os, socket
+REPO = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 from playwright.async_api import async_playwright
 tag, path = sys.argv[1], sys.argv[2]
 acts = None
 if len(sys.argv) > 3:
     spec = importlib.util.spec_from_file_location("acts", sys.argv[3]); acts = importlib.util.module_from_spec(spec); spec.loader.exec_module(acts)
 PORT = 8765
-SHOTS = os.environ.get("SHOTS", "/tmp/etis-shots")
 def up():
     s = socket.socket();
     try: s.connect(("127.0.0.1", PORT)); return True
     except: return False
     finally: s.close()
 if not up():
-    subprocess.Popen(["python3","-m","http.server",str(PORT)], cwd=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); time.sleep(0.8)
-os.makedirs(SHOTS, exist_ok=True)
+    subprocess.Popen(["python3","-m","http.server",str(PORT)], cwd=REPO, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); time.sleep(0.8)
+REPO_SHOTS = os.path.join(REPO, "..", "shots")
+os.makedirs(REPO_SHOTS, exist_ok=True)
 CLS_JS = "window.__cls=0;new PerformanceObserver(l=>{for(const e of l.getEntries()) if(!e.hadRecentInput) window.__cls+=e.value}).observe({type:'layout-shift',buffered:true});"
 async def main():
     async with async_playwright() as p:
@@ -32,7 +33,7 @@ async def main():
             await pg.add_init_script(CLS_JS)
             await pg.goto(f"http://localhost:{PORT}/{path}"); await pg.wait_for_timeout(900)
             async def shot(name, full=False):
-                await pg.screenshot(path=f"{SHOTS}/{tag}-{mode}-{name}.png", full_page=full)
+                await pg.screenshot(path=os.path.join(REPO_SHOTS, f"{tag}-{mode}-{name}.png"), full_page=full)
             await shot("load")
             info = await pg.evaluate("({cls: window.__cls, overflowX: document.documentElement.scrollWidth > innerWidth+1, h: document.documentElement.scrollHeight})")
             if acts:

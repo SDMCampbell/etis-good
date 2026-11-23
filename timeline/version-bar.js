@@ -26,17 +26,18 @@
 
     var css = document.createElement("style");
     css.textContent =
-      ".vb{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:2147483000;display:flex;align-items:center;gap:2px;" +
-      "max-width:calc(100vw - 16px);padding:4px;border-radius:999px;background:#fff7d6;color:#1b1b1b;border:2px solid #1b1b1b;" +
-      "box-shadow:3px 3px 0 #1b1b1b;font:600 12px/1 system-ui,-apple-system,Segoe UI,sans-serif}" +
-      ".vb a,.vb button{all:unset;cursor:pointer;padding:0 12px;min-height:40px;display:inline-flex;align-items:center;border-radius:999px;white-space:nowrap}" +
-      ".vb a:hover,.vb button:hover,.vb a:focus-visible,.vb button:focus-visible{background:#1b1b1b;color:#fff7d6}" +
-      ".vb .lbl{display:inline-flex;align-items:center;padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}" +
-      ".vb .tag{font-size:10px;text-transform:uppercase;letter-spacing:.06em;padding:3px 6px;border-radius:99px;border:1.5px solid currentColor;margin-left:6px}" +
-      ".vb .home{background:#1b1b1b;color:#fff7d6}.vb .home:hover{background:#ff5a36;color:#fff}" +
-      ".vb [aria-disabled=true]{opacity:.3;pointer-events:none}" +
+      ".vb{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:2147483000;display:flex;align-items:center;gap:2px;" +
+      "max-width:calc(100vw - 16px);padding:0 4px;background:#050806;color:#C8F7C5;border:1px solid #39FF7A;" +
+      "box-shadow:0 0 0 3px rgba(5,8,6,.85),0 0 18px rgba(57,255,122,.25);font:700 12px/1 'JetBrains Mono',ui-monospace,Consolas,monospace}" +
+      ".vb a,.vb button{all:unset;cursor:pointer;padding:0 9px;min-height:40px;display:inline-flex;align-items:center;white-space:nowrap;color:#8CFFB0}" +
+      ".vb a:hover,.vb button:hover,.vb a:focus-visible,.vb button:focus-visible{color:#EAFFE7;background:#0c1a10;outline:1px solid #39FF7A}" +
+      ".vb .lbl{display:inline-flex;align-items:center;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;color:#7DB878}" +
+      ".vb .lbl b{color:#EAFFE7;margin:0 .5ch}" +
+      ".vb .tag{margin-left:6px;color:#39FF7A}.vb .tag.rejected{color:#FFC24D}" +
+      ".vb .home{color:#050806;background:#39FF7A}.vb .home:hover,.vb .home:focus-visible{background:#EAFFE7;color:#050806}" +
+      ".vb [aria-disabled=true]{opacity:.35;pointer-events:none}" +
       ".vb.min .lbl,.vb.min .nav{display:none}" +
-      "@media (max-width:560px){.vb .lbl .t,.vb .tag{display:none}}" +
+      "@media (max-width:560px){.vb .lbl .t,.vb .tag,.vb .w{display:none}.vb .lbl{flex-shrink:0;padding:0 4px}.vb{top:auto;bottom:76px}}" +
       "@media print{.vb{display:none}}";
     document.head.appendChild(css);
 
@@ -45,11 +46,11 @@
     bar.setAttribute("aria-label", "Version history");
     bar.innerHTML =
       '<button type="button" class="nav" data-act="hide" title="Collapse bar" aria-label="Collapse version bar">–</button>' +
-      '<span class="lbl">v' + v + '<span class="t"> · ' + esc(entry.title) + "</span>" + (entry.verdict ? '<span class="tag">' + esc(entry.verdict) + "</span>" : "") + "</span>" +
+      '<span class="lbl"><span class="w">archive</span><b>v' + v + '</b><span class="t">' + esc(entry.title) + "</span>" + (entry.verdict ? '<span class="tag ' + esc(entry.verdict) + '">[' + esc(entry.verdict) + "]</span>" : "") + "</span>" +
       '<a class="nav" href="' + (prev != null ? vurl(prev) : "#") + '" aria-label="Previous milestone"' + (prev == null ? ' aria-disabled="true"' : "") + ">◀</a>" +
       '<a class="nav" href="' + (next != null ? vurl(next) : "#") + '" aria-label="Next milestone"' + (next == null ? ' aria-disabled="true"' : "") + ">▶</a>" +
-      '<a class="nav" href="' + new URL("timeline/?v=" + v, root).href + '">Timeline</a>' +
-      '<a class="home" href="' + root.href + '" title="Esc or Alt+0">Current best ↩</a>';
+      '<a class="nav" href="' + new URL("timeline/?v=" + v, root).href + '">changelog</a>' +
+      '<a class="home" href="' + root.href + '" title="Esc or Alt+0">[ <span class="w">back to </span>current ↩ ]</a>';
     bar.querySelector("[data-act=hide]").addEventListener("click", function () {
       bar.classList.toggle("min");
     });
@@ -57,7 +58,7 @@
     // Esc (when not typing) or Alt+0 returns to the current best version
     document.addEventListener("keydown", function (e) {
       var typing = /input|textarea|select/i.test(e.target.tagName) || e.target.isContentEditable;
-      if ((e.key === "Escape" && !typing && !e.defaultPrevented && !document.querySelector("[aria-expanded=true], dialog[open]")) || (e.altKey && e.key === "0")) location.href = root.href;
+      if ((e.key === "Escape" && !typing && !e.defaultPrevented && !document.querySelector("[aria-expanded=true], dialog[open], #find:not([hidden])")) || (e.altKey && e.key === "0")) location.href = root.href;
     });
   }
   function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }

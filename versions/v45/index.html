@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" data-concept="home">
+<head>
+  <meta name="robots" content="noindex">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Samuel Campbell · Full Stack Web Developer</title>
+  <meta name="description" content="Samuel Campbell, Full Stack Web Developer in Lexington, SC. A résumé in pure text, rained into place by a swarm of cursor drones.">
+  <meta property="og:type" content="profile">
+  <meta property="og:title" content="Samuel Campbell · Full Stack Web Developer">
+  <meta property="og:description" content="A résumé in pure text, rained into place by a swarm of cursor drones.">
+  <meta property="og:url" content="https://etis-good.samueldcampbell.workers.dev/">
+  <meta property="og:image" content="https://etis-good.samueldcampbell.workers.dev/assets/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#050806">
+  <script>try{var t=localStorage.getItem("phosphor");if(t&&t!=="green")document.documentElement.dataset.theme=t}catch(e){}</script>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 fill=%27%23050806%27/%3E%3Ctext x=%276%27 y=%2724%27 font-family=%27monospace%27 font-size=%2722%27 font-weight=%27700%27 fill=%27%2339FF7A%27%3E%E2%96%B8%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/rain.css">
+</head>
+<body>
+  <header class="top" data-rain>
+    <span class="who" id="topName">SAMUEL CAMPBELL</span>
+    <nav class="chan" aria-label="Sections"><a href="#top" data-ch="1">[1]home</a><a href="#exp-h" data-ch="2">[2]exp</a><a href="#sys-h" data-ch="3">[3]sys</a><a href="#contact" data-ch="4">[4]contact</a></nav>
+    <span class="top-act"><button class="findbtn" id="findBtn" type="button" aria-controls="find">[ find ]</button><a class="hail" id="hail" href="#contact">[ hail ]</a></span>
+  </header>
+  <div class="find" id="find" hidden role="search">
+    <label for="findIn">find:</label><input id="findIn" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="type a skill, company, anything"><span class="find-n" id="findN" aria-live="polite"></span><button type="button" id="gatherBtn" hidden>[ gather ]</button><button type="button" id="findX" aria-label="Clear search">[ esc ]</button>
+    <ol class="gather" id="gather" hidden aria-label="Gathered matches"></ol>
+  </div>
+
+  <main id="doc" class="doc"><span id="top"></span>
+    <p class="arrange dim" id="arrange" hidden>arrange: <button type="button" data-arr="time" aria-pressed="true">timeline</button> <button type="button" data-arr="company" aria-pressed="false">by company</button> <button type="button" data-arr="learned" aria-pressed="false">most learned</button> · drag any card to move it</p>
+    <section class="hero" data-rain data-priority="1" aria-labelledby="name">
+      <p class="dim">// résumé.txt · rendered from data · <span id="stamp"></span></p>
+      <h1 id="name"></h1>
+      <p class="title" id="title"></p>
+      <p id="now"></p>
+      <p id="links"></p>
+      <p class="dim" id="summary"></p>
+      <p class="dim hint">// tip: just start typing to search · click any word · tap the swarm ↘ for orders</p>
+    </section>
+
+    <section class="block" data-rain aria-labelledby="exp-h">
+      <h2 id="exp-h">== EXPERIENCE ==</h2>
+      <p class="sorts dim" role="group" aria-label="Sort experience">sort: <button type="button" data-sort="newest" aria-pressed="true">newest</button> <button type="button" data-sort="oldest" aria-pressed="false">oldest</button> <button type="button" data-sort="learned" aria-pressed="false">most learned</button></p>
+      <p class="dispatch" id="dispatchNote" hidden aria-live="polite"></p>
+      <ol class="jobs" id="jobs"></ol>
+    </section>
+
+    <section class="block" data-rain aria-labelledby="sys-h">
+      <h2 id="sys-h">== SYSTEMS ==</h2>
+      <div id="systems"></div>
+    </section>
+
+    <section class="block" id="contact" data-rain aria-labelledby="con-h">
+      <h2 id="con-h">== CONTACT ==</h2>
+      <p id="contactLines"></p>
+      <h2>== ELSEWHERE ==</h2>
+      <p>
+        <a href="terminal/">terminal/</a> · an interactive shell<br>
+        <a href="gitlog/">gitlog/</a> · the career as a commit graph<br>
+        <a href="desktop/">desktop/</a> · a retro desktop<br>
+        <a href="../../timeline/" id="logLink">service-log/</a> · every version of this site
+      </p>
+      <p class="dim" id="eof">// EOF</p>
+    </section>
+  </main>
+
+  <nav class="pbar" aria-label="Sections"><a href="#top" data-ch="1">1 home</a><a href="#exp-h" data-ch="2">2 exp</a><a href="#sys-h" data-ch="3">3 sys</a><a href="#contact" data-ch="4">4 hail</a></nav>
+  <dialog class="keys" id="keys" aria-labelledby="keys-h"><pre id="keysBody"></pre><button type="button" id="keysX">[ close ]</button></dialog>
+  <canvas class="amb" id="amb" aria-hidden="true"></canvas>
+  <canvas class="rain" id="rain" aria-hidden="true"></canvas>
+  <button class="skip" id="skip" type="button">skip ▸▸</button>
+  <button class="hivebtn" id="hiveBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="swarmMenu" title="Give the swarm an order"><span class="sr">Swarm orders</span></button>
+  <div class="swarm-menu" id="swarmMenu" role="group" aria-label="Swarm orders" hidden>
+    <p class="sm-h">// swarm orders</p>
+    <button type="button" data-order="replay">replay the rain <kbd>0</kbd></button>
+    <button type="button" data-order="form">form up: spell my handle</button>
+    <button type="button" data-order="newest">carry jobs: newest first</button>
+    <button type="button" data-order="oldest">carry jobs: oldest first</button>
+    <button type="button" data-order="learned">carry jobs: most learned</button>
+    <button type="button" data-order="board" class="wide-only">rebuild as board / doc</button>
+    <button type="button" data-order="phosphor" id="phosphor">phosphor: green <kbd>9</kbd></button>
+    <button type="button" data-order="keys">all keys <kbd>?</kbd></button>
+  </div>
+
+  <noscript><p class="noscript">Samuel Campbell · Full Stack Web Developer · <a href="mailto:SamuelDCampbell@gmail.com">SamuelDCampbell@gmail.com</a> · <a href="https://github.com/SDMCampbell">GitHub</a></p></noscript>
+  <script src="assets/resume-data.js"></script>
+  <script src="assets/derive.js"></script>
+  <script src="../../versions/manifest.js"></script>
+  <script src="assets/rain.js"></script>
+  <script src="assets/switcher.js"></script>
+<script data-version-bar data-v="45" src="../../timeline/version-bar.js"></script>
+</body>
+</html>

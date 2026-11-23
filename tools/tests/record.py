@@ -1,7 +1,8 @@
 """record.py <json>: {v,title,verdict,featured,note,why,try,lesson,strongest,brief:{...}, snapshot:true, cycle_review:...}
 Snapshots the site, appends to manifest + state, advances last_completed_version LAST."""
-import json, sys, subprocess, re, datetime, os
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import json, sys, subprocess, re, datetime
+import os
+ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 r = json.loads(open(sys.argv[1]).read())
 v = r["v"]
 # 1. snapshot

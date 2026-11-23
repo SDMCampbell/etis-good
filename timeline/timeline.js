@@ -12,21 +12,21 @@
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function badge(e) {
     var b = '<span class="badge ' + esc(e.verdict) + '">' + esc(e.verdict) + "</span>";
-    if (e.v === best) b += '<span class="badge best">current best</span>';
+    if (e.v === best) b += '<span class="badge best">current</span>';
     return b;
   }
 
-  // altimeter: one step per version, bar height climbs with version number
+  // refit strip: one step per version, bar height grows with version number
   alt.innerHTML = list.map(function (e, i) {
     var cls = "alt-step" + (e.featured ? " feat" : "") + (e.v === best ? " best" : "") + (e.verdict === "rejected" ? " rej" : "");
     return '<button type="button" role="option" class="' + cls + '" data-v="' + e.v + '" aria-selected="false" tabindex="-1" aria-label="Version ' + e.v + ": " + esc(e.title) + " (" + esc(e.verdict) + ')">' +
       '<span class="lbl">' + (e.featured || e.v === best ? "v" + e.v : "") + "</span>" +
-      '<span class="dot">' + e.v + '</span><span class="alt-bar" style="height:' + (8 + i * 7) + 'px"></span></button>';
+      '<span class="dot">' + e.v + '</span><span class="alt-bar" style="height:' + (8 + Math.round(i / Math.max(1, list.length - 1) * (mobile.matches ? 110 : 190))) + 'px"></span></button>';
   }).join("");
 
   rows.innerHTML = list.slice().reverse().map(function (e) {
-    return '<li class="' + (e.featured ? "feat" : "") + '" data-v="' + e.v + '"><span class="v">v' + pad(e.v) + '</span><span class="t">' + esc(e.title) + " " + badge(e) +
-      '</span><a href="' + url(e.v) + '">Open →</a><span class="n">' + esc(e.note) + "</span></li>";
+    return '<li class="' + (e.featured ? "feat" : "") + '" data-v="' + e.v + '"><span class="v">' + (e.featured ? "★ " : "") + "v" + pad(e.v) + '</span><span class="t">' + esc(e.title) + " " + badge(e) +
+      '</span><a href="' + url(e.v) + '">open →</a><span class="n">' + esc(e.note) + "</span></li>";
   }).join("");
   document.getElementById("onlyFeat").addEventListener("change", function (ev) {
     rows.querySelectorAll("li").forEach(function (li) { li.classList.toggle("hide", ev.target.checked && !li.classList.contains("feat")); });
@@ -43,16 +43,16 @@
     var feats = list.filter(function (x) { return x.featured; }).map(function (x) { return x.v; });
     var prev = feats.filter(function (n) { return n < e.v; }).pop(), next = feats.filter(function (n) { return n > e.v; })[0];
     entry.innerHTML = '<span class="mono">v' + pad(e.v) + " · " + esc(e.date) + "</span>" + badge(e) +
-      "<h3>" + esc(e.title) + "</h3><p>" + esc(e.note) + '</p><p class="why">' + esc(e.why) + "</p>" +
+      "<h3>" + (e.featured ? '<span class="star" title="Milestone">★ </span>' : "") + esc(e.title) + "</h3><p>" + esc(e.note) + '</p><p class="why">' + esc(e.why) + "</p>" +
       (e.try ? '<p class="try"><b>Try it:</b> ' + esc(e.try) + "</p>" : "") +
-      '<div class="actions"><a class="btn primary" href="' + url(e.v) + '">Open v' + e.v + " →</a>" +
-      '<button class="btn" data-go="' + prev + '"' + (prev == null ? " disabled" : "") + ' aria-label="Previous milestone">◀ Milestone</button>' +
-      '<button class="btn" data-go="' + next + '"' + (next == null ? " disabled" : "") + ' aria-label="Next milestone">Milestone ▶</button>' +
-      '<a class="btn" href="../">Current best ↩</a></div>';
+      '<div class="actions"><a class="btn primary" href="' + url(e.v) + '">[ open v' + e.v + " → ]</a>" +
+      '<button class="btn" data-go="' + prev + '"' + (prev == null ? " disabled" : "") + ' aria-label="Previous milestone">[ ◀ milestone ]</button>' +
+      '<button class="btn" data-go="' + next + '"' + (next == null ? " disabled" : "") + ' aria-label="Next milestone">[ milestone ▶ ]</button>' +
+      '<a class="btn" href="../">[ current ↩ ]</a></div>';
     var target = url(e.v) + "?embed=1";
     clearTimeout(window.__tlT);
     window.__tlT = setTimeout(function () { if (frame.dataset.src !== target) { frame.dataset.src = target; frame.src = target; } }, 220);
-    cap.textContent = "Live preview · v" + e.v;
+    cap.textContent = "live preview · v" + e.v;
     history.replaceState(null, "", "?v=" + e.v);
   }
   // compare with current best: a second live preview beside the selected one
@@ -62,7 +62,7 @@
     frames.classList.toggle("cmp-on", on); bestWrap.hidden = !on;
     document.querySelector(".viewer").classList.toggle("cmp-wide", on && !mobile.matches);
     if (on && !bestFrame.src) bestFrame.src = "../?embed=1";
-    document.getElementById("bestCap").textContent = "Current best · v" + best;
+    document.getElementById("bestCap").textContent = "current · v" + best;
     fit();
   });
   // [ and ] step between milestones from anywhere on the page

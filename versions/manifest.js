@@ -4,7 +4,7 @@
  * verdict: baseline | kept | rejected | merged (partly folded into a later version)
  */
 window.VERSIONS = {
-  "current": 18,
+  "current": 48,
   "list": [
     {
       "v": 0,
@@ -194,6 +194,306 @@ window.VERSIONS = {
       "note": "Pasting the link into Slack, LinkedIn or a text now unfurls a branded card: name, current role, and the route art, rendered from the site's own data (tools/og-card.html). Also fixed the top hold's year label, which the token used to cover at rest.",
       "why": "For a résumé site the share preview is often the real first screen, and it was blank. Meta tags can't run JavaScript, so name and title appear there as text; everything else stays data-driven.",
       "try": "Paste the site URL into a chat app and look at the preview.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 19,
+      "title": "Cockpit: Frame AUTODIDACT",
+      "verdict": "kept",
+      "featured": true,
+      "note": "Complete redesign as an original walking-machine cockpit. The throttle moves through years, not distance: push it and each job arrives as a refit. The console prints INSTALLING: PHP · PostgreSQL … OK, new systems light up as contacts on the sensor scope, hardpoints light on the frame schematic, and the counters tick up. The pilot plate, current assignment and Hail (contact) are readable before you touch anything.",
+      "why": "Samuel rejected the climbing metaphor: what he loves is learning new technologies. The cockpit makes 'each job installs new tech' the core mechanic, straight from the data (_new, _cum). Never an empty cockpit: 6 s with no input, a deep link, or reduced motion brings all systems online.",
+      "try": "Drag the throttle on the right from the bottom up (on a phone, slide it sideways). Or focus it and press End.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 20,
+      "title": "Target lock + cold start",
+      "verdict": "kept",
+      "featured": true,
+      "note": "Type a system into LOCK (or click a contact, or any chip in the plain résumé): a reticle closes on it, the throttle lights every sortie that used it, and the legend lists them as jump buttons. #lock=Drupal links straight to it (old #skill= links still work). First visit per session, the cockpit powers up in about a second: lamp test, MFDs flicker on. Any key or tap skips it.",
+      "why": "The cockpit lost v3's 'where did he use X?' answer, the most useful recruiter query. Scope labels also collided, so now only the current sortie's systems and the locked one are labelled.",
+      "try": "Press / and type drup, then Enter. Press Esc to clear.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 21,
+      "title": "Sensor Scope (alternate direction)",
+      "verdict": "rejected",
+      "featured": true,
+      "note": "A completely different cockpit layout: one giant radar where the rings are years (centre 2011, edge today), jobs are big contacts on their start-year ring and each technology is a small contact where it was first installed. Tap anywhere to send a ping; the ripple lights contacts as it passes and locks the nearest. A slider filters to 'what was online by year X'.",
+      "why": "Tested whether one spatial map beats the throttle and four panels. The ping is genuinely fun, but it lost: on phones only the name shows on the first screen (no role or company), the early-career contacts pile up at the centre, sector labels clip at the edge, and the 'each job installs new tech' story is much weaker than the throttle's install cascade.",
+      "try": "Tap anywhere on the radar. Drag the 'Online by' slider back to 2014.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 22,
+      "title": "Story refits",
+      "verdict": "kept",
+      "featured": true,
+      "note": "Four sorties now get their own moment. COBOL flashes in as green-phosphor LEGACY FIRMWARE, still in service. xGrok's bullets decode from scrambled hex into text, a nod to reverse-engineering a database format. MARCO shows a TUNE gauge whose needle swings from the data's 'failing' to '99%'. Returning to AgFirst ghosts the old loadout on the frame, then re-docks with +N systems. Plus: tap empty space on the scope to send a ping that locks the nearest system.",
+      "why": "Every sortie looked alike apart from its text, so the résumé's most distinctive facts slipped by. Each set piece is triggered by data (a legacy tag, a 'reverse-engineer' bullet, the highlight field, the returning flag), not hard-coded copy. The ping was borrowed from the rejected v21.",
+      "try": "Press 3, then 4, then 7, then 8 on the keyboard to jump between those sorties.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 23,
+      "title": "Sound, reference card, overdrive",
+      "verdict": "kept",
+      "featured": true,
+      "note": "The cockpit can make noise, but only if you ask: the ♪ toggle (or M) turns on synthesized blips for notch ticks, install chirps, lock tones and the tune whoosh, and nothing audio-related exists until you opt in. Press ? for a laminated pilot reference card with every shortcut. And typing overdrive (or slamming the throttle end to end three times) overheats the frame: lamps flash red, a HEAT (just for fun) bar fills, then a coolant flush suggests learning something new.",
+      "why": "The cockpit was silent and its shortcuts were invisible. Fun for developers, invisible to anyone who doesn't go looking: sound is off by default and remembered, the egg never blocks content.",
+      "try": "Press ? for the card. Then type overdrive.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 24,
+      "title": "Service Log & archived frames",
+      "verdict": "kept",
+      "featured": false,
+      "note": "The rest of the site now lives in the cockpit too. The version history is the SERVICE LOG (every refit, ★ for commissioned milestones), archived versions carry an ARCHIVED FRAME strip with one-click 'Return to active frame', and the rooms' wayfinding bar is a cockpit bezel: ← Cockpit, the three rooms, Service Log.",
+      "why": "Outside the home page the old climbing words and colours survived, so the redesign felt half-done. A grep for climbing terms across the live UI now finds only code comments.",
+      "try": "Open the Service Log, pick any refit, open it, and hit Return to active frame.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 25,
+      "title": "Hangar Refit (alternate direction)",
+      "verdict": "rejected",
+      "featured": true,
+      "note": "A scroll-story take: you stand on the catwalk of a refit hangar. A work-order clipboard holds the name, role and Hail; each job is a numbered refit bay down the page, and as each bay scrolls into view its new systems drop onto the frame's line-art chassis as yellow crates. A crate rack lights every bay that used a system.",
+      "why": "Tested whether plain scrolling beats the throttle. It reads well and needs nothing to learn, but it lost: it isn't a cockpit (the brief), it's passive (no throttle, lock links, sound or story set pieces), and on phones the sticky work order plus frame eat almost half the screen.",
+      "try": "Scroll down the bays and watch crates land on the frame. On desktop, pick Drupal in the crate rack.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 26,
+      "title": "Mission briefings + crate frame",
+      "verdict": "kept",
+      "featured": true,
+      "note": "Any sortie can open as a full mission briefing (Briefing ▸ on the card, or Enter on the throttle): objective, theatre, intel and systems fitted, with previous/next and a shareable link (#sortie=xgrok&brief). On phones you can swipe the mission card left or right to step through sorties. The frame schematic now holds one crate per technology, filling green as you throttle up (the newest glow amber).",
+      "why": "The mission card was dense and couldn't be shared on its own; phones had no natural way to step sorties; and six hardpoints didn't show accumulation. The crate idea came from the rejected v25 Hangar Refit.",
+      "try": "Push the throttle to any sortie and press Enter (or tap Briefing ▸). On a phone, swipe the mission card.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 27,
+      "title": "Pilot record (achievements)",
+      "verdict": "kept",
+      "featured": false,
+      "note": "Exploring the cockpit now earns small, local-only achievements: First refit, Full systems, Decoder, Legacy certified, Tuned, Locked on, Briefed, Pilot's reference and Overdrive. A toast appears once for each, and the ★ Pilot record panel (brow on desktop, bottom bar on phones) lists what's earned and hints at what's left.",
+      "why": "The set pieces, lock, briefings and easter egg were easy to miss and gave no acknowledgement. Achievements reward exploring without gating anything: the site is identical with zero earned, the autopilot earns nothing, and it's all stored only in the visitor's browser.",
+      "try": "Push the throttle up one notch, then open ★ Pilot record.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 28,
+      "title": "Controller linked",
+      "verdict": "kept",
+      "featured": false,
+      "note": "Plug in a game controller and fly the cockpit: left stick or triggers drive the throttle, D-pad steps sorties, A opens the briefing, X locks the current sortie's first new system, B backs out, Start brings all systems online. A CONTROLLER LINKED lamp lights in the brow. Nothing polls until a controller announces itself.",
+      "why": "Sim fans reach for a controller. It costs nothing for everyone else: no polling loop runs unless the browser reports a connected gamepad.",
+      "try": "Connect a controller, press any button, then push the left stick up.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 29,
+      "title": "Loadout screen",
+      "verdict": "kept",
+      "featured": false,
+      "note": "Press L (or Loadout in the bottom bar) for the whole stack on one screen: every bay as a panel, every system with where it first arrived and how often it was used ('PHP · S04 · xGrok 2016 · used in 4'). Pick one to close the loadout and lock it on the sensors.",
+      "why": "Systems were scattered across the scope, the frame and the plain résumé. Technical readers asking 'what's his full stack?' now get it in one view with provenance. Verified every skill in the data appears exactly once (35).",
+      "try": "Press L, then pick COBOL.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 30,
+      "title": "Hangar day",
+      "verdict": "kept",
+      "featured": true,
+      "note": "A daylight cockpit: white MFDs, deep-cyan sensors, amber-brown readouts and a pale sky behind the canopy. It follows your system's light/dark setting, flips with the ☀/☾ button and remembers your choice. An automated audit checked every visible text element in both themes against WCAG AA: zero failures.",
+      "why": "The cockpit was dark-only, so light-mode visitors and anyone reading in daylight got no choice. Also fixed a regression the new buttons caused: the pilot's name could be clipped at 1280px; now the lamps and subtitle give way first.",
+      "try": "Click ☀ in the brow.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 31,
+      "title": "Text Rain + drone escort",
+      "verdict": "kept",
+      "featured": true,
+      "note": "The cockpit is gone: the site is now pure monospace text. On arrival every word rains down from above the screen, flickering through random glyphs until it locks into its exact place, while a swarm of tiny ▸ cursor drones swoops from a hive in the corner to escort each line down, then streaks home. Sections below the fold rain in when you scroll to them. Any key or click lands everything instantly.",
+      "why": "Samuel asked for a pure-text site where all the text falls from the top into place, ushered by a drone swarm. The page text is real and laid out from the first frame (screen readers, copy, search and print all work); the rain is painted on a canvas overlay that hides each block only until its words land, so layout never shifts.",
+      "try": "Reload and watch the name drop in. Then scroll down to Experience.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 32,
+      "title": "The swarm comes alive",
+      "verdict": "kept",
+      "featured": true,
+      "note": "After the rain, the drones don't just sleep. They flock loosely around your pointer; click any word and a squad of three dives in, lifts it, scrambles it through glyphs and drops it back into place; leave the page alone for 12 seconds and the whole swarm (reinforcements fly out of the hive) assembles into DOOG, scattering the moment you move.",
+      "why": "The drone swarm was the most fun thing on the page but only appeared during the entrance. Now visitors can play with the text after it lands. All of it is decorative: the real text never changes, links still work normally, and reduced motion turns it off.",
+      "try": "Move your mouse around, click a word, then leave the page alone for 12 seconds.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 33,
+      "title": "Résumé REPL (alternate direction)",
+      "verdict": "rejected",
+      "featured": true,
+      "note": "A conversational take: the home page is one prompt. whoami and jobs answer themselves on arrival; after that you type (or tap a suggestion) commands like find php, job xgrok or hail, and each answer rains into the scrollback.",
+      "why": "Tested whether talking to the résumé beats a raining document. It works and the essentials show without typing, but it lost: job details hide behind commands, the big rain spectacle shrinks to small answers, the swarm has nothing to play with, typing is clumsy on phones, and it duplicates the existing Terminal room.",
+      "try": "Tap find php, then type job mindamp.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 34,
+      "title": "Type to find (swarm-assisted)",
+      "verdict": "kept",
+      "featured": true,
+      "note": "Just start typing anywhere and a find line drops in under the header: every match on the page glows and the drone swarm splits up, one drone hovering over each match (reinforcements launch from the hive if needed). Enter jumps match to match, Esc clears. Phones get a [ find ] button. Links like #find=cobol open straight into a search.",
+      "why": "The rejected REPL proved 'where did he use X?' is the most useful question, but commands were the wrong way to ask it. Now the whole document can be interrogated without leaving it. Matches are wrapped inline and unwrapped afterwards; the text is verified identical. Works under reduced motion too (no drones).",
+      "try": "Type drupal. Press Enter a few times, then Esc.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 35,
+      "title": "Channel switching",
+      "verdict": "kept",
+      "featured": false,
+      "note": "Press 1–4 (or use the [1]home [2]exp [3]sys [4]contact index in the header) to jump between sections. The destination re-rains as you land, escorted by the swarm, and the index tracks where you are. ? opens a plain-text key map.",
+      "why": "From the hero there was no quick way to reach Experience, Systems or Contact, and moving around had no rain moment. Digits no longer start a search (letters do), so the number keys are free for channels.",
+      "try": "Press 3, then 1. Press ? for the key list.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 36,
+      "title": "Cheap enough to keep",
+      "verdict": "kept",
+      "featured": false,
+      "note": "A performance and accessibility pass. The animation loop now stops completely when nothing is moving (idle drones settle in the hive instead of orbiting forever: 240 → 0 frame requests per 4 idle seconds). Phones get a bottom section bar (1 home · 2 exp · 3 sys · 4 hail). All 86 visible text elements pass AA contrast; tab order runs index → find → hail → links.",
+      "why": "The spectacle has to be cheap to keep: an always-running loop drains phone batteries. Measured with 4× CPU throttling: p95 frame 17 ms; one ~240 ms hitch (≈60 ms unthrottled) when several large sections are measured at once.",
+      "try": "On a phone, use the bottom bar. On desktop, let the page sit: nothing keeps running.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 37,
+      "title": "Drone carry",
+      "verdict": "kept",
+      "featured": true,
+      "note": "The swarm now physically moves text. Experience has sort controls (newest · oldest · most learned): pick one and a squad of four drones latches onto each job's heading, lifts the whole block, swings it out across the page and sets it down in its new slot, job after job. The real list is reordered underneath, so what lands is the true order.",
+      "why": "Samuel asked twice for drones that move the text around the screen, not just escort it. The carry engine measures every word before and after a DOM change and flies each one between the two positions, so it can animate any rearrangement.",
+      "try": "Scroll to Experience and click oldest, then most learned.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 38,
+      "title": "Swarm Board",
+      "verdict": "kept",
+      "featured": true,
+      "note": "A second way to read the page: switch view to board and the swarm takes the document apart, carrying the identity, each job and the systems list into cards on a grid. Arrange the cards by timeline, by company or by most learned, or drag one onto another and a squad ferries it to that slot.",
+      "why": "Cycle rule: try a substantially different direction. The board turns the résumé from a page you scroll into a table the drones rearrange, and drag-and-drop lets the visitor give the swarm orders.",
+      "try": "On desktop, click view: board at top right, then by company, then drag any job card onto the first card.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 39,
+      "title": "Recall",
+      "verdict": "kept",
+      "featured": false,
+      "note": "A [ replay ] control (key 0) sends the swarm to haul every visible word back up off the top of the screen, bottom lines first, then rains the page down again with drones escorting each line.",
+      "why": "The signature entrance only happened once per visit. Now visitors can rerun it on demand, and the lift-off is a new swarm move.",
+      "try": "Press 0, or click [ replay ] in the header.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 40,
+      "title": "Gather",
+      "verdict": "kept",
+      "featured": true,
+      "note": "Type to search, then hit [ gather ]: the swarm pulls a copy of every matching line out of the page (rising from below if it's off-screen) and tows it into a stacked list under the find bar. Click any gathered line to jump to its source.",
+      "why": "Find only highlighted matches in place, so you had to scroll to see them all. Now the drones bring the matches to you, which also answers the owner's 'drones moving text around the screen' brief.",
+      "try": "Type php, then click [ gather ], then click a gathered line.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 41,
+      "title": "Phosphor repaint",
+      "verdict": "kept",
+      "featured": true,
+      "note": "Four colour schemes: green, amber, ice and paper (key 9 or the [ green ] button). Changing scheme is a swarm event: a line of drones sweeps down the screen and the new colours follow right behind it. The choice is remembered and applied before first paint, so there's no flash on the next visit.",
+      "why": "The page had one fixed look and the drones were always green. Themes give visitors a choice, and the sweep makes changing colours another thing the swarm does.",
+      "try": "Press 9 a few times, or click the colour name in the header.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 42,
+      "title": "Dispatch",
+      "verdict": "kept",
+      "featured": false,
+      "note": "Every skill in Systems is now a button. Click one (PHP, say) and the swarm carries the roles that used it to the top of Experience and tags each with '◆ used PHP here'. A note reports how many roles, and 'clear' sends everything back to newest-first.",
+      "why": "It answers 'where did he use this?' in one click, and gives the carry engine a job that is about the content itself rather than just showing off.",
+      "try": "Scroll to Systems and click PHP, then Drupal, then clear.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 43,
+      "title": "Text changelog",
+      "verdict": "kept",
+      "featured": true,
+      "note": "The version history now lives in the same text world as the site. The old cockpit-styled Service Log is now a monospace changelog: a bar strip with ★ milestones and the current version glowing, [kept]/[rejected] tags, live previews and compare-with-current, and log rows that drop into place. The bar shown on every archived version is a terminal strip with ◀ ▶ milestone steps and a one-tap [ back to current ↩ ]. The changelog follows the chosen phosphor colour scheme.",
+      "why": "Jumping to the history used to leave the text world for a cockpit skin from an abandoned direction. Now the whole site is one place, and every timeline feature still works.",
+      "try": "Open the changelog from the bottom-right link, press [ to jump between milestones, then open an archived version and tap back to current.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 44,
+      "title": "Hive orders",
+      "verdict": "kept",
+      "featured": true,
+      "note": "The swarm's resting hive (bottom right) is now a button. Tap it and the drones' order menu opens: replay the rain, form up and spell the handle, carry the jobs newest / oldest / most learned, rebuild as board or doc, change phosphor, all keys. The header is back to name, channels, find and hail. Every order now works on phones, by keyboard (arrow keys move, Esc closes and returns focus) and with reduced motion (motion-only orders are hidden).",
+      "why": "The cycle review flagged a header full of bracketed controls and toys hidden behind hotkeys. Putting the orders on the swarm itself makes them easy to find and fits the idea that you are commanding the drones.",
+      "try": "Click the swarm at bottom right, then choose 'form up', then 'carry jobs: oldest first'.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 45,
+      "title": "Ambient rain",
+      "verdict": "kept",
+      "featured": true,
+      "note": "Faint columns of glyphs now drift down behind the text all the time. They part around your pointer like water, drones flying through push them aside, and they're quieter behind the reading column so body text stays clear. The ambient rain follows the phosphor colour, is off in the paper theme and with reduced motion, and pauses after 20 s with no input or when the tab is hidden.",
+      "why": "Between swarm actions the page was flat black, so the rain only existed while something was landing. Now the page feels alive at rest, and the contrast audit still passes.",
+      "try": "Move the pointer slowly across the empty side margins and watch the columns part.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 46,
+      "title": "Hail relay",
+      "verdict": "kept",
+      "featured": false,
+      "note": "A [ copy ] button sits beside the email in the hero and in contact. It copies the address, and a squad of drones breaks the address into chunks and carries them off into the hive, where a '> copied' readout confirms it. With reduced motion you just get the readout. If copying fails, the readout says to long-press the address instead.",
+      "why": "Getting in touch is the most important action on the page, and a bare mailto link often opens nothing useful. Copying is reliable, and the relay makes it memorable.",
+      "try": "Click [ copy ] next to the email address at the top.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 47,
+      "title": "Ship-shape",
+      "verdict": "kept",
+      "featured": false,
+      "note": "Housekeeping so the site presents itself correctly. There's a new text-rain social card (og.png), so shared links show the current design: the name over faint glyph rain, the current role, a row of drones. The changelog page gets its own share tags. The README is rewritten for Text Rain, with a 'things to try' list, how the rain and carry engine work, the open content TODOs and the old files that can be deleted. The service-worker cache is bumped so returning visitors pick up the new assets. The regression tests are now portable (paths are relative to the repo).",
+      "why": "Links still unfurled with the climbing-era card and the README described a design that no longer exists.",
+      "try": "Paste the site link into Slack or iMessage after deploying to see the new card.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 48,
+      "title": "Final polish",
+      "verdict": "kept",
+      "featured": false,
+      "note": "A regression pass over every interaction from this run on desktop, phone and reduced motion: keyboard order, channels, find and gather, dispatch then sort, hive replay and phosphor, copy relay, contrast audit and print. Fixes from the pass: sort buttons now show no active sort while a skill dispatch is showing, and choosing a sort clears the dispatch; print gets a clean black-on-white palette and hides the hive, menus, toasts, copy and sort controls, and the hint.",
+      "why": "Seventeen rounds of new interactions needed checking together before the run ends.",
+      "try": "Click a skill in Systems, then choose a sort; or print the page.",
       "date": "2026-11-22"
     }
   ]

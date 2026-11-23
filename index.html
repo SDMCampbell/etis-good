@@ -4,136 +4,93 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Samuel Campbell · Full Stack Web Developer</title>
-  <meta name="description" content="Samuel Campbell, Full Stack Web Developer in Lexington, SC. Climb his career route, skill by skill.">
+  <meta name="description" content="Samuel Campbell, Full Stack Web Developer in Lexington, SC. A résumé in pure text, rained into place by a swarm of cursor drones.">
   <meta property="og:type" content="profile">
   <meta property="og:title" content="Samuel Campbell · Full Stack Web Developer">
-  <meta property="og:description" content="Climb his career route skill by skill, or watch it climb itself.">
+  <meta property="og:description" content="A résumé in pure text, rained into place by a swarm of cursor drones.">
   <meta property="og:url" content="https://etis-good.samueldcampbell.workers.dev/">
   <meta property="og:image" content="https://etis-good.samueldcampbell.workers.dev/assets/og.png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Samuel Campbell, Full Stack Web Developer at AgFirst Farm Credit Bank, with his career drawn as a climbing route">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="theme-color" content="#FFF7E8">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%231C1838%27/%3E%3Cpath d=%27M5 25 L12 17 L17 20 L27 7%27 stroke=%27%23FF4A1C%27 stroke-width=%274%27 fill=%27none%27 stroke-linecap=%27round%27/%3E%3C/svg%3E">
+  <meta name="theme-color" content="#050806">
+  <script>try{var t=localStorage.getItem("phosphor");if(t&&t!=="green")document.documentElement.dataset.theme=t}catch(e){}</script>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 fill=%27%23050806%27/%3E%3Ctext x=%276%27 y=%2724%27 font-family=%27monospace%27 font-size=%2722%27 font-weight=%27700%27 fill=%27%2339FF7A%27%3E%E2%96%B8%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Instrument+Sans:wght@400;600&family=Martian+Mono:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/wall.css">
-  <script>try{var t=localStorage.getItem("theme");if(t==="night"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.dataset.theme="night"}catch(e){}</script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/rain.css">
 </head>
 <body>
-  <svg class="topo" id="topo" aria-hidden="true"></svg>
-
-  <header class="bar">
-    <a class="who" href="#top" id="barName">Samuel Campbell</a>
-    <nav class="bar-actions" aria-label="Quick links">
-      <a class="bar-link hide-sm" href="#route-description" data-sec="route-description">Résumé</a>
-      <a class="bar-link hide-sm" href="#skills" data-sec="skills">Rack</a>
-      <a class="bar-link hide-sm" href="#modes" data-sec="modes">Routes</a>
-      <a class="bar-link hide-sm" href="#register" data-sec="register">Register</a>
-      <button class="bar-link theme-btn" type="button" id="themeBtn" aria-pressed="false" title="Night climb"><span aria-hidden="true" id="themeIcon">☾</span><span class="sr">Night climb</span></button>
-      <button class="bar-link hide-sm keys" type="button" id="keysBtn" aria-haspopup="dialog" title="Keyboard shortcuts (?)">?</button>
-      <a class="btn btn-hot" id="barEmail" href="#contact"><span class="hide-sm">Email Samuel</span><svg class="show-sm" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M3 6l9 7 9-7" fill="none" stroke="currentColor" stroke-width="2.5"/></svg><span class="sr show-sm">Email Samuel</span></a>
-    </nav>
+  <header class="top" data-rain>
+    <span class="who" id="topName">SAMUEL CAMPBELL</span>
+    <nav class="chan" aria-label="Sections"><a href="#top" data-ch="1">[1]home</a><a href="#exp-h" data-ch="2">[2]exp</a><a href="#sys-h" data-ch="3">[3]sys</a><a href="#contact" data-ch="4">[4]contact</a></nav>
+    <span class="top-act"><button class="findbtn" id="findBtn" type="button" aria-controls="find">[ find ]</button><a class="hail" id="hail" href="#contact">[ hail ]</a></span>
   </header>
+  <div class="find" id="find" hidden role="search">
+    <label for="findIn">find:</label><input id="findIn" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="type a skill, company, anything"><span class="find-n" id="findN" aria-live="polite"></span><button type="button" id="gatherBtn" hidden>[ gather ]</button><button type="button" id="findX" aria-label="Clear search">[ esc ]</button>
+    <ol class="gather" id="gather" hidden aria-label="Gathered matches"></ol>
+  </div>
 
-  <main id="top">
-    <section class="wall" id="wall" aria-labelledby="name">
-      <div class="intro">
-        <p class="kicker mono" id="kicker"></p>
-        <h1 id="name"></h1>
-        <p class="role" id="role"></p>
-        <p class="tagline" id="tagline"></p>
-        <p class="stats mono" id="stats"></p>
-      </div>
-
-      <div class="route" id="route">
-        <svg id="routeSvg" viewBox="0 0 300 600" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
-        <div class="token" id="token" role="slider" tabindex="0" aria-label="Climb Samuel's career route"></div>
-        <p class="hint mono" id="hint" aria-hidden="true"></p>
-        <span class="lamp" id="lamp" aria-hidden="true"></span>
-        <button class="belay-play" type="button" id="playBtn" aria-pressed="false"><span aria-hidden="true" id="playIcon">▶</span> <span id="playLbl">Auto-belay</span></button>
-        <p class="caption mono" id="caption" aria-hidden="true"></p>
-        <div class="spot mono" id="spot" hidden></div>
-      </div>
-
-      <div class="card-col">
-        <article class="card" id="card" aria-live="off"></article>
-        <div class="bag" id="bag"><span class="level" id="bagLevel" aria-hidden="true"></span><div class="bag-head mono"><span>Chalk bag</span><b id="bagCount"></b></div><div class="chips" id="chips"></div></div>
-        <div class="cta-row">
-          <a class="btn btn-hot" id="ctaEmail" href="#contact">Email Samuel</a>
-          <a class="btn" href="#route-description">Full résumé</a>
-        </div>
-      </div>
-      <p class="sr" id="live" aria-live="polite"></p>
+  <main id="doc" class="doc"><span id="top"></span>
+    <p class="arrange dim" id="arrange" hidden>arrange: <button type="button" data-arr="time" aria-pressed="true">timeline</button> <button type="button" data-arr="company" aria-pressed="false">by company</button> <button type="button" data-arr="learned" aria-pressed="false">most learned</button> · drag any card to move it</p>
+    <section class="hero" data-rain data-priority="1" aria-labelledby="name">
+      <p class="dim">// résumé.txt · rendered from data · <span id="stamp"></span></p>
+      <h1 id="name"></h1>
+      <p class="title" id="title"></p>
+      <p id="now"></p>
+      <p id="links"></p>
+      <p class="dim" id="summary"></p>
+      <p class="dim hint">// tip: just start typing to search · click any word · tap the swarm ↘ for orders</p>
     </section>
 
-    <section class="section" id="route-description" aria-labelledby="rd-h">
-      <h2 id="rd-h">Route description</h2>
-      <p class="lede">Every pitch, newest first. Easy to scan, and it prints as a clean résumé.</p>
-      <div class="pitches">
-        <nav class="mini" id="mini" aria-label="Jump to a pitch"></nav>
-        <ol class="jobs" id="jobs"></ol>
-      </div>
+    <section class="block" data-rain aria-labelledby="exp-h">
+      <h2 id="exp-h">== EXPERIENCE ==</h2>
+      <p class="sorts dim" role="group" aria-label="Sort experience">sort: <button type="button" data-sort="newest" aria-pressed="true">newest</button> <button type="button" data-sort="oldest" aria-pressed="false">oldest</button> <button type="button" data-sort="learned" aria-pressed="false">most learned</button></p>
+      <p class="dispatch" id="dispatchNote" hidden aria-live="polite"></p>
+      <ol class="jobs" id="jobs"></ol>
     </section>
 
-    <section class="section" id="skills" aria-labelledby="sk-h">
-      <h2 id="sk-h">The rack</h2>
-      <p class="lede">Skills grouped by type. The number is how many roles used it. Click one to light up where.</p>
-      <p class="rack-note" id="rackNote" aria-live="polite"></p>
-      <div id="rack"></div>
+    <section class="block" data-rain aria-labelledby="sys-h">
+      <h2 id="sys-h">== SYSTEMS ==</h2>
+      <div id="systems"></div>
     </section>
 
-    <section class="section" id="modes" aria-labelledby="md-h">
-      <h2 id="md-h">Other routes up</h2>
-      <p class="lede">The same résumé, three other ways.</p>
-      <div class="modes">
-        <a class="mode" href="terminal/"><span class="mode-art m-term" aria-hidden="true">$ whoami<br>$ grep drupal<br>$ <i></i></span><b>Terminal</b><span>Type commands to read the résumé, with tab completion.</span></a>
-        <a class="mode" href="gitlog/"><span class="mode-art m-git" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b>Git Log</b><span>The career as a commit graph you can filter by skill.</span></a>
-        <a class="mode" href="desktop/"><span class="mode-art m-os" aria-hidden="true"><i></i><i></i></span><b>DoogOS</b><span>A retro desktop with draggable windows.</span></a>
-      </div>
-    </section>
-
-    <section class="section" id="register" aria-labelledby="rg-h">
-      <h2 id="rg-h">Summit register</h2>
-      <p class="lede">This site is rebuilt one experiment at a time. Every version is kept, including the ones that lost. Drag along the strip (or use the arrow keys) to preview them.</p>
-      <div class="scrub" id="scrub">
-        <div class="alt-strip" id="altStrip" role="slider" tabindex="0" aria-label="Scrub through site versions"></div>
-        <div class="scrub-body">
-          <div class="scrub-note" id="scrubNote" aria-live="polite"></div>
-          <div class="scrub-frame" id="scrubFrame"><iframe id="scrubIframe" title="Preview of the selected version" tabindex="-1" aria-hidden="true"></iframe><span class="mono scrub-cap" id="scrubCap"></span></div>
-        </div>
-      </div>
-      <a class="btn" href="timeline/">Open the full register →</a>
+    <section class="block" id="contact" data-rain aria-labelledby="con-h">
+      <h2 id="con-h">== CONTACT ==</h2>
+      <p id="contactLines"></p>
+      <h2>== ELSEWHERE ==</h2>
+      <p>
+        <a href="terminal/">terminal/</a> · an interactive shell<br>
+        <a href="gitlog/">gitlog/</a> · the career as a commit graph<br>
+        <a href="desktop/">desktop/</a> · a retro desktop<br>
+        <a href="timeline/" id="logLink">service-log/</a> · every version of this site
+      </p>
+      <p class="dim" id="eof">// EOF</p>
     </section>
   </main>
 
-  <footer class="foot" id="contact">
-    <h2>Say hi</h2>
-    <p id="footLinks"></p>
-  </footer>
+  <nav class="pbar" aria-label="Sections"><a href="#top" data-ch="1">1 home</a><a href="#exp-h" data-ch="2">2 exp</a><a href="#sys-h" data-ch="3">3 sys</a><a href="#contact" data-ch="4">4 hail</a></nav>
+  <dialog class="keys" id="keys" aria-labelledby="keys-h"><pre id="keysBody"></pre><button type="button" id="keysX">[ close ]</button></dialog>
+  <canvas class="amb" id="amb" aria-hidden="true"></canvas>
+  <canvas class="rain" id="rain" aria-hidden="true"></canvas>
+  <button class="skip" id="skip" type="button">skip ▸▸</button>
+  <button class="hivebtn" id="hiveBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="swarmMenu" title="Give the swarm an order"><span class="sr">Swarm orders</span></button>
+  <div class="swarm-menu" id="swarmMenu" role="group" aria-label="Swarm orders" hidden>
+    <p class="sm-h">// swarm orders</p>
+    <button type="button" data-order="replay">replay the rain <kbd>0</kbd></button>
+    <button type="button" data-order="form">form up: spell my handle</button>
+    <button type="button" data-order="newest">carry jobs: newest first</button>
+    <button type="button" data-order="oldest">carry jobs: oldest first</button>
+    <button type="button" data-order="learned">carry jobs: most learned</button>
+    <button type="button" data-order="board" class="wide-only">rebuild as board / doc</button>
+    <button type="button" data-order="phosphor" id="phosphor">phosphor: green <kbd>9</kbd></button>
+    <button type="button" data-order="keys">all keys <kbd>?</kbd></button>
+  </div>
 
-  <nav class="pitchbar" id="pitchbar" aria-label="Sections">
-    <a href="#top" data-sec="wall"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20 L9 12 L13 15 L21 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Wall</a>
-    <a href="#route-description" data-sec="route-description"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14M5 10h14M5 15h10M5 20h8" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>Résumé</a>
-    <a href="#skills" data-sec="skills"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="13.5" y="3" width="7.5" height="7.5" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="3" y="13.5" width="7.5" height="7.5" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="13.5" y="13.5" width="7.5" height="7.5" fill="currentColor"/></svg>Rack</a>
-    <a href="#register" data-sec="register"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V14M9 20V10M14 20V7M19 20V3" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>Register</a>
-    <a href="#contact" data-sec="contact" class="pb-hot"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M3 6l9 7 9-7" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>Contact</a>
-  </nav>
-  <p class="offline mono" id="offline" role="status" hidden>You're offline · this is a saved copy of the site</p>
-  <dialog class="help" id="help" aria-labelledby="help-h">
-    <div class="help-term">
-      <p class="mono help-top"><span id="help-h">$ climb --help</span><button type="button" class="help-x" id="helpClose" aria-label="Close">✕</button></p>
-      <pre id="helpBody"></pre>
-    </div>
-  </dialog>
-  <div class="belay mono" id="belay" hidden aria-hidden="true"></div>
-  <noscript><p class="noscript">Samuel Campbell · <a href="mailto:SamuelDCampbell@gmail.com">SamuelDCampbell@gmail.com</a> · <a href="https://github.com/SDMCampbell">GitHub</a></p></noscript>
+  <noscript><p class="noscript">Samuel Campbell · Full Stack Web Developer · <a href="mailto:SamuelDCampbell@gmail.com">SamuelDCampbell@gmail.com</a> · <a href="https://github.com/SDMCampbell">GitHub</a></p></noscript>
   <script src="assets/resume-data.js"></script>
   <script src="assets/derive.js"></script>
   <script src="versions/manifest.js"></script>
-  <script src="assets/wall.js"></script>
+  <script src="assets/rain.js"></script>
   <script src="assets/switcher.js"></script>
 </body>
 </html>

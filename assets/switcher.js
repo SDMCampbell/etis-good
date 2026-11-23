@@ -20,15 +20,15 @@
   var style = document.createElement("style");
   style.textContent =
     ".cs-nav{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:99999;display:flex;align-items:stretch;gap:2px;" +
-    "max-width:calc(100vw - 16px);padding:3px;background:#FFF7E8;border:3px solid #1C1838;box-shadow:4px 4px 0 #1C1838;" +
-    "font:600 13px/1 'Instrument Sans',system-ui,-apple-system,Segoe UI,sans-serif}" +
-    ".cs-nav a{display:inline-flex;align-items:center;gap:6px;min-height:40px;color:#1C1838;text-decoration:none;padding:0 12px;white-space:nowrap}" +
-    ".cs-nav a:hover{background:#F6E9CF}" +
-    ".cs-nav a:focus-visible{outline:3px solid #7A4DFF;outline-offset:-3px}" +
-    ".cs-nav a[aria-current=page]{background:#1C1838;color:#FFF7E8}" +
-    ".cs-nav .cs-home{background:#FF4A1C;color:#1C1838;font-weight:800}" +
-    ".cs-nav .cs-home:hover{background:#ff6a42}" +
-    ".cs-nav .cs-sep{width:3px;background:#1C1838;margin:4px 3px}" +
+    "max-width:calc(100vw - 16px);padding:3px;background:#151E23;border:1px solid #3A4A54;border-top-color:#4c5e69;box-shadow:0 8px 24px rgba(0,0,0,.55);" +
+    "font:600 12px/1 'Chakra Petch','IBM Plex Sans',system-ui,-apple-system,Segoe UI,sans-serif;letter-spacing:.06em;text-transform:uppercase}" +
+    ".cs-nav a{display:inline-flex;align-items:center;gap:6px;min-height:40px;color:#E4ECEF;text-decoration:none;padding:0 12px;white-space:nowrap}" +
+    ".cs-nav a:hover{background:#26333B;color:#FFB547}" +
+    ".cs-nav a:focus-visible{outline:2px solid #FFB547;outline-offset:-2px}" +
+    ".cs-nav a[aria-current=page]{background:#E4ECEF;color:#0D1316}" +
+    ".cs-nav .cs-home{background:#FFB547;color:#0D1316;font-weight:700}" +
+    ".cs-nav .cs-home:hover{background:#ffc66e;color:#0D1316}" +
+    ".cs-nav .cs-sep{width:1px;background:#3A4A54;margin:4px 3px}" +
     ".cs-nav kbd{font:500 10px ui-monospace,monospace;opacity:.5}" +
     ".cs-nav.night{background:#120F2A;border-color:#EEEAFF;box-shadow:4px 4px 0 #7A4DFF}" +
     ".cs-nav.night a{color:#EEEAFF}.cs-nav.night a:hover{background:#211d45}" +
@@ -44,7 +44,7 @@
   var home = document.createElement("a");
   home.href = root.href;
   home.className = "cs-home";
-  home.innerHTML = "← <span>The wall</span>";
+  home.innerHTML = "← <span>résumé.txt</span>";
   home.title = "Back to the main site";
   nav.appendChild(home);
   var sep = document.createElement("span"); sep.className = "cs-sep"; sep.setAttribute("aria-hidden", "true"); nav.appendChild(sep);
@@ -60,9 +60,9 @@
   // inside an archived snapshot the register still lives at the real site root
   var infra = /\/versions\/v\d+\/$/.test(root.pathname) ? new URL("../../", root) : root;
   reg.href = new URL("timeline/", infra).href;
-  reg.innerHTML = '<span aria-hidden="true">▁▃▅</span><span class="cs-long">Register</span>';
-  reg.title = "Summit register: every version of this site";
-  reg.setAttribute("aria-label", "Summit register");
+  reg.innerHTML = '<span aria-hidden="true">▤</span><span class="cs-long">changelog</span>';
+  reg.title = "Changelog: every version of this site";
+  reg.setAttribute("aria-label", "Changelog");
   nav.appendChild(reg);
 
   document.addEventListener("keydown", function (e) {
