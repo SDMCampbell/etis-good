@@ -88,16 +88,17 @@
         },
         // robot: wander the screen, as before
         robot: null,
-        // wizard: drift into an evenly spaced horizontal line low on the screen, then sit in meditation riding a
-        // wave that rolls along the line without end (slow enough that they stay seated as they bob)
+        // wizard: drift into an evenly spaced horizontal line across the screen and sit in meditation on it. The line sits
+        // halfway up the screen, or level with the mouse pointer while it's on the page. The wave rolling along the line is
+        // drawn by wizard.js itself (the cursors hold still), so it's perfectly smooth and the wizards stay seated.
         wizard: function (a, now) {
           var i = slotOf(a), n = Math.max(size, slots.size), m = narrow ? 24 : 60;
           var x = scrollX + m + (i + .5) / n * (innerWidth - 2 * m);
-          var y = scrollY + innerHeight - (narrow ? 80 : 110) + Math.sin((x - scrollX) * .011 - now * .0021) * 16;
-          var p = where(a), d = Math.hypot(x - p[0], y - p[1]);
-          if (d > 30) { var ms = Math.min(3200, Math.max(500, d * 2.2)); return { x: x, y: y, ms: ms, wait: ms }; }   // one slow glide into place
-          a.el.dataset.rest = now;
-          return { x: x, y: y, ms: 150, wait: 90 };
+          var y = scrollY + (mouse ? Math.min(innerHeight - 30, Math.max(70, mouse.y)) : innerHeight / 2);
+          var p = where(a), d = Math.hypot(x - p[0], y - p[1]), onLine = a._lineT && now - a._lineT < 400;
+          if (!onLine && d > 30) { var ms = Math.min(3200, Math.max(500, d * 2.2)); return { x: x, y: y, ms: ms, wait: ms }; }   // one slow glide into place
+          a._lineT = now; a.el.dataset.rest = now; a.el.dataset.line = now;     // on the line: seated, riding the wave
+          return { x: x, y: y, ms: 260, wait: 90 };                               // ...and following the pointer up and down
         }
       };
       try { size = Math.min(30, +localStorage.getItem("swarmSize") || size); } catch (e) {}

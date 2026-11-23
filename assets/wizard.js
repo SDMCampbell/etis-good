@@ -46,7 +46,7 @@
     };
     svg.appendChild(g); cursor.appendChild(svg);
     return { g: g, p: parts, pose: JSON.parse(JSON.stringify(POSES.idle)), face: 1, x: null, y: null, vx: 0, vy: 0,
-      state: "idle", ox: 0, oy: 0, ovx: 0, ovy: 0, recoil: 0, lastClash: 0, castT: 0, seed: Math.random() * 10 };
+      state: "idle", wa: 0, wy: 0, ox: 0, oy: 0, ovx: 0, ovy: 0, recoil: 0, lastClash: 0, castT: 0, seed: Math.random() * 10 };
   }
 
   function render(s, now) {
@@ -106,7 +106,7 @@
       s.p.bolt.setAttribute("d", d + " L" + f1(end));
       s.p.flare.setAttribute("cx", end[0].toFixed(1)); s.p.flare.setAttribute("cy", end[1].toFixed(1)); s.p.flare.setAttribute("r", (2.5 + Math.random() * 3).toFixed(1));
     } else { s.p.bolt.setAttribute("d", ""); s.p.flare.setAttribute("r", 0); }
-    s.g.setAttribute("transform", "translate(" + s.ox.toFixed(1) + " " + s.oy.toFixed(1) + ") scale(" + s.face + " 1)");
+    s.g.setAttribute("transform", "translate(" + s.ox.toFixed(1) + " " + (s.oy + s.wy).toFixed(1) + ") scale(" + s.face + " 1)");
   }
 
   window.wizardMode = function () {
@@ -129,7 +129,8 @@
         s.x = p[0]; s.y = p[1];
         var speed = Math.hypot(s.vx, s.vy), prev = s.state;
         if (c._box) s.state = "cast";
-        else if (speed < .04 && c.dataset.rest && now - c.dataset.rest < 500) s.state = "meditate";
+        // seated stays seated through gentle movement (following the pointer, settling into place); only a real move stands it up
+        else if (c.dataset.rest && now - c.dataset.rest < 500 && speed < (c.dataset.line && now - c.dataset.line < 500 ? .6 : .25)) s.state = "meditate";
         else if (speed < .04) s.state = "idle";
         else if (Math.abs(s.vx) >= Math.abs(s.vy) * .7) s.state = "glide";
         else s.state = s.vy < 0 ? "up" : "down";
@@ -140,6 +141,11 @@
           s.target = [(bx - s.x - s.ox) * s.face, by - s.y - s.oy];          // in the sprite's own (flipped) frame
         } else { s.target = null; if (Math.abs(s.vx) > .03) s.face = s.vx > 0 ? 1 : -1; }
         lerp(s.pose, POSES[s.state], s.state === "cast" ? .4 : .16);           // wizards move a little more gently
+        // the idle line's wave: drawn here as an offset so it's smooth, eased in when a wizard joins the line and out when it leaves
+        var onLine = c.dataset.line && now - c.dataset.line < 500 && s.state === "meditate";
+        s.wa += ((onLine ? 1 : 0) - s.wa) * .06;
+        s.wy = s.wa * Math.sin((s.x - scrollX) * .011 - now * .0021) * 16;
+        if (c.dataset.state !== s.state) c.dataset.state = s.state;
         if (now < s.recoil) { s.pose.lean += (-.5 - s.pose.lean) * .5; }
       });
       collide(now, dt, document.querySelector(".swarm-intro-world"));
