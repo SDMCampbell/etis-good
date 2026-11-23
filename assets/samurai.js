@@ -8,6 +8,7 @@
 //   moving up       -> levitating: upright, legs hanging, arms eased out, faint lift lines under the feet
 //   moving down     -> a controlled descent in a crouched ready stance, hand on the hilt
 //   building        -> draws the sword and slashes across the element; sheathes it again when done
+//   nothing to do   -> lines up down the right side of the screen and sits in meditation, sword laid in front
 (function () {
   var SVGNS = "http://www.w3.org/2000/svg";
   // running is a full sprint: torso pitched far forward, both arms swept straight back
@@ -19,6 +20,8 @@
     up:   { lean: 0, tF: .1, kF: -.18, tB: -.05, kB: -.12, aF: .5, eF: .2, aB: -.5, eB: -.2 },
     // dropping: a controlled descent in a crouched ready stance, hand on the hilt, the other arm out for balance
     down: { lean: .18, tF: .9, kF: -1.55, tB: -.3, kB: -.85, aF: .75, eF: 1.25, aB: -.75, eB: .35 },
+    // meditation: kneeling seated on the heels, back straight, hands resting on the thighs
+    meditate: { lean: 0, tF: 1.5, kF: -3.05, tB: 1.42, kB: -2.98, aF: .35, eF: 1.15, aB: .25, eB: 1.2 },
     slash: { lean: .45, tF: 1.0, kF: -.6, tB: -.85, kB: .15, aF: 1.45, eF: .05, aB: 1.35, eB: .1 }
   };
   function dir(p, a, l) { return [p[0] + Math.sin(a) * l, p[1] + Math.cos(a) * l]; }
@@ -48,7 +51,7 @@
       var ph = s.phase, sw = Math.sin(ph);
       P.tF = .25 + sw * 1.0; P.kF = -(1 + Math.cos(ph)) * .8; P.tB = .25 - sw * 1.0; P.kB = -(1 - Math.cos(ph)) * .8;
     }
-    var bob = run ? Math.abs(Math.cos(s.phase)) * 1.4 + 1.5 : st === "idle" ? Math.sin(now / 420) * .5 : st === "up" ? -2 + Math.sin(now / 260) * 1 : st === "down" ? 3 : 0;
+    var bob = st === "meditate" ? -8.6 + Math.sin(now / 900) * .35 : run ? Math.abs(Math.cos(s.phase)) * 1.4 + 1.5 : st === "idle" ? Math.sin(now / 420) * .5 : st === "up" ? -2 + Math.sin(now / 260) * 1 : st === "down" ? 3 : 0;
     var hip = [0, -14 - bob];
     var neck = dir(hip, Math.PI - P.lean, 11);          // lean > 0 tips the torso forward
     var kF = dir(hip, P.tF, 7), fF = dir(kF, P.tF + P.kF, 7.2), kB = dir(hip, P.tB, 7), fB = dir(kB, P.tB + P.kB, 7.2);
@@ -60,7 +63,11 @@
     s.p.knot.setAttribute("d", seg(dir(head, Math.PI - P.lean + .6, 3.2), dir(head, Math.PI - P.lean + 1.3, 6)));
     // scabbard sits on the hip, angled back; the hilt pokes forward to where the hand rests
     var sHip = [hip[0] + 1, hip[1] - 1], sTip = dir(sHip, -1.05 - P.lean * .55, 12), hilt = dir(sHip, 2.1, 4);
-    if (st === "slash") {
+    if (st === "meditate") {
+      // sword laid on the ground in front, hilt to the right hand
+      s.p.saya.setAttribute("d", seg([4, -.8], [17, -.8]));
+      s.p.blade.setAttribute("d", seg([1.5, -.8], [4, -.8]));
+    } else if (st === "slash") {
       // the draw: the blade sweeps from over the shoulder down through the cut in the first ~220 ms
       var k = Math.min(1, (now - s.slashT) / 220), a = -2.4 + k * 3.7;
       s.p.saya.setAttribute("d", seg(sHip, sTip));
@@ -98,12 +105,14 @@
         s.x = p[0]; s.y = p[1];
         var speed = Math.hypot(s.vx, s.vy), prev = s.state;
         if (c.classList.contains("slash")) s.state = "slash";
+        else if (speed < .04 && c.dataset.rest && now - c.dataset.rest < 500) s.state = "meditate";
         else if (speed < .04) s.state = "idle";
         else if (Math.abs(s.vx) >= Math.abs(s.vy) * .7) s.state = "run";
         else s.state = s.vy < 0 ? "up" : "down";
         if (s.state === "slash" && prev !== "slash") s.slashT = now;
         if (s.state !== "slash" && Math.abs(s.vx) > .03) s.face = s.vx > 0 ? 1 : -1;
         if (s.state === "slash") s.face = 1;                                // the cut always runs to the bottom-right
+        if (s.state === "meditate") s.face = -1;                            // facing in towards the page
         if (s.state === "run") lerp(s.pose, RUN, .3);
         else lerp(s.pose, POSES[s.state], s.state === "slash" ? .45 : .22);
         if (now < s.recoil) { s.pose.lean += (-.45 - s.pose.lean) * .5; s.pose.aB += (-1.2 - s.pose.aB) * .5; }   // knocked back by a clash

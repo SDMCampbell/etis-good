@@ -1,4 +1,7 @@
-/*! swarm-intro (https://github.com/swarnadeep31/swarm-intro), compiled unmodified from src/index.ts to a browser script.
+/*! swarm-intro (https://github.com/swarnadeep31/swarm-intro), compiled from src/index.ts to a browser script.
+   Local patch (marked "etis-good patch" below), adding two options:
+     idle(agent, now) -> {x, y, ms, wait} | null : where an idle cursor should go instead of wandering at random
+     persist: true                                : keep the swarm on screen (idling) after the page is built
 MIT License
 
 Copyright (c) 2026 Swarnadeep Roy
@@ -137,7 +140,8 @@ function swarmIntro(options = {}) {
     window.addEventListener("scroll", syncScroll, { passive: true });
     const skipLabel = (_j = options.skipButton) !== null && _j !== void 0 ? _j : true;
     if (skipLabel) {
-        const btn = document.createElement("button");
+        var skipBtn;  // etis-good patch: kept so it can be hidden once the page is built
+        const btn = skipBtn = document.createElement("button");
         btn.type = "button";
         btn.className = "swarm-intro-skip";
         btn.textContent = typeof skipLabel === "string" ? skipLabel : "Skip intro  Esc";
@@ -304,6 +308,16 @@ function swarmIntro(options = {}) {
     };
     // Drift somewhere in view, but keep checking for work while drifting
     const wander = async (a) => {
+        // etis-good patch: a custom idle behaviour, if given
+        if (options.idle) {
+            const t = options.idle(a, performance.now());
+            if (t) {
+                a.idleUntil = 0;
+                moveTo(a, t.x, t.y, t.ms);
+                await wait(t.wait || 120);
+                return;
+            }
+        }
         if (performance.now() >= a.idleUntil) {
             const d = rand(900, 1700);
             a.idleUntil = performance.now() + d;
@@ -318,8 +332,13 @@ function swarmIntro(options = {}) {
                 a.idleUntil = 0;
                 await build(a, el);
             }
-            else if (pending <= 0)
+            else if (pending <= 0 && !options.persist)
                 return finish(false);
+            else if (pending <= 0) {
+                // etis-good patch: the page is built but the swarm stays, idling
+                if (typeof skipBtn !== "undefined" && skipBtn) skipBtn.style.display = "none";
+                await wander(a);
+            }
             else
                 await wander(a);
         }

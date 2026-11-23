@@ -10,7 +10,7 @@ index.html               the page, and the single call to the swarm library
 assets/resume-data.js    the content (edit here only)
 assets/content.js        renders the content into plain HTML
 assets/matrix.js         the animated background (one scene per mode)
-assets/swarm-intro.js    swarm-intro (MIT, Swarnadeep Roy), compiled unmodified from its src/index.ts
+assets/swarm-intro.js    swarm-intro (MIT, Swarnadeep Roy), compiled from its src/index.ts, with a small local patch (see below)
 assets/samurai.js        the "samurai" mode
 assets/robot.js          the "robot" mode
 assets/site.css          styles
@@ -28,6 +28,12 @@ Each mode is a different way of using the swarm library. Pick one with the switc
 **Swarm size**: the slider next to the mode switch sets how many cursors there are (1–30, remembered; more than that is just clutter). swarm-intro fixes its cursor count when it starts and can't add cursors to a running build, so moving the slider tears down the current swarm and rebuilds the page with the new count straight away.
 
 - **robot** (`#mode=robot`): every cursor is an animated stick-figure robot in a jet-powered suit (an original design): a solid helmet with a visor slit, an armoured chest and a thruster pack. Hovering on boot jets when still, boosting along upright with its boosters angled back when moving sideways, rising upright with palm and boot jets firing down, and dropping in a powered crouch with the jets braking. To build an element it braces, aims a palm and fires a beam into a glowing energy frame until the element blasts into existence.
+
+**When there's nothing to build**, the swarm now stays on screen (Esc or Skip dismisses it) and each mode idles its own way:
+**normal** circles the mouse pointer in two rings turning opposite ways (or the middle of the screen when the pointer isn't on it);
+**samurai** walk to a neat line down the right side of the screen and kneel in meditation with their swords laid in front of them;
+**robot** wander the screen as before. This needed a small patch to `swarm-intro.js`, marked "etis-good patch": an `idle` option that
+says where an idle cursor goes, and a `persist` option that keeps the swarm after the page is built.
 
 Each mode has its own background, all moving the same way (drifting down, parting around the pointer, fainter behind the text): **normal** is the matrix glyph rain, **samurai** is cherry blossom petals tumbling down from a sakura branch in the top-left corner, and **robot** is deep space, a twinkling starfield with faint, distant asteroids drifting through it.
 

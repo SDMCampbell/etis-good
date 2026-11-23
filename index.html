@@ -59,12 +59,41 @@
       // Swarm size: swarm-intro takes its cursor count at start-up and can't add cursors to a running build,
       // so changing the slider tears the current swarm down and rebuilds the page with the new count.
       var narrow = innerWidth < 768, size = narrow ? 8 : 14, intro = null;
+
+      // What a cursor does when it has nothing to build (the swarm now stays on screen after the page is built).
+      // Each returns where to go next ({x, y} in page coordinates, ms to get there, wait before asking again),
+      // or null for the library's own random wandering.
+      var mouse = null, slots = new Map();
+      addEventListener("pointermove", function (e) { if (e.pointerType === "mouse") mouse = { x: e.clientX, y: e.clientY }; }, { passive: true });
+      document.addEventListener("mouseout", function (e) { if (!e.relatedTarget) mouse = null; });     // pointer left the window: circle the centre
+      function slotOf(a) { if (!slots.has(a)) slots.set(a, slots.size); return slots.get(a); }
+      var IDLE = {
+        // normal: orbit the mouse pointer (or the middle of the screen), in two rings turning opposite ways
+        normal: function (a, now) {
+          var i = slotOf(a), ring = i % 2, n = Math.ceil(size / 2), k = Math.floor(i / 2);
+          var c = mouse || { x: innerWidth / 2, y: innerHeight / 2 }, r = ring ? 78 : 46;
+          var ang = k / n * Math.PI * 2 + now * (ring ? -.0018 : .0026);
+          return { x: scrollX + c.x + Math.cos(ang) * r, y: scrollY + c.y + Math.sin(ang) * r, ms: 160, wait: 90 };
+        },
+        // samurai: walk to a place in a neat line down the right side of the screen and sit in meditation
+        samurai: function (a) {
+          var i = slotOf(a), perCol = Math.max(4, Math.floor((innerHeight - 120) / 58)), col = Math.floor(i / perCol), row = i % perCol;
+          var x = scrollX + innerWidth - (narrow ? 30 : 70) - col * 46, y = scrollY + 110 + row * 58;
+          a.el.dataset.rest = performance.now();
+          var d = Math.hypot(x - a.x, y - a.y);
+          return { x: x, y: y, ms: d < 2 ? 200 : Math.max(250, d * 1.6), wait: 150 };
+        },
+        // robot: wander the screen, as before
+        robot: null
+      };
       try { size = Math.min(30, +localStorage.getItem("swarmSize") || size); } catch (e) {}
       var slider = document.getElementById("swarmSize"), out = document.getElementById("swarmSizeOut");
       function launch(first) {
+        slots = new Map();
         if (intro) intro.destroy();
         intro = swarmIntro({ root: "#content", logo: first ? RESUME.handle : false, respectReducedMotion: false,
-          cursors: size, maxCursors: Math.min(30, Math.max(size, narrow ? 14 : 24)) });
+          cursors: size, maxCursors: Math.min(30, Math.max(size, narrow ? 14 : 24)),
+          persist: true, idle: IDLE[MODE] });
       }
       slider.value = size; out.textContent = size;
       slider.oninput = function () { out.textContent = slider.value; };
