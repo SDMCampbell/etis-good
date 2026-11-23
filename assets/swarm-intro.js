@@ -2,7 +2,7 @@
    Local patch (marked "etis-good patch" below), adding two options:
      idle(agent, now) -> {x, y, ms, wait} | null : where an idle cursor should go instead of wandering at random
      persist: true                                : keep the swarm on screen (idling) after the page is built
-   and returning rework(el) from swarmIntro(): one cursor takes a built element apart (the build in reverse, from
+   and type: false (never type text in; just fade it in), and returning rework(el) from swarmIntro(): one cursor takes a built element apart (the build in reverse, from
    its bottom-right corner back to the top-left), then after a short pause another cursor builds it again.
 MIT License
 
@@ -198,6 +198,13 @@ function swarmIntro(options = {}) {
             return false;
         const len = ((_a = el.textContent) !== null && _a !== void 0 ? _a : "").trim().length;
         if (len === 0 || len > 400)
+            return false;
+        // etis-good patch: `type: false` turns typing off, and text that wraps onto more than one line is faded in
+        // instead: typing it sends the cursor zigzagging back and forth through the middle of the block, chasing the caret
+        if (options.type === false)
+            return false;
+        const cs = getComputedStyle(el), lh = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.25;
+        if (el.getBoundingClientRect().height > lh * 1.6)
             return false;
         // Gradient (background-clip) text would show through the hidden part
         return !isTransparent(getComputedStyle(el).color);
