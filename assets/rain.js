@@ -5,7 +5,12 @@
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   var manifestScript = document.querySelector('script[src$="versions/manifest.js"]');
   var INFRA = manifestScript ? new URL("../", manifestScript.src) : new URL("./", location.href);
-  var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // The OS "reduce motion" setting (Windows: Settings > Accessibility > Visual effects > Animation effects off) turns the
+  // animation off by default. A visitor can still opt in for this site; the choice is remembered.
+  var osReduce = matchMedia("(prefers-reduced-motion: reduce)").matches, motionPref = null;
+  try { motionPref = localStorage.getItem("motion"); } catch (e) {}
+  var reduce = motionPref === "on" ? false : motionPref === "off" ? true : osReduce;
+  document.documentElement.classList.toggle("still", reduce);
   var small = matchMedia("(max-width: 600px)").matches;
 
   // ---------- 1. the document: real text, rendered from data ----------
@@ -741,6 +746,18 @@
     }, function () { say("> couldn't copy. long-press the address instead"); });
   });
 
+  // ---------- motion switch: lets visitors whose system reduces motion turn the swarm on (and anyone turn it off) ----------
+  function setMotion(on) { try { localStorage.setItem("motion", on ? "on" : "off"); sessionStorage.removeItem("rained"); } catch (e) {} location.reload(); }
+  var mNote = $("motionNote");
+  if (mNote && reduce) {
+    mNote.hidden = false;
+    mNote.innerHTML = osReduce && motionPref !== "off" ? '// animation is paused because your device is set to reduce motion · <button type="button" id="motionOn">[ play the swarm anyway ]</button>'
+      : '// animation is off · <button type="button" id="motionOn">[ turn it back on ]</button>';
+    $("motionOn").addEventListener("click", function () { setMotion(true); });
+  }
+  var mBtn = document.querySelector('[data-order="motion"]');
+  if (mBtn) mBtn.innerHTML = reduce ? "motion: off · turn on" : "motion: on · turn off";
+
   // ---------- hive menu: every swarm order in one place (reachable on phones too) ----------
   var hiveBtn = $("hiveBtn"), menu = $("swarmMenu");
   if (reduce) menu.querySelectorAll('[data-order="replay"], [data-order="form"]').forEach(function (b) { b.hidden = true; });
@@ -765,6 +782,7 @@
     else if (o === "board") setView(document.body.classList.contains("board") ? "doc" : "board");
     else if (o === "phosphor") nextTheme();
     else if (o === "keys") keys.showModal();
+    else if (o === "motion") setMotion(reduce);
     else { var sb = document.querySelector('[data-sort="' + o + '"]'); $("exp-h").scrollIntoView({ block: "start" }); requestAnimationFrame(function () { sb.click(); }); }
   });
 

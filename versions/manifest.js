@@ -4,7 +4,7 @@
  * verdict: baseline | kept | rejected | merged (partly folded into a later version)
  */
 window.VERSIONS = {
-  "current": 49,
+  "current": 50,
   "list": [
     {
       "v": 0,
@@ -504,6 +504,16 @@ window.VERSIONS = {
       "note": "The entrance now works the way swarm-intro does, rebuilt in our own code. On a fresh visit the drones huddle round a [ doog ] badge in the middle of the screen, then break off. Each drone claims an element, flies to its top-left corner and drags a dashed selection box to the bottom-right with a live 'W × H' size label, and that element's words then fall into the box. Sections further down build as you scroll to them; fast scrolling calls in extra drones (up to 56) and speeds up the build. Skip, Esc or any key finishes instantly; reduced motion shows the page with no animation.",
       "why": "Samuel asked for the swarm to use swarm-intro or our own version of it. Neither machine can download the package (GitHub and npm are blocked), so this is an independent implementation built on our falling-text engine. The README credits the original (MIT).",
       "try": "Open the site in a new tab (the full build plays once per session), then scroll fast.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 50,
+      "title": "Motion switch",
+      "verdict": "kept",
+      "featured": true,
+      "note": "Visitors whose device is set to reduce motion (on Windows: Animation effects turned off) used to get a completely still page, with no rain, drones or build. That's what Samuel saw. They now get a line under the summary saying animation is paused because of that setting, with [ play the swarm anyway ], and the choice is remembered. The hive menu has a 'motion' switch so anyone can turn the swarm on or off.",
+      "why": "Samuel reported seeing no animation at all. Checked in his own browser: the page reports prefers-reduced-motion: reduce, so the site had deliberately switched every effect off. All our tests ran with motion allowed, so they never showed what he sees.",
+      "try": "With reduced motion on, click [ play the swarm anyway ]; or open the swarm menu and choose 'motion'.",
       "date": "2026-11-22"
     }
   ]
