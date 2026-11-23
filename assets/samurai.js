@@ -8,7 +8,8 @@
 //   moving up       -> levitating: upright, legs hanging, arms eased out, faint lift lines under the feet
 //   moving down     -> a controlled descent in a crouched ready stance, hand on the hilt
 //   building        -> draws the sword and slashes across the element; sheathes it again when done
-//   nothing to do   -> lines up down the right side of the screen and sits in meditation, sword laid in front
+//   nothing to do   -> lines up down the right side of the screen, poised in a low iaijutsu stance: one hand on the
+//                      hilt, the other on the scabbard, sword sheathed and ready to draw
 (function () {
   var SVGNS = "http://www.w3.org/2000/svg";
   // running is a full sprint: torso pitched far forward, both arms swept straight back
@@ -20,11 +21,17 @@
     up:   { lean: 0, tF: .1, kF: -.18, tB: -.05, kB: -.12, aF: .5, eF: .2, aB: -.5, eB: -.2 },
     // dropping: a controlled descent in a crouched ready stance, hand on the hilt, the other arm out for balance
     down: { lean: .18, tF: .9, kF: -1.55, tB: -.3, kB: -.85, aF: .75, eF: 1.25, aB: -.75, eB: .35 },
-    // meditation: kneeling seated on the heels, back straight, hands resting on the thighs
-    meditate: { lean: 0, tF: 1.5, kF: -3.05, tB: 1.42, kB: -2.98, aF: .35, eF: 1.15, aB: .25, eB: 1.2 },
+    // iaijutsu ready: low wide stance, leaning in, drawing hand on the hilt, the other gripping the scabbard at the hip
+    meditate: { lean: .26, tF: .85, kF: -.95, tB: -.7, kB: .3, aF: .55, eF: 1.3, aB: .05, eB: 1.45 },
     slash: { lean: .45, tF: 1.0, kF: -.6, tB: -.85, kB: .15, aF: 1.45, eF: .05, aB: 1.35, eB: .1 }
   };
   function dir(p, a, l) { return [p[0] + Math.sin(a) * l, p[1] + Math.cos(a) * l]; }
+  // two-bone IK: the elbow for an arm from shoulder s to hand h (segment lengths a, b), bending outward/down
+  function ik(s, h, a, b, side) {
+    var dx = h[0] - s[0], dy = h[1] - s[1], d = Math.min(a + b - .01, Math.hypot(dx, dy)) || .01;
+    var x = (a * a - b * b + d * d) / (2 * d), y = Math.sqrt(Math.max(0, a * a - x * x)), ux = dx / Math.hypot(dx, dy), uy = dy / Math.hypot(dx, dy);
+    return [s[0] + ux * x - uy * y * side, s[1] + uy * x + ux * y * side];
+  }
   function lerp(cur, tgt, k) { for (var key in tgt) cur[key] += (tgt[key] - cur[key]) * k; }
 
   function makeSprite(cursor) {
@@ -51,7 +58,7 @@
       var ph = s.phase, sw = Math.sin(ph);
       P.tF = .25 + sw * 1.0; P.kF = -(1 + Math.cos(ph)) * .8; P.tB = .25 - sw * 1.0; P.kB = -(1 - Math.cos(ph)) * .8;
     }
-    var bob = st === "meditate" ? -8.6 + Math.sin(now / 900) * .35 : run ? Math.abs(Math.cos(s.phase)) * 1.4 + 1.5 : st === "idle" ? Math.sin(now / 420) * .5 : st === "up" ? -2 + Math.sin(now / 260) * 1 : st === "down" ? 3 : 0;
+    var bob = st === "meditate" ? -3.2 + Math.sin(now / 1100) * .3 : run ? Math.abs(Math.cos(s.phase)) * 1.4 + 1.5 : st === "idle" ? Math.sin(now / 420) * .5 : st === "up" ? -2 + Math.sin(now / 260) * 1 : st === "down" ? 3 : 0;
     var hip = [0, -14 - bob];
     var neck = dir(hip, Math.PI - P.lean, 11);          // lean > 0 tips the torso forward
     var kF = dir(hip, P.tF, 7), fF = dir(kF, P.tF + P.kF, 7.2), kB = dir(hip, P.tB, 7), fB = dir(kB, P.tB + P.kB, 7.2);
@@ -64,9 +71,15 @@
     // scabbard sits on the hip, angled back; the hilt pokes forward to where the hand rests
     var sHip = [hip[0] + 1, hip[1] - 1], sTip = dir(sHip, -1.05 - P.lean * .55, 12), hilt = dir(sHip, 2.1, 4);
     if (st === "meditate") {
-      // sword laid on the ground in front, hilt to the right hand
-      s.p.saya.setAttribute("d", seg([4, -.8], [17, -.8]));
-      s.p.blade.setAttribute("d", seg([1.5, -.8], [4, -.8]));
+      // sheathed katana at the hip, hilt forward and a little up, scabbard running back past the hip: the
+      // drawing hand is on the hilt, the other hand grips the scabbard mouth. Both arms reach their grips by IK.
+      var sa = Math.PI - 1.2 - P.lean * .3;                           // sword direction: forward, ~20° above level
+      var sd = [Math.sin(sa), Math.cos(sa)], guard = [hip[0] + 4.5, hip[1] - 2.5], tail = [guard[0] - sd[0] * 19, guard[1] - sd[1] * 19];
+      var grip = [guard[0] + sd[0] * 2.6, guard[1] + sd[1] * 2.6], mouth = [guard[0] - sd[0] * 2.4, guard[1] - sd[1] * 2.4];
+      var eGrip = ik(shoulder, grip, 5.5, 5.5, 1), eMouth = ik(shoulder, mouth, 5.5, 5.5, 1);
+      s.p.body.setAttribute("d", seg(hip, neck) + seg(hip, kF, fF) + seg(hip, kB, fB) + seg(shoulder, eGrip, grip) + seg(shoulder, eMouth, mouth));
+      s.p.saya.setAttribute("d", seg(guard, tail) + seg([guard[0] - sd[1] * 1.8, guard[1] + sd[0] * 1.8], [guard[0] + sd[1] * 1.8, guard[1] - sd[0] * 1.8]));
+      s.p.blade.setAttribute("d", seg(guard, [guard[0] + sd[0] * 4, guard[1] + sd[1] * 4]));     // the grip, ahead of the guard (tsuba)
     } else if (st === "slash") {
       // the draw: the blade sweeps from over the shoulder down through the cut in the first ~220 ms
       var k = Math.min(1, (now - s.slashT) / 220), a = -2.4 + k * 3.7;

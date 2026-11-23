@@ -31,7 +31,7 @@ Each mode is a different way of using the swarm library. Pick one with the switc
 
 **When there's nothing to build**, the swarm now stays on screen (Esc or Skip dismisses it) and each mode idles its own way:
 **normal** circles the mouse pointer in two rings turning opposite ways (or the middle of the screen when the pointer isn't on it);
-**samurai** walk to a neat line down the right side of the screen and kneel in meditation with their swords laid in front of them;
+**samurai** walk to a neat line down the right side of the screen and wait poised in a low iaijutsu stance, katana sheathed at the hip with one hand on the hilt, ready to draw;
 **robot** wander the screen as before. This needed a small patch to `swarm-intro.js`, marked "etis-good patch": an `idle` option that
 says where an idle cursor goes, and a `persist` option that keeps the swarm after the page is built.
 
