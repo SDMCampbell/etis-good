@@ -189,3 +189,4 @@ html[data-theme="paper"] .amb { display: none; }
 .motion-note { color: var(--accent); margin: 0 0 10px; }
 .motion-note[hidden] { display: none; }
 .motion-note button { background: none; border: 0; padding: 0; min-height: 36px; font: inherit; color: var(--link); text-decoration: underline; cursor: pointer; }
+@media (max-width: 600px) { .swarm-intro-skip { bottom: 72px !important; } }

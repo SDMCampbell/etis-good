@@ -50,7 +50,9 @@ tools/og-card.html    share-card generator
 tools/tests/          regression suite (Playwright)
 ```
 
-How the build intro works: on a fresh visit the drones huddle round a `[ doog ]` badge, then break off. Each one claims an element, flies to its corner and drags out a selection box with a live `W × H` readout, and the element's words then fall into the box. Sections further down build as you scroll to them, and fast scrolling speeds the build up and calls in extra drones. Skip with the button, Esc or any key. This is our own implementation of the idea behind [swarm-intro](https://github.com/swarnadeep31/swarm-intro) (MIT, by Swarnadeep Roy), adapted to the falling-text engine rather than using the package itself.
+How the page is built: every load, the text is built by [swarm-intro](https://github.com/swarnadeep31/swarm-intro) (MIT, Swarnadeep Roy), vendored unmodified as `assets/swarm-intro.js` (compiled from its `src/index.ts`). Cursors gather round the `doog` badge, then each one drags a selection box with a live size label over an element and types its text in; sections lower down build as you scroll to them. Skip with its button, Esc or any key. When it finishes, the site's own ▸ drones take over for everything interactive. An inline script in `<head>` hides the page until the intro starts, using the same motion setting as `rain.js`.
+
+To update the library: replace `swarm-intro-main/src/index.ts`, compile it (`tsc index.ts --target ES2019 --module ES2015 --lib ES2020,DOM`), drop the `export` keywords and wrap it as in the current `assets/swarm-intro.js`.
 
 How the text rain works: the real text is in the DOM from the first frame (so layout never shifts and screen readers, search and copy/paste work), hidden with transparent colour until its words land. A canvas on top paints the falling glyphs at exactly the positions measured from the live text. The same measure → change the DOM → measure again → fly every word between the two positions engine powers sorting, the board view, gather and dispatch.
 

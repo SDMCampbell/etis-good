@@ -6,8 +6,8 @@
   "goal": "Samuel Campbell's résumé site as a pure-text experience: every line rains down from the top and locks into place, escorted by a swarm of tiny cursor drones (original, inspired by falling-code films and drone-swarm sci-fi; no film quotes, logos or names). Recruiters still get name/role/company/email immediately; content always renders from assets/resume-data.js and stays real, selectable, accessible text.",
   "timeline_rules": "Every evaluated round is snapshotted to versions/vNN/ and listed in versions/manifest.js. Turning points are featured. Visitors can open any version, step between milestones, and return to the current best in one action. Losing experiments stay in the archive.",
   "design_spec": "NEWDESIGNS.md section 'Direction 3: Text Rain' (this run). Cockpit spec above it is kept for history.",
-  "last_completed_version": 50,
-  "strongest_version": 50,
+  "last_completed_version": 51,
+  "strongest_version": 51,
   "target_version": 66,
   "run": {
     "started": null,
@@ -34,12 +34,12 @@
     ]
   },
   "brief": {
-    "next_version": 51,
-    "protect": "v50: motion switch, swarm build, everything from v48.",
-    "weakness": "Not yet checked on real phones; the old rooms are still in the Learning Curve style.",
-    "experiment": "Reskin or retire the rooms; real-device check; opt-in sound.",
+    "next_version": 52,
+    "protect": "v51: swarm-intro build, motion switch, everything from v48.",
+    "weakness": "The intro's cursors keep wandering until every element on the page has been built, so short visits that don't scroll to the bottom keep a light overlay of cursors.",
+    "experiment": "Reskin or retire the rooms; consider handing the drones' toys over to swarm-intro-style cursors for one consistent look.",
     "expected_payoff": "One consistent site everywhere.",
-    "question": "Reskin or retire the rooms?"
+    "question": "Should the ▸ drones be replaced by the library's arrow cursors everywhere?"
   },
   "history": [
     {
@@ -347,6 +347,12 @@
       "title": "Motion switch",
       "verdict": "kept",
       "lesson": "Respecting reduced motion silently can look like a broken site to its own owner. Say what's happening and let the visitor choose."
+    },
+    {
+      "v": 51,
+      "title": "Built by swarm-intro",
+      "verdict": "kept",
+      "lesson": "Phones fire height-only resize events as the address bar slides, and the old 'skip on resize' rule killed the intro on mobile. Now only width changes skip it. The library's own reduced-motion check is turned off so our motion switch is the single source of truth."
     }
   ],
   "cycle_reviews": [

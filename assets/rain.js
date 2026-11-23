@@ -275,6 +275,7 @@
     if (!pending.length) { done = true; $("skip").hidden = true; }
   }
   function skipAll() {
+    if (intro) { var it = intro; intro = null; it.skip(); }
     if (done) return;
     done = true; cancelAnimationFrame(raf); raf = 0; active = []; surveys = []; gather = null;
     drones.forEach(function (d) { if (d.state === "survey" || d.state === "hold" || (d.state === "form" && !formation)) d.state = "idle"; });
@@ -840,21 +841,30 @@
   else { blocks.forEach(function (b) { b.classList.add("veiled"); }); makeDrones(small ? 16 : 24); }
   var io = null;
   var ready = document.fonts && document.fonts.ready ? Promise.race([document.fonts.ready, new Promise(function (r) { setTimeout(r, 900); })]) : Promise.resolve();
+  // The page is built by swarm-intro (assets/swarm-intro.js): cursors gather round the handle badge, then drag a
+  // selection box over every element and type its text in. Our own drones take over once it finishes.
+  var intro = null;
   ready.then(function () {
     if (done || reduce) return;
-    var GATHER = quick ? 0 : 650;
-    if (GATHER) { startGather(GATHER); kick(); }
-    var t = performance.now() + 80 + GATHER;
-    var hero = blocks.filter(function (b) { return b.dataset.priority; });
-    hero.forEach(function (b) { rainBlock(b, t, true); });
-    blocks.filter(function (b) { return b.classList.contains("top"); }).forEach(function (b) { rainBlock(b, t + 200, true); });
-    if ("IntersectionObserver" in window) {
-      io = new IntersectionObserver(function (en) {
-        en.forEach(function (x) { if (x.isIntersecting && !x.target._rained) rainBlock(x.target, performance.now(), false); });
-      }, { rootMargin: "0px 0px -10% 0px" });
-      blocks.forEach(function (b) { if (!b._rained) io.observe(b); });
-    } else skipAll();
+    blocks.forEach(function (b) { b._rained = true; b._left = 0; b.classList.remove("veiled"); });
+    if (!window.swarmIntro) { finishIntro(); return; }
+    $("skip").hidden = true; canvas.style.visibility = "hidden";
+    var bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+    intro = window.swarmIntro({
+      targets: "h1,h2,h3,p,span,a,button,li,label,kbd,dt,dd",
+      logo: R.handle || "doog",
+      color: INK.acc, background: bg,
+      cursors: small ? 10 : 18, maxCursors: small ? 16 : 30,
+      skipButton: "skip ▸▸  esc",
+      respectReducedMotion: false,          // our motion switch already decided (see `reduce` above)
+      onComplete: finishIntro
+    });
   });
+  function finishIntro() {
+    intro = null; canvas.style.visibility = ""; done = true; $("skip").hidden = true;
+    try { sessionStorage.setItem("rained", "1"); } catch (e) {}
+    kick();
+  }
   function findFromHash() {
     var fm = decodeURIComponent(location.hash).match(/^#find=(.+)$/);
     if (fm && fm[1] !== findIn.value) { skipAll(); setTimeout(function () { openFind(false); findIn.value = fm[1]; find(fm[1]); if (hits[0]) nextHit(); }, 50); }
@@ -863,6 +873,7 @@
   $("skip").addEventListener("click", skipAll);
   addEventListener("keydown", function (e) { if (!e.metaKey && !e.ctrlKey) skipAll(); });
   addEventListener("click", function (e) { if (e.target.id !== "skip") skipAll(); }, true);
-  addEventListener("resize", function () { size(); skipAll(); });
+  var lastW = innerWidth;
+  addEventListener("resize", function () { size(); if (innerWidth !== lastW) { lastW = innerWidth; skipAll(); } });   // phones fire height-only resizes as the address bar moves
   document.addEventListener("visibilitychange", function () { if (document.hidden) skipAll(); });
 })();

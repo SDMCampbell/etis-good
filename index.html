@@ -18,6 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/rain.css">
+  <script>/* hide the page until swarm-intro takes over (same check as the motion switch in rain.js) */try{var m=localStorage.getItem("motion"),r=matchMedia("(prefers-reduced-motion: reduce)").matches;if(m==="on"||(m!=="off"&&!r)){document.documentElement.setAttribute("data-swarm-intro","");var st=document.createElement("style");st.id="swarm-intro-preload";st.textContent="html[data-swarm-intro] body>*{opacity:0;animation:swarm-intro-failsafe 0s 4s forwards}@keyframes swarm-intro-failsafe{to{opacity:1}}";document.head.appendChild(st)}}catch(e){}</script>
 </head>
 <body>
   <header class="top" data-rain>
@@ -92,6 +93,7 @@
   <script src="assets/resume-data.js"></script>
   <script src="assets/derive.js"></script>
   <script src="versions/manifest.js"></script>
+  <script src="assets/swarm-intro.js"></script>
   <script src="assets/rain.js"></script>
   <script src="assets/switcher.js"></script>
 </body>

@@ -4,7 +4,7 @@
  * verdict: baseline | kept | rejected | merged (partly folded into a later version)
  */
 window.VERSIONS = {
-  "current": 50,
+  "current": 51,
   "list": [
     {
       "v": 0,
@@ -514,6 +514,16 @@ window.VERSIONS = {
       "note": "Visitors whose device is set to reduce motion (on Windows: Animation effects turned off) used to get a completely still page, with no rain, drones or build. That's what Samuel saw. They now get a line under the summary saying animation is paused because of that setting, with [ play the swarm anyway ], and the choice is remembered. The hive menu has a 'motion' switch so anyone can turn the swarm on or off.",
       "why": "Samuel reported seeing no animation at all. Checked in his own browser: the page reports prefers-reduced-motion: reduce, so the site had deliberately switched every effect off. All our tests ran with motion allowed, so they never showed what he sees.",
       "try": "With reduced motion on, click [ play the swarm anyway ]; or open the swarm menu and choose 'motion'.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 51,
+      "title": "Built by swarm-intro",
+      "verdict": "kept",
+      "featured": true,
+      "note": "Every page load is now built by the real swarm-intro library (vendored unmodified as assets/swarm-intro.js). Cursors fly in and circle the 'doog' badge, then each one drags a selection box with a live size label over an element and types its text in. Sections further down build as you scroll to them, and fast scrolling calls in more cursors. When it's done, the site's own ▸ drones take over for sorting, gather, dispatch and the rest. The page is hidden from first paint until the intro starts, so there's no flash of finished text.",
+      "why": "Samuel added the library to the project folder and asked for all text to be built with it from the moment the page loads.",
+      "try": "Load the page (every load plays it), then scroll down while it's building.",
       "date": "2026-11-22"
     }
   ]
