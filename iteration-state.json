@@ -6,8 +6,8 @@
  "goal": "Samuel Campbell's résumé site as a pure-text experience: every line rains down from the top and locks into place, escorted by a swarm of tiny cursor drones (original, inspired by falling-code films and drone-swarm sci-fi; no film quotes, logos or names). Recruiters still get name/role/company/email immediately; content always renders from assets/resume-data.js and stays real, selectable, accessible text.",
  "timeline_rules": "Every evaluated round is snapshotted to versions/vNN/ and listed in versions/manifest.js. Turning points are featured. Visitors can open any version, step between milestones, and return to the current best in one action. Losing experiments stay in the archive.",
  "design_spec": "NEWDESIGNS.md section 'Direction 3: Text Rain' (this run). Cockpit spec above it is kept for history.",
- "last_completed_version": 72,
- "strongest_version": 72,
+ "last_completed_version": 73,
+ "strongest_version": 73,
  "target_version": 89,
  "run": {
   "started": null,
@@ -42,12 +42,12 @@
   ]
  },
  "brief": {
-  "next_version": 73,
-  "protect": "v72 mow intro + tractor mode",
-  "weakness": "Unverified in Samuel's browser; sound unheard; old rooms unchanged.",
-  "experiment": "Real-browser check after push.",
-  "expected_payoff": "Confidence on his machine.",
-  "question": "How does it look on his PC?"
+  "next_version": 74,
+  "protect": "v73 text-mow intro, tractor mode",
+  "weakness": "Not yet seen on his machine.",
+  "experiment": "Check in his browser after push.",
+  "expected_payoff": "Confidence.",
+  "question": "Is this the mowing he pictured?"
  },
  "history": [
   {
@@ -487,6 +487,12 @@
    "title": "Mow to reveal",
    "verdict": "kept",
    "lesson": "The first version mowed the whole screen in about a second. The field needs a held beat and slower tractors (0.9 px/ms) to read as tractors at work rather than a wipe transition."
+  },
+  {
+   "v": 73,
+   "title": "Swarm mows the text",
+   "verdict": "kept",
+   "lesson": "Fast scrolling could jump a line from below the screen to above it between frames, so it never got queued and the intro never finished. Lines are now queued once they've been reached at all, whether they're on screen or already past."
   }
  ],
  "cycle_reviews": [
@@ -671,6 +677,10 @@
   {
    "date": "2026-11-23 08:05",
    "text": "On page load the whole page should look like a massive field of grass; the tractor swarm mows the entire page so the website text can be seen."
+  },
+  {
+   "date": "2026-11-23 08:27",
+   "text": "Didn't like v72's grass-cover animation; wants the swarm to mow the text itself (each element mowed into view)."
   }
  ],
  "next_invocation_brief": {

@@ -195,8 +195,8 @@ html[data-theme="paper"] .amb { display: none; }
 /* tractor mode: text is drawn as grass on the canvas; mowed elements show their text again */
 /* text-fill-color hides the glyphs while leaving every element's real colour alone, so a mowed element (and
    everything inside it) gets its own colours back instead of inheriting "transparent" from its parents */
-html.tractor :is(.top, .doc, .pbar) { -webkit-text-fill-color: transparent; }
-html.tractor :is(.top, .doc, .pbar) * { text-decoration-color: transparent !important; text-shadow: none !important; border-color: transparent !important; }
+html.tractor :is(.top, .doc) { -webkit-text-fill-color: transparent; }
+html.tractor :is(.top, .doc) * { text-decoration-color: transparent !important; text-shadow: none !important; border-color: transparent !important; }
 html.tractor .doc { cursor: pointer; }
 html.tractor .mowed { cursor: default; }
 html.tractor .amb { display: none; }
@@ -243,6 +243,9 @@ html.driving .doc { cursor: crosshair; }
 }
 .tractor-bar button.on { color: #ffd76a; }
 
-/* v72: mow intro, a field of grass over the whole page that the tractors cut away */
-.field { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 50; pointer-events: none; }
-.field[hidden] { display: none; }
+/* v73: load intro. Until the swarm mows each word, the text is drawn as grass on the canvas and the real
+   glyphs are hidden. A failsafe shows the text after 9 s in case the script never runs. */
+html.mowin :is(.top, .doc) { -webkit-text-fill-color: transparent; animation: mowin-failsafe 0s 9s forwards; }
+html.mowin :is(.top, .doc) * { text-decoration-color: transparent; }
+@keyframes mowin-failsafe { to { -webkit-text-fill-color: currentColor; } }
+html.mowin.live :is(.top, .doc) { animation: none; }

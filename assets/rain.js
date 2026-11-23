@@ -758,6 +758,7 @@
   // top edges. Tractors till each line (soil first), then the letters rise out of the ground and grow. Clicking grass
   // sends a tractor to mow it: the letters are cut away, leaving clippings and stubble.
   // The real text stays in the page, invisible (screen readers, find and copy still work).
+  var mowIn = false, holdUntil = 0;                                                 // the load intro: every word starts as grass and the swarm mows it into text
   var tractor = false, field = [], tractorBar = $("tractorBar"), clips = [];
   var MOWABLE = "p, li, h1, h2, h3, a, button, .who, .sys, dd, dt, label, #stamp";
   var fieldBusyUntil = 0, lastInput = performance.now(), lastFieldDraw = 0;
@@ -925,6 +926,10 @@
     for (i = 0; i < w.t.length; i++) {
       if (w.ct[i] === null) continue;
       var sxp = sod.pad + i * cw, lx = dx + sxp;
+      if (w.mt[i] !== null && mowIn) {                              // load intro: mowing uncovers the real letter
+        ctx.globalAlpha = Math.min(1, (now - w.mt[i]) / 160); ctx.font = w.font; ctx.fillStyle = w.color; ctx.textBaseline = "middle";
+        ctx.fillText(w.t[i], lx + .0, w.y - oy + w.h / 2); ctx.globalAlpha = 1; continue;
+      }
       if (w.mt[i] !== null) {                                       // mowed: a freshly cut, striped strip of lawn
         var age2 = now - w.mt[i], fa = Math.min(1, age2 / 250), band = Math.max(3, w.h * .16);
         var stripe = Math.floor((w.x + i * cw) / 14) % 2;
@@ -965,9 +970,10 @@
     var topH = document.querySelector(".top").getBoundingClientRect().bottom;
     for (var i = 0; i < field.length; i++) {
       var ln = field[i], oy = ln.fixed ? 0 : sy, vy = ln.y - oy;
-      if (vy > H + 40 || vy + ln.h < -40) continue;
+      if (vy > H + 40) continue;
+      if (ln.state === "raw" && vy < H - 4 && now >= holdUntil) queueLine(ln, mowIn ? "mow" : "till");   // includes lines already scrolled past
+      if (vy + ln.h < -40) continue;
       if (!ln.fixed && vy < topH) continue;                               // don't draw over the sticky header
-      if (ln.state === "raw" && vy < H - 20 && vy > -ln.h) queueLine(ln, "till");
       for (var j = 0; j < ln.words.length; j++) {
         var w = ln.words[j];
         if (w.mowEl === undefined) w.mowEl = elAtWord(w);
@@ -1001,7 +1007,7 @@
   function updateClips(now) {
     for (var i = clips.length - 1; i >= 0; i--) {
       var c = clips[i], dt = Math.min(.05, (now - c.t) / 1000); c.t = now;
-      if (!c.down) { c.vy += 900 * dt; c.x += c.vx * dt; c.y += c.vy * dt; c.r += c.vr * dt; if (c.vy > 0 && c.y >= c.gy) { c.y = c.gy; c.down = true; c.life = 5; } }
+      if (!c.down) { c.vy += 900 * dt; c.x += c.vx * dt; c.y += c.vy * dt; c.r += c.vr * dt; if (c.vy > 0 && c.y >= c.gy) { c.y = c.gy; c.down = true; c.life = mowIn ? .6 : 5; } }
       c.life -= dt;
       if (c.life <= 0) { clips.splice(i, 1); continue; }
       if (c.sy0 !== scrollY) { c.y -= scrollY - c.sy0; c.gy -= scrollY - c.sy0; c.sy0 = scrollY; }
@@ -1147,7 +1153,7 @@
   // click a patch of grass and a tractor comes to mow it
   document.addEventListener("click", function (e) {
     if (tractor && driver && !e.target.closest("#tractorBar, #swarmMenu, #hiveBtn, .top, dialog")) { e.preventDefault(); e.stopPropagation(); return; }   // clicks steer while driving
-    if (!tractor || e.target.closest("#tractorBar, #swarmMenu, #hiveBtn, .swarm-intro-layer, #find, dialog")) return;
+    if (!tractor || mowIn || e.target.closest("#tractorBar, #swarmMenu, #hiveBtn, .swarm-intro-layer, #find, dialog")) return;
     if (!e.target.closest(".top, .doc, .pbar")) return;
     var el = e.target.closest(MOWABLE); if (!el) return;
     e.preventDefault(); e.stopPropagation();
@@ -1281,10 +1287,11 @@
     var els = []; field.forEach(function (ln) { ln.words.forEach(function (w) { if (w.mowEl && els.indexOf(w.mowEl) < 0) els.push(w.mowEl); }); });
     els.forEach(mow);
   });
-  window.__tractorDebug = function () { var c = {}; drones.forEach(function (d) { c[d.state] = (c[d.state] || 0) + 1; }); return { drones: c, q: growQ.length, driving: field.filter(function (l) { return l.drone; }).length, states: field.reduce(function (a, l) { a[l.state] = (a[l.state] || 0) + 1; return a; }, {}), sample: drones.slice(0, 4).map(function (d) { return [Math.round(d.x), Math.round(d.y), d.state]; }) }; };
+  window.__tractorDebug = function () { var c = {}; drones.forEach(function (d) { c[d.state] = (c[d.state] || 0) + 1; }); return { drones: c, q: growQ.length, driving: field.filter(function (l) { return l.drone; }).length, states: field.reduce(function (a, l) { a[l.state] = (a[l.state] || 0) + 1; return a; }, {}), sample: drones.slice(0, 4).map(function (d) { return [Math.round(d.x), Math.round(d.y), d.state]; }), left: field.filter(function (l) { return l.state !== "mowed"; }).map(function (l) { return [Math.round(l.y), l.state, l.fixed, l.words.map(function (w) { return w.t; }).join(" ").slice(0, 30)]; }).slice(0, 12) }; };
   var tReb = 0;
   var tW = innerWidth;
   addEventListener("resize", function () {
+    if (mowIn && innerWidth !== tW) { tW = innerWidth; endMowIn(); return; }
     if (!tractor || innerWidth === tW) return;           // phones fire height-only resizes as the address bar moves
     tW = innerWidth; clearTimeout(tReb);
     tReb = setTimeout(function () {                      // re-flowed text: rebuild the field fully grown where it was grown
@@ -1401,133 +1408,34 @@
     if (wantTractor) { finishIntro(); setTractor(true, true); return; }   // tractor mode remembered: the tractors till the page instead
     if (done || reduce) { coverOff(); return; }
     blocks.forEach(function (b) { b._rained = true; b._left = 0; b.classList.remove("veiled"); });
-    intro = mowIntro();
+    intro = startMowIn();
   });
-  function coverOff() { document.documentElement.removeAttribute("data-mow"); }
+  function coverOff() { document.documentElement.classList.remove("mowin", "live"); }
 
-  // ---------- mow intro: the page loads as one big field of tall grass; a fleet of tractors mows it away in
-  // serpentine rows (what's on screen first, then down the rest of the page) and the site appears in the cut strips
-  function mowIntro() {
-    var fc = $("field"), fx = fc.getContext("2d"), dpr = Math.min(2, devicePixelRatio || 1);
-    var FW, FH; function fsize() { FW = innerWidth; FH = innerHeight; fc.width = FW * dpr; fc.height = FH * dpr; fx.setTransform(dpr, 0, 0, dpr, 0, 0); }
-    fsize(); fc.hidden = false;
-    var docW = document.documentElement.clientWidth, docH = Math.max(document.documentElement.scrollHeight, innerHeight);
-    var S = 4, mask = document.createElement("canvas"); mask.width = Math.ceil(docW / S); mask.height = Math.ceil(docH / S);
-    var mx = mask.getContext("2d"); mx.fillStyle = "#000";
-    var R = small ? 50 : 64, nRows = Math.ceil(docH / R), CELLW = small ? 15 : 13, CELLH = small ? 22 : 20;
-    var cols = Math.ceil(docW / CELLW), cut = new Uint8Array(cols * Math.ceil(docH / CELLH));
-    // a tileable bed of short grass, drawn once
-    var T = 220, tile = document.createElement("canvas"); tile.width = T * dpr; tile.height = T * dpr;
-    var tg = tile.getContext("2d"); tg.scale(dpr, dpr); tg.fillStyle = "#24561f"; tg.fillRect(0, 0, T, T);
-    var SH = ["#1d4a1a", "#2b6a24", "#38802d", "#47943a", "#5aa846", "#6fbd55"];
-    for (var k = 0; k < 2600; k++) {
-      var bx = Math.random() * T, by = Math.random() * T, bl = 7 + Math.random() * 16, lean = (Math.random() - .5) * 6;
-      tg.strokeStyle = SH[(k % 6 + (by / T * 2 | 0)) % 6]; tg.lineWidth = .8 + Math.random() * .9;
-      for (var ox = -T; ox <= T; ox += T) for (var oy = -T; oy <= T; oy += T) {
-        if (bx + ox < -20 || bx + ox > T + 20 || by + oy < -30 || by + oy > T + 30) continue;
-        tg.beginPath(); tg.moveTo(bx + ox, by + oy); tg.quadraticCurveTo(bx + ox + lean * .3, by + oy - bl * .6, bx + ox + lean, by + oy - bl); tg.stroke();
-      }
-    }
-    var pat = fx.createPattern(tile, "repeat"), PM = new DOMMatrix();
-    function hash(a, b) { var h = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return h - Math.floor(h); }
-    // the fleet
-    var queue = [], sy0 = scrollY, first = Math.floor(sy0 / R), last = Math.ceil((sy0 + innerHeight) / R);
-    for (var r0 = first; r0 < Math.min(nRows, last); r0++) queue.push(r0);          // what's on screen first
-    for (r0 = 0; r0 < nRows; r0++) if (r0 < first || r0 >= last) queue.push(r0);    // then the rest of the page, top down
-    var N = small ? 4 : 6, fleet = [], clipsI = [], size = R / 24;
-    for (var n = 0; n < N; n++) fleet.push({ x: n % 2 ? docW + 40 + n * 30 : -40 - n * 30, y: sy0 + (n + .5) * R, dir: n % 2 ? -1 : 1, row: -1, phase: "idle",
-      d: { x: 0, y: 0, state: "tractor", job: "mow", size: size, trail: [], seed: n } });
-    var t0 = performance.now(), last2 = t0, raf2 = 0, finished = false, SPEED = small ? .62 : .9, HOLD = 700;   // a moment to take in the field before the tractors roll in
-    function mowSpan(row, xa, xb) {
-      var lo = Math.max(0, Math.min(xa, xb) - 2), hi = Math.min(docW, Math.max(xa, xb) + 2), y = row * R;
-      mx.fillRect(lo / S, y / S, (hi - lo) / S + 1, R / S + .5);
-      for (var c = Math.floor(lo / CELLW); c <= Math.floor(hi / CELLW) && c < cols; c++)
-        for (var rr = Math.floor(y / CELLH); rr < Math.ceil((y + R) / CELLH); rr++) cut[rr * cols + c] = 1;
-    }
-    function assign(tr, now) {
-      if (!queue.length) { tr.phase = "done"; return; }
-      // take the waiting row nearest to this tractor (keeps each tractor working one patch, back and forth)
-      var best = 0, bd = 1e9;
-      for (var i = 0; i < Math.min(queue.length, 12); i++) { var dd = Math.abs((queue[i] + .5) * R - tr.y); if (dd < bd) { bd = dd; best = i; } }
-      tr.row = queue.splice(best, 1)[0];
-      var cy = (tr.row + .5) * R, startL = -30, startR = docW + 30;
-      tr.dir = Math.abs(tr.x - startR) < Math.abs(tr.x - startL) ? -1 : 1;
-      tr.from = { x: tr.x, y: tr.y }; tr.to = { x: tr.dir === 1 ? startL : startR, y: cy }; tr.t0 = now;
-      tr.dur = Math.max(260, Math.min(900, Math.hypot(tr.to.x - tr.x, tr.to.y - tr.y) / 1.4)); tr.phase = "go";
-    }
-    function step(now) {
-      var dt = Math.min(40, now - last2); last2 = now;
-      fleet.forEach(function (tr) {
-        if (now - t0 < HOLD) return;
-        if (tr.phase === "idle" || (tr.phase === "mow" && (tr.dir === 1 ? tr.x > docW + 30 : tr.x < -30))) assign(tr, now);
-        if (tr.phase === "go") {
-          var q = Math.min(1, (now - tr.t0) / tr.dur), e = q < .5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2;
-          var near = Math.abs(tr.to.y - tr.from.y) < R * 2.5, cx = near ? tr.to.x - tr.dir * 70 : (tr.from.x + tr.to.x) / 2, cy = (tr.from.y + tr.to.y) / 2;
-          tr.x = (1 - e) * (1 - e) * tr.from.x + 2 * (1 - e) * e * cx + e * e * tr.to.x;    // U-turn out past the edge between rows
-          tr.y = (1 - e) * (1 - e) * tr.from.y + 2 * (1 - e) * e * cy + e * e * tr.to.y;
-          if (q >= 1) { tr.phase = "mow"; tr.lastX = tr.x; }
-        } else if (tr.phase === "mow") {
-          tr.x += tr.dir * SPEED * dt;
-          mowSpan(tr.row, tr.lastX, tr.x); tr.lastX = tr.x;
-          if (clipsI.length < 260 && Math.random() < .7) clipsI.push({ x: tr.x - tr.dir * 10 * size, y: tr.y - 4, vx: -tr.dir * (60 + Math.random() * 120), vy: -(90 + Math.random() * 180), life: .7 + Math.random() * .4, r: Math.random() * 6, c: SH[2 + (Math.random() * 4 | 0)] });
-        }
-      });
-      if (fleet.every(function (tr) { return tr.phase === "done"; }) && !queue.length) end(false);
-    }
-    function draw(now) {
-      var sx = scrollX, sy = scrollY;
-      fx.globalCompositeOperation = "source-over"; fx.clearRect(0, 0, FW, FH);
-      // the grass bed scrolls with the page
-      pat.setTransform(PM.translate(-(sx % T), -(sy % T)).scale(1 / dpr)); fx.fillStyle = pat; fx.fillRect(0, 0, FW, FH);
-      // tall blades on top, swaying, bending around tractors, gone where it's cut
-      var paths = [new Path2D(), new Path2D(), new Path2D()], C0 = Math.floor(sx / CELLW), R0 = Math.floor(sy / CELLH);
-      var gust0 = now * .0008;
-      for (var rr = R0; rr <= R0 + Math.ceil(FH / CELLH) + 1; rr++) for (var c = C0; c <= C0 + Math.ceil(FW / CELLW) && c < cols; c++) {
-        if (cut[rr * cols + c]) continue;
-        var h1 = hash(c, rr), bx = c * CELLW + h1 * CELLW - sx, by = (rr + 1) * CELLH - sy, bl = 18 + hash(rr, c) * 22;
-        var lean = (h1 - .5) * .5 + Math.sin(gust0 - bx * .005 + h1) * .16;
-        for (var f = 0; f < fleet.length; f++) { var tr2 = fleet[f], ddx = bx - (tr2.x - sx), ddy = by - (tr2.y - sy); if (ddx > -60 && ddx < 60 && ddy > -50 && ddy < 50) lean += (ddx > 0 ? 1 : -1) * (1 - Math.abs(ddx) / 60) * .9; }
-        var P = paths[(h1 * 3) | 0], tx = bx + bl * lean, ty = by - bl * (1 - .35 * lean * lean), w2 = 1.1 + h1;
-        P.moveTo(bx - w2, by); P.quadraticCurveTo(bx + (tx - bx) * .25, by - bl * .6, tx, ty); P.quadraticCurveTo(bx + (tx - bx) * .3 + w2 * .5, by - bl * .55, bx + w2, by); P.closePath();
-      }
-      fx.fillStyle = "#2f7428"; fx.fill(paths[0]); fx.fillStyle = "#43913a"; fx.fill(paths[1]); fx.fillStyle = "#62b24f"; fx.fill(paths[2]);
-      // cut it away: the mowed strips show the site underneath
-      fx.globalCompositeOperation = "destination-out"; fx.imageSmoothingEnabled = true;
-      fx.drawImage(mask, sx / S, sy / S, FW / S, FH / S, 0, 0, FW, FH);
-      fx.globalCompositeOperation = "source-over";
-      // clippings and the fleet
-      for (var i = clipsI.length - 1; i >= 0; i--) {
-        var cl = clipsI[i]; cl.vy += 900 * .016; cl.x += cl.vx * .016; cl.y += cl.vy * .016; cl.life -= .016; cl.r += .2;
-        if (cl.life <= 0) { clipsI.splice(i, 1); continue; }
-        fx.save(); fx.translate(cl.x - sx, cl.y - sy); fx.rotate(cl.r); fx.globalAlpha = Math.min(1, cl.life * 2); fx.fillStyle = cl.c; fx.fillRect(-2.5, -.7, 5, 1.4); fx.restore();
-      }
-      var keep = ctx; ctx = fx;
-      fleet.forEach(function (tr) {
-        var vx = tr.x - sx, vy = tr.y - sy;
-        if (vy < -60 || vy > FH + 60) { tr.d.lx = undefined; return; }
-        tr.d.x = vx; tr.d.y = vy + 2 * size; drawTractor(tr.d);
-      });
-      ctx = keep;
-    }
-    function loop(now) {
-      raf2 = 0; if (finished) return;
-      step(now); draw(now);
-      if (!loop.shown) { loop.shown = true; coverOff(); }        // the canvas is up: drop the CSS stand-in
-      raf2 = requestAnimationFrame(loop);
-    }
-    function end(skipped) {
-      if (finished) return; finished = true; cancelAnimationFrame(raf2);
-      fc.style.transition = "opacity " + (skipped ? 250 : 600) + "ms"; fc.style.opacity = "0";
-      setTimeout(function () { fc.hidden = true; fc.style.opacity = ""; fc.style.transition = ""; }, skipped ? 260 : 620);
-      coverOff(); skipEl.hidden = true; skipEl.style.zIndex = "";
-      if (intro === api) intro = null;
-      finishIntro();
-    }
-    var skipEl = $("skip"); skipEl.hidden = false; skipEl.style.zIndex = "60"; skipEl.textContent = "skip ▸▸ esc";
-    var lw = innerWidth; addEventListener("resize", function rs() { if (innerWidth !== lw) { removeEventListener("resize", rs); end(true); } else fsize(); });
-    var api = { skip: function () { end(true); } };
-    raf2 = requestAnimationFrame(loop);
+  function startMowIn() {
+    document.documentElement.classList.add("mowin", "live");
+    tractor = true; mowIn = true;
+    canvas.style.display = ""; canvas.style.visibility = "";
+    buildField();
+    field.forEach(function (ln) { ln.words.forEach(function (w) { w.ct = w.ct.map(function () { return -1e9; }); }); });   // every word starts fully grown
+    holdUntil = performance.now() + 1100;                           // a beat to see the page as grass before the swarm moves in
+    $("skip").hidden = false; $("skip").textContent = "skip ▸▸ esc";
+    kick();
+    var api = { skip: function () { endMowIn(); } };
+    (function watch() {                                             // once every line has been mown, hand back to the plain page
+      if (!mowIn) return;
+      if (field.length && field.every(function (l) { return l.state === "mowed"; })) { endMowIn(); return; }
+      setTimeout(watch, 300);
+    })();
     return api;
+  }
+  function endMowIn() {
+    if (!mowIn) return;
+    mowIn = false; tractor = false; field = []; clips = []; growQ = [];
+    drones.forEach(function (d) { if (d.state === "tractor") { d.state = "idle"; d.job = null; d.size = 1; } });
+    coverOff();
+    if (intro) intro = null;
+    finishIntro();
   }
   function finishIntro() {
     var pre = document.getElementById("swarm-intro-preload"); if (pre) pre.remove(); document.documentElement.removeAttribute("data-swarm-intro");
