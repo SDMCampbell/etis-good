@@ -24,7 +24,8 @@
 <body>
   <canvas id="matrix" class="matrix" aria-hidden="true"></canvas>
   <p class="motion-note" id="motionNote" hidden>animation is paused because your device is set to reduce motion · <button type="button" id="motionOn">play it anyway</button></p>
-  <nav class="modes" aria-label="Display mode">mode: <button type="button" data-mode="normal">normal</button> <button type="button" data-mode="samurai">samurai</button></nav>
+  <nav class="modes" aria-label="Display mode">mode: <button type="button" data-mode="normal">normal</button> <button type="button" data-mode="samurai">samurai</button>
+    <label class="swarm-size">swarm: <input type="range" id="swarmSize" min="1" max="80" step="1"> <output id="swarmSizeOut"></output></label></nav>
   <main id="content" class="content"></main>
   <noscript><p class="content">Samuel Campbell · Full Stack Web Developer · Lexington, SC · SamuelDCampbell@gmail.com</p></noscript>
 
@@ -50,7 +51,20 @@
       document.getElementById("motionOn").onclick = function () { try { localStorage.setItem("motion", "on"); } catch (e) {} location.reload(); };
     } else {
       if (MODE === "samurai") samuraiMode();
-      swarmIntro({ root: "#content", logo: RESUME.handle, respectReducedMotion: false });
+      // Swarm size: swarm-intro takes its cursor count at start-up and can't add cursors to a running build,
+      // so changing the slider tears the current swarm down and rebuilds the page with the new count.
+      var narrow = innerWidth < 768, size = narrow ? 8 : 14, intro = null;
+      try { size = +localStorage.getItem("swarmSize") || size; } catch (e) {}
+      var slider = document.getElementById("swarmSize"), out = document.getElementById("swarmSizeOut");
+      function launch(first) {
+        if (intro) intro.destroy();
+        intro = swarmIntro({ root: "#content", logo: first ? RESUME.handle : false, respectReducedMotion: false,
+          cursors: size, maxCursors: Math.max(size, narrow ? 14 : 24) });
+      }
+      slider.value = size; out.textContent = size;
+      slider.oninput = function () { out.textContent = slider.value; };
+      slider.onchange = function () { size = +slider.value; try { localStorage.setItem("swarmSize", size); } catch (e) {} launch(false); };
+      launch(true);
     }
   </script>
 </body>

@@ -57,6 +57,5 @@
       ], { duration: 320, easing: "cubic-bezier(.2,.9,.3,1)" });
     }
     mo.observe(document.body, { childList: true, subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ["class", "style", "data-swarm-intro-pending"] });
-    setTimeout(function () { mo.disconnect(); }, 120000);     // the intro is long over by then
   };
 })();
