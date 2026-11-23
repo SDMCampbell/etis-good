@@ -38,7 +38,7 @@
       aura: el("path", { "stroke-width": 1, opacity: .45 })        // faint lift lines under the feet when rising
     };
     svg.appendChild(g); cursor.appendChild(svg);
-    return { g: g, p: parts, pose: JSON.parse(JSON.stringify(POSES.idle)), phase: 0, face: 1, x: null, y: null, vx: 0, vy: 0, slashT: 0, state: "idle" };
+    return { g: g, p: parts, pose: JSON.parse(JSON.stringify(POSES.idle)), phase: 0, face: 1, x: null, y: null, vx: 0, vy: 0, slashT: 0, state: "idle", ox: 0, oy: 0, ovx: 0, ovy: 0, recoil: 0, lastClash: 0 };
   }
 
   function render(s, now) {
@@ -74,7 +74,7 @@
       s.p.aura.setAttribute("d", seg([fF[0] - 2, fF[1] + 2 + t * 4], [fF[0] - 2, fF[1] + 2 + t * 4 + l]) + seg([fB[0] + 2, fB[1] + 4 + ((t + .5) % 1) * 4], [fB[0] + 2, fB[1] + 4 + ((t + .5) % 1) * 4 + l]));
       s.p.aura.setAttribute("opacity", (.5 * (1 - t)).toFixed(2));
     } else s.p.aura.setAttribute("d", "");
-    s.g.setAttribute("transform", "scale(" + s.face + " 1)");
+    s.g.setAttribute("transform", "translate(" + s.ox.toFixed(1) + " " + s.oy.toFixed(1) + ") scale(" + s.face + " 1)");
   }
 
   window.samuraiMode = function () {
@@ -106,10 +106,47 @@
         if (s.state === "slash") s.face = 1;                                // the cut always runs to the bottom-right
         if (s.state === "run") lerp(s.pose, RUN, .3);
         else lerp(s.pose, POSES[s.state], s.state === "slash" ? .45 : .22);
-        render(s, now);
+        if (now < s.recoil) { s.pose.lean += (-.45 - s.pose.lean) * .5; s.pose.aB += (-1.2 - s.pose.aB) * .5; }   // knocked back by a clash
       });
-      sprites.forEach(function (s, c) { if (!c.isConnected) sprites.delete(c); });
+      collide(now, dt, document.querySelector(".swarm-intro-world"));
+      sprites.forEach(function (s, c) { if (!c.isConnected) sprites.delete(c); else render(s, now); });
       if (document.querySelector(".swarm-intro-cursor")) raf = requestAnimationFrame(tick);
+    }
+    // collisions: swarm-intro decides where every cursor goes, so the samurai can't change their real routes.
+    // Instead each figure carries a small offset from its cursor: overlapping figures are shoved apart, a fast
+    // meeting is a clash (a spark, and both are knocked back), and the offset springs back to zero afterwards.
+    var R = 15;
+    function collide(now, dt, world) {
+      var list = []; sprites.forEach(function (s) { if (s.x !== null) list.push(s); });
+      for (var i = 0; i < list.length; i++) for (var j = i + 1; j < list.length; j++) {
+        var a = list[i], b = list[j];
+        var dx = (b.x + b.ox) - (a.x + a.ox), dy = (b.y + b.oy) - (a.y + a.oy), d = Math.hypot(dx, dy);
+        if (d >= R * 2 || d < .01) { if (d < .01) { a.ox -= .5; b.ox += .5; } continue; }
+        var nx = dx / d, ny = dy / d, push = (R * 2 - d) / 2;
+        var aFixed = a.state === "slash", bFixed = b.state === "slash";      // a samurai mid-cut holds its line
+        if (!aFixed) { a.ox -= nx * push * (bFixed ? 2 : 1); a.oy -= ny * push * (bFixed ? 2 : 1); }
+        if (!bFixed) { b.ox += nx * push * (aFixed ? 2 : 1); b.oy += ny * push * (aFixed ? 2 : 1); }
+        var closing = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;               // how fast they're running into each other
+        if (closing > .4 && now - a.lastClash > 1100 && now - b.lastClash > 1100) {
+          a.lastClash = b.lastClash = now;
+          var kick = Math.min(4, closing * 6);
+          if (!aFixed) { a.ovx -= nx * kick; a.ovy -= ny * kick; a.recoil = now + 220; }
+          if (!bFixed) { b.ovx += nx * kick; b.ovy += ny * kick; b.recoil = now + 220; }
+          if (world) spark(world, a.x + a.ox + dx / 2, a.y + a.oy + dy / 2 - 22);
+        }
+      }
+      var k = Math.min(1, dt / 16);
+      list.forEach(function (s) {                                            // knockback drifts, then springs home
+        s.ox += s.ovx * k; s.oy += s.ovy * k; s.ovx *= Math.pow(.82, k); s.ovy *= Math.pow(.82, k);
+        s.ox -= s.ox * .06 * k; s.oy -= s.oy * .06 * k;
+        if (s.state === "slash") { s.ox *= .6; s.oy *= .6; }
+      });
+    }
+    function spark(world, x, y) {
+      var e = document.createElement("div"); e.className = "sam-clash";
+      e.style.left = x + "px"; e.style.top = y + "px";
+      e.innerHTML = '<svg viewBox="-10 -10 20 20"><path d="M0 -9 L0 -3 M0 3 L0 9 M-9 0 L-3 0 M3 0 L9 0 M-6 -6 L-2.5 -2.5 M2.5 2.5 L6 6 M6 -6 L2.5 -2.5 M-2.5 2.5 L-6 6"/></svg>';
+      world.appendChild(e); setTimeout(function () { e.remove(); }, 380);
     }
     function wake() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } }
 
