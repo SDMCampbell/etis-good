@@ -3,6 +3,7 @@
 //   normal  -> the matrix: columns of glyphs falling
 //   samurai -> cherry blossom petals falling from a sakura branch in the top corner, tumbling as they drift
 //   robot   -> deep space: a twinkling starfield with asteroids tumbling down through it
+//   wizard  -> an arcane night: glowing motes of gold and violet light drifting and swaying down, with twinkling sparkles
 // Runs at ~20-30 fps, pauses when the tab is hidden or after 20 s without input, and is off for visitors whose
 // device asks for reduced motion unless they chose "play it anyway".
 (function () {
@@ -157,7 +158,49 @@
     };
   })();
 
-  var scene = MODE === "samurai" ? sakuraScene : MODE === "robot" ? spaceScene : glyphScene;
+  // ---------- wizard: falling motes of magic ----------
+  // Each kind of mote is a soft glow painted once into a small image; every frame just moves and draws the images.
+  var arcaneScene = (function () {
+    var motes = [], glows = [], COLORS = ["255,214,140", "190,150,255", "236,226,255", "160,120,255"];
+    function glow(rgb) {
+      var r = 16, c = document.createElement("canvas"); c.width = c.height = r * 2 * dpr;
+      var g = c.getContext("2d"); g.scale(dpr, dpr);
+      var gr = g.createRadialGradient(r, r, 0, r, r, r);
+      gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(.12, "rgba(" + rgb + ",.95)"); gr.addColorStop(.4, "rgba(" + rgb + ",.28)"); gr.addColorStop(1, "rgba(" + rgb + ",0)");
+      g.fillStyle = gr; g.fillRect(0, 0, r * 2, r * 2); return c;
+    }
+    function mote(top) {
+      var star = Math.random() < .12;
+      return { x0: rnd(0, AW), y: top ? rnd(0, AH) : rnd(-60, -10), v: star ? rnd(8, 16) : rnd(14, 42), amp: rnd(6, 26), sp: rnd(.3, 1.1), ph: rnd(0, 6.3),
+        s: star ? rnd(5, 8) : rnd(5, 14), k: (Math.random() * COLORS.length) | 0, a: star ? rnd(.5, .8) : rnd(.25, .6), tw: rnd(1, 3.5), star: star };
+    }
+    return {
+      fps: 60,
+      size: function () {
+        glows = COLORS.map(glow);
+        motes = []; for (var i = 0, n = Math.round(AW * AH / 11000); i < n; i++) motes.push(mote(true));
+      },
+      draw: function (dt, now) {
+        var t = now / 1000;
+        for (var i = 0; i < motes.length; i++) {
+          var m = motes[i]; m.y += m.v * dt;
+          if (m.y > AH + 20) { motes[i] = mote(false); continue; }
+          var x = m.x0 + Math.sin(t * m.sp + m.ph) * m.amp, a = m.a * (.55 + .45 * Math.sin(t * m.tw + m.ph));
+          if (x > DL && x < DR) a *= .4;
+          c2.globalAlpha = a;
+          if (m.star) {                                   // a four-point twinkle
+            var L = m.s * (.6 + .4 * Math.sin(t * m.tw * 1.7 + m.ph));
+            c2.strokeStyle = "rgb(" + COLORS[m.k] + ")"; c2.lineWidth = 1; c2.beginPath();
+            c2.moveTo(x - L, m.y); c2.lineTo(x + L, m.y); c2.moveTo(x, m.y - L); c2.lineTo(x, m.y + L); c2.stroke();
+            c2.drawImage(glows[m.k], x - 4, m.y - 4, 8, 8);
+          } else c2.drawImage(glows[m.k], x - m.s / 2, m.y - m.s / 2, m.s, m.s);
+        }
+        c2.globalAlpha = 1;
+      }
+    };
+  })();
+
+  var scene = MODE === "samurai" ? sakuraScene : MODE === "robot" ? spaceScene : MODE === "wizard" ? arcaneScene : glyphScene;
   function size() {
     AW = innerWidth; AH = innerHeight; cv.width = AW * dpr; cv.height = AH * dpr; c2.setTransform(dpr, 0, 0, dpr, 0, 0);
     textColumn(); scene.size();

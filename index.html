@@ -20,13 +20,13 @@
   <!-- Motion: devices set to reduce motion get a still page unless the visitor opts in (remembered as motion=on).
        This mirrors swarm-intro's own preload, but with that opt-in: it keeps the page blank until the intro starts. -->
   <!-- Mode: from a #mode=NAME link, else the last one picked, else normal. Sets html[data-mode] for the background. -->
-  <script>window.MODES=["normal","samurai","robot"];window.MODE=(function(){var m=(location.hash.match(/mode=(\w+)/)||[])[1];if(MODES.indexOf(m)<0){try{m=localStorage.getItem("mode")}catch(e){}}if(m==="mech")m="robot";return MODES.indexOf(m)<0?"normal":m})();document.documentElement.setAttribute("data-mode",window.MODE);</script>
+  <script>window.MODES=["normal","samurai","robot","wizard"];window.MODE=(function(){var m=(location.hash.match(/mode=(\w+)/)||[])[1];if(MODES.indexOf(m)<0){try{m=localStorage.getItem("mode")}catch(e){}}if(m==="mech")m="robot";return MODES.indexOf(m)<0?"normal":m})();document.documentElement.setAttribute("data-mode",window.MODE);</script>
   <script>window.MOTION=(function(){try{var m=localStorage.getItem("motion");if(m==="on")return true;if(m==="off")return false}catch(e){}return !matchMedia("(prefers-reduced-motion: reduce)").matches})();(function(){try{if(!window.MOTION)return;var d=document.documentElement;d.setAttribute("data-swarm-intro","");var s=document.createElement("style");s.id="swarm-intro-preload";s.textContent="html[data-swarm-intro] body>*{opacity:0;animation:swarm-intro-failsafe 0s 4s forwards}@keyframes swarm-intro-failsafe{to{opacity:1}}";document.head.appendChild(s);}catch(e){}})();</script>
 </head>
 <body>
   <canvas id="matrix" class="matrix" aria-hidden="true"></canvas>
   <p class="motion-note" id="motionNote" hidden>animation is paused because your device is set to reduce motion · <button type="button" id="motionOn">play it anyway</button></p>
-  <nav class="modes" aria-label="Display mode">mode: <button type="button" data-mode="normal">normal</button> <button type="button" data-mode="samurai">samurai</button> <button type="button" data-mode="robot">robot</button>
+  <nav class="modes" aria-label="Display mode">mode: <button type="button" data-mode="normal">normal</button> <button type="button" data-mode="samurai">samurai</button> <button type="button" data-mode="robot">robot</button> <button type="button" data-mode="wizard">wizard</button>
     <label class="swarm-size">swarm: <input type="range" id="swarmSize" min="1" max="30" step="1"> <output id="swarmSizeOut"></output></label></nav>
   <main id="content" class="content"></main>
   <noscript><p class="content">Samuel Campbell · Full Stack Web Developer · Lexington, SC · SamuelDCampbell@gmail.com</p></noscript>
@@ -37,6 +37,7 @@
   <script src="assets/swarm-intro.js"></script>
   <script src="assets/samurai.js"></script>
   <script src="assets/robot.js"></script>
+  <script src="assets/wizard.js"></script>
   <script>
     // Modes: each one is a different way of using the swarm library to show the content.
     // Picked with the switch at the top right (remembered) or a link ending in #mode=NAME.
@@ -56,6 +57,7 @@
     } else {
       if (MODE === "samurai") samuraiMode();
       if (MODE === "robot") robotMode();
+      if (MODE === "wizard") wizardMode();
       // Swarm size: swarm-intro takes its cursor count at start-up and can't add cursors to a running build,
       // so changing the slider tears the current swarm down and rebuilds the page with the new count.
       var narrow = innerWidth < 768, size = narrow ? 8 : 14, intro = null;
@@ -84,7 +86,20 @@
           return { x: x, y: y, ms: d < 2 ? 200 : Math.max(250, d * 1.6), wait: 150 };
         },
         // robot: wander the screen, as before
-        robot: null
+        robot: null,
+        // wizard: drift slowly to a spot, then float there in meditation for a while before drifting on
+        wizard: function (a, now) {
+          var w = a._wz || (a._wz = { until: 0 });
+          var inView = w.y > scrollY + 60 && w.y < scrollY + innerHeight - 20 && w.x > scrollX && w.x < scrollX + innerWidth;
+          if (now > w.until || !inView) {
+            w.x = scrollX + 50 + Math.random() * (innerWidth - 100); w.y = scrollY + 110 + Math.random() * (innerHeight - 160);
+            var ms = Math.max(1200, Math.hypot(w.x - a.x, w.y - a.y) * 4.5);
+            w.arrive = now + ms; w.until = w.arrive + 3500 + Math.random() * 4500;
+            return { x: w.x, y: w.y, ms: ms, wait: 150 };
+          }
+          if (now >= w.arrive) a.el.dataset.rest = now;                   // arrived: sit and meditate
+          return { x: w.x, y: w.y, ms: Math.max(150, w.arrive - now), wait: 150 };
+        }
       };
       try { size = Math.min(30, +localStorage.getItem("swarmSize") || size); } catch (e) {}
       var slider = document.getElementById("swarmSize"), out = document.getElementById("swarmSizeOut");
