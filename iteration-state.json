@@ -6,8 +6,8 @@
  "goal": "Samuel Campbell's résumé site as a pure-text experience: every line rains down from the top and locks into place, escorted by a swarm of tiny cursor drones (original, inspired by falling-code films and drone-swarm sci-fi; no film quotes, logos or names). Recruiters still get name/role/company/email immediately; content always renders from assets/resume-data.js and stays real, selectable, accessible text.",
  "timeline_rules": "Every evaluated round is snapshotted to versions/vNN/ and listed in versions/manifest.js. Turning points are featured. Visitors can open any version, step between milestones, and return to the current best in one action. Losing experiments stay in the archive.",
  "design_spec": "NEWDESIGNS.md section 'Direction 3: Text Rain' (this run). Cockpit spec above it is kept for history.",
- "last_completed_version": 71,
- "strongest_version": 71,
+ "last_completed_version": 72,
+ "strongest_version": 72,
  "target_version": 89,
  "run": {
   "started": null,
@@ -42,12 +42,12 @@
   ]
  },
  "brief": {
-  "next_version": 72,
-  "protect": "v71: tractor mode as built this run, swarm-intro default, motion switch",
-  "weakness": "Not yet seen in Samuel's own browser; sound unheard; old rooms still Learning Curve style.",
-  "experiment": "Real-browser verification after push; bitmap caching for grown words; rooms reskin or retire.",
-  "expected_payoff": "Confidence on real devices and a consistent site.",
-  "question": "What does it look and sound like on his machine?"
+  "next_version": 73,
+  "protect": "v72 mow intro + tractor mode",
+  "weakness": "Unverified in Samuel's browser; sound unheard; old rooms unchanged.",
+  "experiment": "Real-browser check after push.",
+  "expected_payoff": "Confidence on his machine.",
+  "question": "How does it look on his PC?"
  },
  "history": [
   {
@@ -481,6 +481,12 @@
    "title": "Tidy barn + run wrap-up",
    "verdict": "kept",
    "lesson": "Fixed parking slots also make the idle loop settle sooner, because tractors stop jittering around a shared point."
+  },
+  {
+   "v": 72,
+   "title": "Mow to reveal",
+   "verdict": "kept",
+   "lesson": "The first version mowed the whole screen in about a second. The field needs a held beat and slower tractors (0.9 px/ms) to read as tractors at work rather than a wipe transition."
   }
  ],
  "cycle_reviews": [
@@ -661,6 +667,10 @@
   {
    "date": "2026-11-23 01:23",
    "text": "Run of cycles/rounds on tractor/grass mode. Grass is very basic: make it seem like it's really growing, not a 2D line upward. The text should BE the grass (not text under grass). Tractors should erase the text when clicked (mowing). When the page loads, tractors go out and till the area, growing the text grass."
+  },
+  {
+   "date": "2026-11-23 08:05",
+   "text": "On page load the whole page should look like a massive field of grass; the tractor swarm mows the entire page so the website text can be seen."
   }
  ],
  "next_invocation_brief": {

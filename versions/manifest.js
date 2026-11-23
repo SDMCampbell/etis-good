@@ -4,7 +4,7 @@
  * verdict: baseline | kept | rejected | merged (partly folded into a later version)
  */
 window.VERSIONS = {
-  "current": 71,
+  "current": 72,
   "list": [
     {
       "v": 0,
@@ -724,6 +724,16 @@ window.VERSIONS = {
       "note": "Parked tractors no longer pile into a heap over the swarm button: they line up in neat rows beside it (smaller and tighter on phones, so they don't cover text). Final regression across tractor mode (enter, till, click-mow, mow all, reseed, rain, drive, toolbox keyboard focus, leave) and the normal text site, on desktop, phone and reduced motion: no errors.",
       "why": "Last round of the run: fix the one visual mess left and prove everything still works together.",
       "try": "Tractor mode: watch the fleet park when tilling finishes.",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 72,
+      "title": "Mow to reveal",
+      "verdict": "kept",
+      "featured": true,
+      "note": "The page now loads as one big field of tall grass covering everything, including the header, with a CSS stand-in from the very first paint so the text never flashes. After a short pause a fleet of tractors (6 on desktop, 4 on phones) rolls in and mows the field in serpentine rows, U-turning past the edges and throwing clippings, and the site appears in the cut strips. Rows on screen go first (about 4–5 s), then the fleet keeps working down the rest of the page, so wherever you scroll you find it mown or being mown. Skip, Esc or any key clears it instantly. Reduced motion shows the page straight away. Tractor mode (text-as-grass) is unchanged and still loads into its own till-and-grow field when it's on.",
+      "why": "Samuel: 'When the page loads, I want the whole page to look like a massive field of grass. Then the tractor swarm should go in and mow the entire page so that the text of the website can be seen.'",
+      "try": "Open the site in a new tab and watch the first five seconds; then scroll down while it's still mowing.",
       "date": "2026-11-23"
     }
   ]

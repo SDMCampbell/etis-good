@@ -242,3 +242,7 @@ html.driving .doc { cursor: crosshair; }
   .tractor-bar .ic { font-size: 18px; }
 }
 .tractor-bar button.on { color: #ffd76a; }
+
+/* v72: mow intro, a field of grass over the whole page that the tractors cut away */
+.field { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 50; pointer-events: none; }
+.field[hidden] { display: none; }
