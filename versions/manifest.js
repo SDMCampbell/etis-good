@@ -4,7 +4,7 @@
  * verdict: baseline | kept | rejected | merged (partly folded into a later version)
  */
 window.VERSIONS = {
-  "current": 52,
+  "current": 53,
   "list": [
     {
       "v": 0,
@@ -535,6 +535,16 @@ window.VERSIONS = {
       "why": "Samuel asked for a tractor mode where the swarm becomes tractors and all the text becomes grass they grow.",
       "try": "Press 8, watch the field get planted, then click your name to mow it.",
       "date": "2026-11-22"
+    },
+    {
+      "v": 53,
+      "title": "Tractor fixes + visible swarm button",
+      "verdict": "kept",
+      "featured": false,
+      "note": "Fixes from Samuel's report. (1) With reduced motion on, tractor mode made all the text vanish and no grass appeared: the grass was drawn once and then wiped by the end-of-animation cleanup. It now stays. (2) Mowed lines could come back black-on-black, because they inherited 'transparent' from their parent elements. The glyphs are now hidden with text-fill-color, so a mowed line gets its real colours back. (3) The swarm control at bottom right was only a faint dashed outline and three tiny arrows. It's now a clearly outlined 'swarm' button. Also: grass no longer draws over the sticky header, and on phones the intro's skip button moved left so it doesn't cover the swarm button.",
+      "why": "Samuel: 'once it's clicked and goes active it seems to go to a completely black color on a black background' and 'there's nothing in the bottom right that indicates where that control box would be'. Both reproduced in his own browser on the live site.",
+      "try": "Open the swarm button, turn on tractor mode, then click a job bullet.",
+      "date": "2026-11-23"
     }
   ]
 };

@@ -158,8 +158,9 @@ body.board .sorts { display: none; }
 
 /* v44: hive menu */
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.hivebtn { position: fixed; right: 8px; bottom: 60px; z-index: 41; color: var(--text); width: 56px; height: 44px; background: transparent; border: 1px dashed var(--line2); cursor: pointer; }
-.hivebtn:hover, .hivebtn:focus-visible, .hivebtn[aria-expanded="true"] { border-color: var(--accent); }
+.hivebtn { position: fixed; right: 8px; bottom: 60px; z-index: 41; color: var(--accent); min-width: 56px; height: 44px; padding: 0 10px; background: color-mix(in srgb, var(--bg) 70%, transparent); border: 1px solid var(--accent); cursor: pointer; font: 700 12px 'JetBrains Mono', ui-monospace, monospace; letter-spacing: .06em; display: inline-flex; align-items: flex-end; justify-content: center; padding-bottom: 4px; }
+.hivebtn .hb-l { pointer-events: none; }
+.hivebtn:hover, .hivebtn:focus-visible, .hivebtn[aria-expanded="true"] { background: var(--accent); color: var(--bg); }
 .swarm-menu { position: fixed; right: 8px; bottom: 110px; z-index: 42; min-width: 300px; max-width: calc(100vw - 16px); background: var(--bg); border: 1px solid var(--accent); box-shadow: 0 0 0 4px var(--bg), 0 0 24px color-mix(in srgb, var(--accent) 25%, transparent); padding: 8px 0; }
 .swarm-menu[hidden] { display: none; }
 .sm-h { margin: 0 14px 4px; color: var(--dim); font-size: 13px; }
@@ -170,7 +171,7 @@ body.board .sorts { display: none; }
 .swarm-menu kbd { font: inherit; color: var(--dim); margin-left: auto; }
 @media (max-width: 900px) { .swarm-menu .wide-only { display: none; } }
 @media (max-width: 600px) { .skip { right: auto; left: 12px; } .hivebtn { bottom: 60px; } .swarm-menu { bottom: 110px; left: 8px; right: 8px; min-width: 0; } }
-html.still .hivebtn { border-color: var(--line2); } html.still .hivebtn::after { content: "▸▸▸"; color: var(--accent); font: 700 13px "JetBrains Mono", monospace; }
+html.still .hivebtn { align-items: center; padding-bottom: 0; } html.still .hivebtn::before { content: "▸▸▸ "; white-space: pre; }
 
 /* v45: ambient rain behind the text */
 .amb { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
@@ -189,21 +190,22 @@ html[data-theme="paper"] .amb { display: none; }
 .motion-note { color: var(--accent); margin: 0 0 10px; }
 .motion-note[hidden] { display: none; }
 .motion-note button { background: none; border: 0; padding: 0; min-height: 36px; font: inherit; color: var(--link); text-decoration: underline; cursor: pointer; }
-@media (max-width: 600px) { .swarm-intro-skip { bottom: 72px !important; } }
+@media (max-width: 600px) { .swarm-intro-skip { bottom: 72px !important; right: auto !important; left: 12px !important; } }
 
 /* tractor mode: text is drawn as grass on the canvas; mowed elements show their text again */
-html.tractor :is(.top, .doc, .pbar) :not(.mowed, .mowed *),
-html.tractor :is(.top, .doc, .pbar) :not(.mowed, .mowed *)::before,
-html.tractor :is(.top, .doc, .pbar) :not(.mowed, .mowed *)::after { color: transparent !important; text-decoration-color: transparent !important; text-shadow: none !important; }
-html.tractor :is(.top, .doc, .pbar) :not(.mowed, .mowed *) { border-color: transparent !important; }
+/* text-fill-color hides the glyphs while leaving every element's real colour alone, so a mowed element (and
+   everything inside it) gets its own colours back instead of inheriting "transparent" from its parents */
+html.tractor :is(.top, .doc, .pbar) { -webkit-text-fill-color: transparent; }
+html.tractor :is(.top, .doc, .pbar) .mowed { -webkit-text-fill-color: currentColor; }
+html.tractor :is(.top, .doc, .pbar) :not(.mowed, .mowed *) { text-decoration-color: transparent !important; text-shadow: none !important; border-color: transparent !important; }
 html.tractor .doc { cursor: pointer; }
 html.tractor .mowed { cursor: auto; }
 html.tractor .amb { display: none; }
 html.tractor mark.hit { background: rgba(255, 220, 90, .25); }
-.tractor-bar { position: fixed; left: 12px; bottom: 16px; z-index: 44; max-width: calc(100vw - 96px); margin: 0; padding: 6px 10px; background: var(--bg); color: var(--text); border: 1px solid #4fb14c; font-size: 13px; line-height: 1.5; }
+.tractor-bar { position: fixed; left: 12px; bottom: 16px; z-index: 44; max-width: calc(100vw - 150px); margin: 0; padding: 6px 10px; background: var(--bg); color: var(--text); border: 1px solid #4fb14c; font-size: 13px; line-height: 1.5; }
 .tractor-bar[hidden] { display: none; }
 .tractor-bar button { background: none; border: 0; padding: 0 2px; min-height: 32px; font: inherit; color: #7fd36b; text-decoration: underline; cursor: pointer; }
 html.tractor .skip { display: none; }
 @media (max-width: 600px) { .tractor-bar { bottom: 72px; } }
-@media print { .tractor-bar { display: none !important; } html.tractor :is(.top, .doc) * { color: #000 !important; } }
+@media print { .tractor-bar { display: none !important; } html.tractor :is(.top, .doc, .pbar) { -webkit-text-fill-color: currentColor; } }
 @media (max-width: 600px) { .tractor-bar { font-size: 12px; padding: 4px 8px; } .tractor-bar .tb-hint { display: none; } }

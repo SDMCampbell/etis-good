@@ -3,7 +3,7 @@
  * Assets: network first too (fresh deploys stay consistent); cache only when offline.
  * Bump CACHE when the shell changes shape.
  */
-var CACHE = "etis-shell-v52";
+var CACHE = "etis-shell-v53";
 var SHELL = ["./", "assets/rain.css", "assets/rain.js", "assets/swarm-intro.js", "assets/derive.js", "assets/resume-data.js", "assets/switcher.js", "versions/manifest.js", "timeline/", "timeline/timeline.css", "timeline/timeline.js"];
 
 self.addEventListener("install", function (e) {

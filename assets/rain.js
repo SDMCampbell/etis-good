@@ -76,7 +76,7 @@
     }
     return out;
   }
-  function hive() { return { x: W - 36, y: H - 82 }; }
+  function hive() { return { x: W - 44, y: H - 92 }; }
   function makeDrones(n) {
     var h = hive();
     for (var i = 0; i < n; i++) drones.push({ x: h.x + (Math.random() - .5) * 40, y: h.y + (Math.random() - .5) * 30, state: "idle", word: null, t0: 0, from: null, trail: [], seed: Math.random() * 10 });
@@ -272,7 +272,7 @@
     ctx.fillText("▸", d.x, d.y); ctx.shadowBlur = 0;
   }
   function finish() {
-    ctx.clearRect(0, 0, W, H);
+    if (!tractor) ctx.clearRect(0, 0, W, H);   // in tractor mode with reduced motion the grass is drawn once and has to stay
     var pending = blocks.filter(function (b) { return !b._rained; });
     if (!pending.length) { done = true; $("skip").hidden = true; }
   }
@@ -781,10 +781,12 @@
     ctx.beginPath(); ctx.moveTo(x, base); ctx.quadraticCurveTo(x + lean * .4, base - h * .6, x + lean, base - h); ctx.stroke();
   }
   function drawField(now, sx, sy) {
+    var topH = document.querySelector(".top").getBoundingClientRect().bottom;
     ctx.save(); ctx.lineCap = "round";
     for (var i = 0; i < field.length; i++) {
       var ln = field[i], oy = ln.fixed ? 0 : sy, vy = ln.y - oy;
       if (vy > H + 40 || vy + ln.h < -40) continue;
+      if (!ln.fixed && vy < topH) continue;                               // don't draw over the sticky header
       if (ln.state === "seed" && vy < H - 20 && vy > -ln.h) queueLine(ln, now);
       for (var j = 0; j < ln.words.length; j++) {
         var w = ln.words[j];
