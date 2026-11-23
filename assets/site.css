@@ -57,8 +57,8 @@ html.samurai:not(.type-all) .swarm-intro-caret { visibility: hidden; }
 .swarm-size output { min-width: 2ch; color: var(--accent); }
 .type-all { display: inline-flex; align-items: center; gap: 4px; margin-left: 10px; cursor: pointer; }
 .type-all input { accent-color: var(--accent); margin: 0; }
-:is(html.samurai, html.robot, html.wizard) .sam-clash { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; pointer-events: none; animation: sam-clash .38s ease-out forwards; }
-:is(html.samurai, html.robot, html.wizard) .sam-clash svg { width: 100%; height: 100%; fill: none; stroke: var(--swarm-intro-fg); stroke-width: 1.6; stroke-linecap: round; filter: drop-shadow(0 0 3px var(--swarm-intro-fg)); }
+:is(html.samurai, html.robot, html.wizard, html.ninja) .sam-clash { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; pointer-events: none; animation: sam-clash .38s ease-out forwards; }
+:is(html.samurai, html.robot, html.wizard, html.ninja) .sam-clash svg { width: 100%; height: 100%; fill: none; stroke: var(--swarm-intro-fg); stroke-width: 1.6; stroke-linecap: round; filter: drop-shadow(0 0 3px var(--swarm-intro-fg)); }
 @keyframes sam-clash { from { transform: scale(.4) rotate(0); opacity: 1; } to { transform: scale(1.5) rotate(20deg); opacity: 0; } }
 
 /* ---------- robot mode ----------
@@ -81,6 +81,7 @@ html.robot:not(.type-all) .swarm-intro-caret { visibility: hidden; }
 html[data-mode="samurai"] { --bg: #0c0709; }
 html[data-mode="robot"] { --bg: #03040a; }
 html[data-mode="wizard"] { --bg: #07051a; }
+html[data-mode="ninja"] { --bg: #05070c; background: radial-gradient(circle at 84% 20%, rgb(232 238 255 / .14) 0 44px, rgb(200 214 255 / .05) 46px, transparent 170px) fixed, var(--bg); }
 .starfield { position: fixed; left: 0; top: -100vh; width: 100vw; height: 200vh; z-index: -2; pointer-events: none; background-repeat: repeat; animation: starfield-drift 300s linear infinite; will-change: transform; }
 @keyframes starfield-drift { to { transform: translateY(100vh); } }
 
@@ -107,3 +108,32 @@ html.wizard:not(.type-all) .swarm-intro-caret { visibility: hidden; }
 html.wizard .wz-spark { position: absolute; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; pointer-events: none; background: #FFF6DE; opacity: 0;
   clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); filter: drop-shadow(0 0 3px #B48CFF); animation: wz-spark .65s ease-out forwards; }
 @keyframes wz-spark { 0% { opacity: 0; transform: scale(.2) rotate(0); } 30% { opacity: 1; transform: scale(1.1) rotate(25deg); } 100% { opacity: 0; transform: scale(.3) rotate(70deg) translateY(-6px); } }
+
+/* ---------- ninja mode ----------
+   The swarm-intro cursors become animated stick-figure ninjas (drawn and posed by ninja.js), in moonlit steel with a
+   red headband. The selection box is a faint thin outline; shuriken fly into it and stick for a moment. */
+html.ninja .swarm-intro-layer { --swarm-intro-fg: #CBD5E6 !important; }
+html.ninja .swarm-intro-cursor > svg:not(.ninja) { display: none; }
+html.ninja .swarm-intro-cursor { filter: none; }
+html.ninja .ninja { position: absolute; left: -26px; top: -40px; width: 52px; height: 46px; overflow: visible; fill: none; stroke: var(--swarm-intro-fg); stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 2px rgb(0 0 0 / .6)); }
+html.ninja .ninja .mask { fill: var(--swarm-intro-fg); stroke: none; }
+html.ninja .ninja .band { stroke: #E2465C; }
+html.ninja .ninja .eye { stroke: #FFF1BE; filter: drop-shadow(0 0 2px #FFE27A); }
+html.ninja .swarm-intro-box { border: 1px solid rgb(203 213 230 / .55); border-radius: 0; }
+html.ninja .swarm-intro-badge { display: none; }
+html.ninja:not(.type-all) .swarm-intro-rest { color: inherit !important; }
+html.ninja:not(.type-all) .swarm-intro-caret { visibility: hidden; }
+html.ninja .nj-star { position: absolute; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; pointer-events: none; }
+html.ninja .nj-star svg { display: block; width: 100%; height: 100%; fill: #DCE4F2; stroke: #05070c; stroke-width: .6; filter: drop-shadow(0 0 2px rgb(255 255 255 / .5)); }
+html.ninja .nj-star svg circle { fill: #05070c; stroke: none; }
+html.ninja .nj-star.stuck { transition: opacity .4s; opacity: 0; }
+html.ninja .nj-ghost { position: absolute; margin: -2px 0 0 -2px; pointer-events: none; animation: nj-ghost .3s ease-out forwards; }
+@keyframes nj-ghost { from { opacity: .35; } to { opacity: 0; } }
+html.ninja .nj-smoke { position: absolute; width: 0; height: 0; pointer-events: none; }
+html.ninja .nj-smoke i { position: absolute; width: 14px; height: 14px; margin: -7px; border-radius: 50%; background: rgb(190 200 220 / .5); filter: blur(2px); animation: nj-smoke .6s ease-out forwards; }
+html.ninja .nj-smoke i:nth-child(1) { --x: -12px; --y: -6px; }
+html.ninja .nj-smoke i:nth-child(2) { --x: 12px; --y: -8px; animation-delay: 30ms; }
+html.ninja .nj-smoke i:nth-child(3) { --x: -6px; --y: 10px; animation-delay: 60ms; }
+html.ninja .nj-smoke i:nth-child(4) { --x: 9px; --y: 9px; animation-delay: 20ms; }
+html.ninja .nj-smoke i:nth-child(5) { --x: 0px; --y: -14px; animation-delay: 50ms; }
+@keyframes nj-smoke { from { transform: translate(0, 0) scale(.4); opacity: .9; } to { transform: translate(var(--x), var(--y)) scale(1.9); opacity: 0; } }

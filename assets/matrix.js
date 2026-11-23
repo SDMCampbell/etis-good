@@ -4,6 +4,7 @@
 //   samurai -> cherry blossom petals falling from a sakura branch in the top corner, tumbling as they drift
 //   robot   -> deep space: a twinkling starfield with asteroids tumbling down through it
 //   wizard  -> an arcane night: glowing motes of gold and violet light drifting and swaying down, with twinkling sparkles
+//   ninja   -> a moonlit night in the rain: thin streaks slanting down past a pale moon (the moon is CSS, in site.css)
 // Runs at ~20-30 fps, pauses when the tab is hidden or after 20 s without input, and is off for visitors whose
 // device asks for reduced motion unless they chose "play it anyway".
 (function () {
@@ -200,7 +201,31 @@
     };
   })();
 
-  var scene = MODE === "samurai" ? sakuraScene : MODE === "robot" ? spaceScene : MODE === "wizard" ? arcaneScene : glyphScene;
+  // ---------- ninja: night rain ----------
+  // Streaks are grouped into a few brightness levels so each level is a single stroke per frame.
+  var rainScene = (function () {
+    var drops = [], LEVELS = [.06, .11, .18], SLANT = .16;
+    function drop(top) { var lv = (Math.random() * LEVELS.length) | 0; return { x: rnd(-40, AW + 40), y: top ? rnd(-AH, AH) : rnd(-80, -10), v: rnd(520, 820) * (.7 + lv * .2), len: rnd(10, 22) * (.8 + lv * .25), lv: lv }; }
+    return {
+      fps: 60,
+      size: function () { drops = []; for (var i = 0, n = Math.round(AW * AH / 5500); i < n; i++) drops.push(drop(true)); },
+      draw: function (dt) {
+        c2.lineWidth = 1; c2.lineCap = "round";
+        for (var lv = 0; lv < LEVELS.length; lv++) for (var dim = 0; dim < 2; dim++) {
+          c2.strokeStyle = "rgba(190,205,235," + (LEVELS[lv] * (dim ? .4 : 1)) + ")"; c2.beginPath();
+          for (var i = 0; i < drops.length; i++) {
+            var d = drops[i]; if (d.lv !== lv) continue;
+            if (dim === 0) { d.y += d.v * dt; d.x -= d.v * SLANT * dt; if (d.y - d.len > AH || d.x < -60) { drops[i] = d = drop(false); d.lv = lv; } }
+            var inText = d.x > DL && d.x < DR; if (inText !== !!dim) continue;     // fainter behind the text column
+            c2.moveTo(d.x, d.y); c2.lineTo(d.x + d.len * SLANT, d.y - d.len);
+          }
+          c2.stroke();
+        }
+      }
+    };
+  })();
+
+  var scene = MODE === "samurai" ? sakuraScene : MODE === "robot" ? spaceScene : MODE === "wizard" ? arcaneScene : MODE === "ninja" ? rainScene : glyphScene;
   function size() {
     AW = innerWidth; AH = innerHeight; cv.width = AW * dpr; cv.height = AH * dpr; c2.setTransform(dpr, 0, 0, dpr, 0, 0);
     textColumn(); scene.size();
