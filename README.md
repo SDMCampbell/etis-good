@@ -20,6 +20,7 @@ Live: https://etis-good.samueldcampbell.workers.dev
 - **Click a skill** in Systems to have the roles that used it carried to the top of Experience.
 - **[ copy ]** next to the email copies it, and the drones carry it home.
 - Keys: `1`–`4` jump between sections · `0` replay · `9` phosphor · `?` all keys.
+- **Tractor mode** (swarm menu, key `8`, or `#tractor`): the drones become tractors and the text becomes grass they grow. Click grass to mow it and read that line.
 - Leave it idle and the swarm spells out the handle. Background rain parts around your pointer.
 
 Respects `prefers-reduced-motion` (no rain or drones; every feature still works), keyboard-only use, phones, and print.

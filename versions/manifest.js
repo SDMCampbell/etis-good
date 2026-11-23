@@ -4,7 +4,7 @@
  * verdict: baseline | kept | rejected | merged (partly folded into a later version)
  */
 window.VERSIONS = {
-  "current": 51,
+  "current": 52,
   "list": [
     {
       "v": 0,
@@ -524,6 +524,16 @@ window.VERSIONS = {
       "note": "Every page load is now built by the real swarm-intro library (vendored unmodified as assets/swarm-intro.js). Cursors fly in and circle the 'doog' badge, then each one drags a selection box with a live size label over an element and types its text in. Sections further down build as you scroll to them, and fast scrolling calls in more cursors. When it's done, the site's own ▸ drones take over for sorting, gather, dispatch and the rest. The page is hidden from first paint until the intro starts, so there's no flash of finished text.",
       "why": "Samuel added the library to the project folder and asked for all text to be built with it from the moment the page loads.",
       "try": "Load the page (every load plays it), then scroll down while it's building.",
+      "date": "2026-11-22"
+    },
+    {
+      "v": 52,
+      "title": "Tractor mode",
+      "verdict": "kept",
+      "featured": true,
+      "note": "Swarm menu → 'tractor mode 🚜' (or key 8, or a link ending in #tractor). Every drone becomes a tractor and every line of text turns into grass. The tractors fan out and drive along each line, and the grass grows up right behind them. Grass sways, tractors kick up dust and turn to face the way they're driving. Lines further down are planted as you scroll to them. Click or tap any patch of grass and a tractor mows it, uncovering that line's text; [ mow everything ] sends the whole fleet; [ back to text ] returns to normal.",
+      "why": "Samuel asked for a tractor mode where the swarm becomes tractors and all the text becomes grass they grow.",
+      "try": "Press 8, watch the field get planted, then click your name to mow it.",
       "date": "2026-11-22"
     }
   ]

@@ -183,6 +183,7 @@
     ctx.clearRect(0, 0, W, H);
     var sy = scrollY, sx = scrollX, h = hive();
     drawGather(now);
+    if (tractor) drawField(now, sx, sy);
     updateSurveys(now, sx, sy);
     // falling words
     for (var i = active.length - 1; i >= 0; i--) {
@@ -250,7 +251,7 @@
     drones = drones.filter(function (d) { return !(d.extra && d.state === "idle"); });
     if (drones.some(function (d) { return d.state === "hover"; })) moving = true;
     if (formation) moving = true;
-    if (active.length || moving || gather || surveys.length || scrambles.length || carries.length || lifts.length || ferries.length || sweeps.length || words.some(function (x) { return x.block._left > 0; })) raf = requestAnimationFrame(frame);
+    if ((tractor && !reduce) || active.length || moving || gather || surveys.length || scrambles.length || carries.length || lifts.length || ferries.length || sweeps.length || words.some(function (x) { return x.block._left > 0; })) raf = requestAnimationFrame(frame);
     else finish();
   }
   function drawWord(w, y, t, sx, sy, now) {
@@ -263,6 +264,7 @@
     }
   }
   function drawDrone(d) {
+    if (tractor) return drawTractor(d);
     ctx.textBaseline = "middle"; ctx.font = "700 14px 'JetBrains Mono', monospace";
     for (var i = 0; i < d.trail.length - 1; i++) { ctx.fillStyle = "rgba(" + INK.rgb + "," + (0.08 * (i + 1)) + ")"; ctx.fillText("▮", d.trail[i][0], d.trail[i][1]); }
     ctx.fillStyle = d.state === "idle" ? "rgba(" + INK.rgb + ",.55)" : INK.acc;
@@ -387,7 +389,7 @@
     }
   }
   addEventListener("click", function (e) {
-    if (!done || e.defaultPrevented) return;
+    if (!done || e.defaultPrevented || tractor) return;
     if (e.target.closest("a, button, input, textarea, select, label, summary, dialog")) return;
     var rg = wordAt(e.clientX, e.clientY); if (rg) scramble(rg);
   });
@@ -747,6 +749,144 @@
     }, function () { say("> couldn't copy. long-press the address instead"); });
   });
 
+  // ---------- tractor mode: the swarm turns into tractors and every line of text becomes grass they grow ----------
+  // The real text stays in the page (screen readers, search and copy still work); it's just drawn as grass.
+  // Click or tap a patch of grass and a tractor mows it, uncovering that line's text.
+  var tractor = false, field = [], tractorBar = $("tractorBar");
+  var GRASS = ["#2f7d32", "#3d9a40", "#4fb14c", "#62c45a", "#7fd36b"];
+  var MOWABLE = "p, li, h1, h2, h3, a, button, .who, .sys, dd, dt, label, #stamp";
+  function buildField() {
+    field = [];
+    blocks.forEach(function (b) {
+      var line = null;
+      measure(b).forEach(function (w) {
+        if (!line || Math.abs(w.y - line.y) > 4 || w.block !== line.block) {
+          line = { block: b, y: w.y, h: w.h, x0: w.x, x1: w.x + w.w, fixed: w.fixed, words: [], prog: reduce ? 1e9 : -1, drone: null, state: reduce ? "grown" : "seed", mow: null };
+          field.push(line);
+        }
+        w.seed = Math.random() * 100; line.words.push(w); line.x1 = Math.max(line.x1, w.x + w.w);
+      });
+    });
+    // which element each word belongs to, so a click can mow just that line of the résumé
+    field.forEach(function (ln) { ln.words.forEach(function (w) { w.mowEl = elAtWord(w); }); });
+  }
+  function elAtWord(w) {
+    var vx = w.x - scrollX + w.w / 2, vy = w.y - (w.fixed ? 0 : scrollY) + w.h / 2;
+    if (vy < 0 || vy > innerHeight || vx < 0 || vx > innerWidth) return undefined;   // off screen: work it out later
+    var hit = document.elementsFromPoint(vx, vy).filter(function (n) { return n !== canvas && n.id !== "amb"; })[0];
+    return (hit && hit.closest(MOWABLE)) || null;
+  }
+  function blade(x, base, h, lean, col) {
+    ctx.strokeStyle = col; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(x, base); ctx.quadraticCurveTo(x + lean * .4, base - h * .6, x + lean, base - h); ctx.stroke();
+  }
+  function drawField(now, sx, sy) {
+    ctx.save(); ctx.lineCap = "round";
+    for (var i = 0; i < field.length; i++) {
+      var ln = field[i], oy = ln.fixed ? 0 : sy, vy = ln.y - oy;
+      if (vy > H + 40 || vy + ln.h < -40) continue;
+      if (ln.state === "seed" && vy < H - 20 && vy > -ln.h) queueLine(ln, now);
+      for (var j = 0; j < ln.words.length; j++) {
+        var w = ln.words[j];
+        if (w.mowEl === undefined) w.mowEl = elAtWord(w);
+        if (w.mowEl && w.mowEl.classList.contains("mowed")) continue;
+        var cw = w.w / w.t.length, base = vy + w.h * .82, full = w.h * .78;
+        for (var k = 0; k < w.t.length; k++) {
+          var cx = w.x - sx + k * cw;
+          var g = Math.max(0, Math.min(1, (ln.prog - (w.x + k * cw)) / 40));     // grows in just behind the tractor
+          if (ln.mow !== null && w.x + k * cw < ln.mow) continue;             // mowed down
+          if (g <= 0) continue;
+          var r = (w.seed * 7 + k * 13) % 10 / 10, sway = reduce ? 0 : Math.sin(now / 700 + (w.x + k * cw) * .04) * 2.2;
+          blade(cx + cw * .25, base, full * g * (.75 + r * .35), sway - 1.5 + r, GRASS[(k + (w.seed | 0)) % 5]);
+          blade(cx + cw * .65, base, full * g * (.6 + (1 - r) * .4), sway + 1.2 - r, GRASS[(k + 2 + (w.seed | 0)) % 5]);
+        }
+      }
+    }
+    ctx.restore();
+    updateTractors(now, sx, sy);
+  }
+  var growQ = [];
+  function queueLine(ln) { ln.state = "queued"; growQ.push(ln); }
+  function freeTractor(near) {
+    return drones.filter(function (d) { return d.state === "idle"; }).sort(function (a, b) { return Math.hypot(a.x - near.x, a.y - near.y) - Math.hypot(b.x - near.x, b.y - near.y); })[0];
+  }
+  function updateTractors(now, sx, sy) {
+    // hand queued lines (top of the screen first) to free tractors
+    growQ.sort(function (a, b) { return a.y - b.y; });
+    while (growQ.length) {
+      var ln = growQ[0], vy0 = ln.y - (ln.fixed ? 0 : sy), d = freeTractor({ x: ln.x0 - sx, y: vy0 });
+      if (!d) break;
+      growQ.shift(); ln.drone = d; d.state = "tractor"; ln.t0 = now; ln.from = { x: d.x, y: d.y }; ln.state = "driving";
+    }
+    field.forEach(function (ln) {
+      if (!ln.drone) return;
+      var d = ln.drone, oy = ln.fixed ? 0 : sy, row = ln.y - oy + ln.h * .55, t = now - ln.t0, FLY = 280;
+      var mowing = ln.mow !== null, startX = ln.x0 - sx - 14;
+      if (t < FLY) { var q = 1 - Math.pow(1 - t / FLY, 3); d.x = ln.from.x + (startX - ln.from.x) * q; d.y = ln.from.y + (row - ln.from.y) * q; return; }
+      var len = ln.x1 - ln.x0 + 40, dur = Math.max(450, len / .9), p = Math.min(1, (t - FLY) / dur);
+      var x = ln.x0 - 14 + len * p;
+      if (mowing) ln.mow = x; else ln.prog = x + 20;
+      d.x = x - sx; d.y = row + Math.sin(now / 45) * .8;
+      if (p >= 1) {
+        d.state = "idle"; ln.drone = null;
+        if (mowing) { ln.state = "mowed"; if (ln.onMowed) ln.onMowed(); }
+        else { ln.state = "grown"; ln.prog = 1e9; }
+      }
+    });
+  }
+  function drawTractor(d) {
+    var dx = d.x - (d.lx === undefined ? d.x : d.lx); d.lx = d.x;
+    if (Math.abs(dx) > .3) d.dir = dx > 0 ? 1 : -1;
+    for (var i = 0; i < d.trail.length - 1; i += 2) { ctx.fillStyle = "rgba(150,110,60," + (0.06 * (i + 1)) + ")"; ctx.fillRect(d.trail[i][0] - 2, d.trail[i][1] + 6, 3, 2); }
+    ctx.save(); ctx.translate(d.x, d.y); if (d.dir === 1) ctx.scale(-1, 1);    // the tractor glyph faces left; flip it when driving right
+    ctx.globalAlpha = d.state === "idle" ? .7 : 1;
+    ctx.font = (d.state === "idle" ? 16 : 20) + "px 'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("🚜", 0, 0); ctx.restore();
+  }
+  function mow(el) {
+    var lines = field.filter(function (ln) { return ln.state !== "mowed" && ln.words.some(function (w) { return w.mowEl === el; }); });
+    if (!lines.length || el.classList.contains("mowing")) { el.classList.add("mowed"); return; }
+    el.classList.add("mowing");
+    var left = lines.length;
+    lines.forEach(function (ln) {
+      ln.mow = ln.x0 - 20; ln.state = "seed-mow";
+      ln.onMowed = function () { if (--left <= 0) { el.classList.remove("mowing"); el.classList.add("mowed"); } };
+      if (reduce || !drones.length) { ln.mow = 1e9; ln.onMowed(); return; }
+      ln.state = "queued"; growQ.unshift(ln);
+    });
+    kick();
+  }
+  function setTractor(on) {
+    if (on === tractor) return;
+    skipAll();
+    tractor = on;
+    document.documentElement.classList.toggle("tractor", on);
+    tractorBar.hidden = !on;
+    var tb = document.querySelector('[data-order="tractor"]'); if (tb) tb.innerHTML = on ? "tractor mode: on · back to text <kbd>8</kbd>" : "tractor mode 🚜 <kbd>8</kbd>";
+    document.querySelectorAll(".mowed, .mowing").forEach(function (x) { x.classList.remove("mowed", "mowing"); });
+    growQ = [];
+    drones.forEach(function (d) { if (d.state === "tractor") d.state = "idle"; });
+    if (on) { canvas.style.display = ""; canvas.style.visibility = ""; buildField(); }
+    else { field = []; if (reduce) canvas.style.display = "none"; }
+    try { history.replaceState(null, "", on ? "#tractor" : location.pathname + location.search); } catch (e) {}
+    kick(); if (reduce) frame(performance.now());
+  }
+  // click a patch of grass to mow it (links and buttons still work once their grass is mowed)
+  document.addEventListener("click", function (e) {
+    if (!tractor || e.target.closest("#tractorBar, #swarmMenu, #hiveBtn, .swarm-intro-layer, #find, dialog")) return;
+    var el = e.target.closest(MOWABLE); if (!el || el.classList.contains("mowed")) return;
+    if (!e.target.closest(".top, .doc, .pbar")) return;
+    e.preventDefault(); e.stopPropagation(); mow(el);
+  }, true);
+  $("tractorX").addEventListener("click", function () { setTractor(false); });
+  $("tractorMowAll").addEventListener("click", function () {
+    var els = []; field.forEach(function (ln) { ln.words.forEach(function (w) { if (w.mowEl && els.indexOf(w.mowEl) < 0) els.push(w.mowEl); }); });
+    els.forEach(mow);
+  });
+  var tReb = 0;
+  addEventListener("resize", function () { if (tractor) { clearTimeout(tReb); tReb = setTimeout(function () { var m = [].slice.call(document.querySelectorAll(".mowed")); buildField(); field.forEach(function (ln) { ln.state = "grown"; ln.prog = 1e9; }); m.forEach(function (x) { x.classList.add("mowed"); }); }, 200); } });
+  addEventListener("scroll", function () { if (tractor && reduce) frame(performance.now()); }, { passive: true });
+
   // ---------- motion switch: lets visitors whose system reduces motion turn the swarm on (and anyone turn it off) ----------
   function setMotion(on) { try { localStorage.setItem("motion", on ? "on" : "off"); sessionStorage.removeItem("rained"); } catch (e) {} location.reload(); }
   var mNote = $("motionNote");
@@ -784,6 +924,7 @@
     else if (o === "phosphor") nextTheme();
     else if (o === "keys") keys.showModal();
     else if (o === "motion") setMotion(reduce);
+    else if (o === "tractor") setTractor(!tractor);
     else { var sb = document.querySelector('[data-sort="' + o + '"]'); $("exp-h").scrollIntoView({ block: "start" }); requestAnimationFrame(function () { sb.click(); }); }
   });
 
@@ -811,6 +952,7 @@
     "  click      any word: the swarm lifts and re-drops it",
     "  0          replay: the swarm reels the page up and rains it again",
     "  9          phosphor: green / amber / ice / paper",
+    "  8          tractor mode: the swarm grows the text as grass",
     "  hive       tap the swarm (bottom right) for every order",
     "  ?          this list", "",
     "LINKS", "",
@@ -824,6 +966,7 @@
     if (/^[1-4]$/.test(e.key) && findBar.hidden) { e.preventDefault(); channel(+e.key); }
     if (e.key === "0" && findBar.hidden) { e.preventDefault(); recall(); }
     if (e.key === "9" && findBar.hidden) { e.preventDefault(); nextTheme(); }
+    if (e.key === "8" && findBar.hidden) { e.preventDefault(); setTractor(!tractor); }
     if (e.key === "Escape" && !menu.hidden) { setMenu(false); hiveBtn.focus(); }
     else if (e.key === "?") { e.preventDefault(); skipAll(); if (keys.showModal && !keys.open) keys.showModal(); }
   });
@@ -870,6 +1013,7 @@
     if (fm && fm[1] !== findIn.value) { skipAll(); setTimeout(function () { openFind(false); findIn.value = fm[1]; find(fm[1]); if (hits[0]) nextHit(); }, 50); }
   }
   findFromHash(); addEventListener("hashchange", findFromHash);
+  if (location.hash === "#tractor") ready.then(function () { setTimeout(function () { setTractor(true); }, 60); });
   $("skip").addEventListener("click", skipAll);
   addEventListener("keydown", function (e) { if (!e.metaKey && !e.ctrlKey) skipAll(); });
   addEventListener("click", function (e) { if (e.target.id !== "skip") skipAll(); }, true);

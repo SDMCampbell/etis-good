@@ -190,3 +190,20 @@ html[data-theme="paper"] .amb { display: none; }
 .motion-note[hidden] { display: none; }
 .motion-note button { background: none; border: 0; padding: 0; min-height: 36px; font: inherit; color: var(--link); text-decoration: underline; cursor: pointer; }
 @media (max-width: 600px) { .swarm-intro-skip { bottom: 72px !important; } }
+
+/* tractor mode: text is drawn as grass on the canvas; mowed elements show their text again */
+html.tractor :is(.top, .doc, .pbar) :not(.mowed, .mowed *),
+html.tractor :is(.top, .doc, .pbar) :not(.mowed, .mowed *)::before,
+html.tractor :is(.top, .doc, .pbar) :not(.mowed, .mowed *)::after { color: transparent !important; text-decoration-color: transparent !important; text-shadow: none !important; }
+html.tractor :is(.top, .doc, .pbar) :not(.mowed, .mowed *) { border-color: transparent !important; }
+html.tractor .doc { cursor: pointer; }
+html.tractor .mowed { cursor: auto; }
+html.tractor .amb { display: none; }
+html.tractor mark.hit { background: rgba(255, 220, 90, .25); }
+.tractor-bar { position: fixed; left: 12px; bottom: 16px; z-index: 44; max-width: calc(100vw - 96px); margin: 0; padding: 6px 10px; background: var(--bg); color: var(--text); border: 1px solid #4fb14c; font-size: 13px; line-height: 1.5; }
+.tractor-bar[hidden] { display: none; }
+.tractor-bar button { background: none; border: 0; padding: 0 2px; min-height: 32px; font: inherit; color: #7fd36b; text-decoration: underline; cursor: pointer; }
+html.tractor .skip { display: none; }
+@media (max-width: 600px) { .tractor-bar { bottom: 72px; } }
+@media print { .tractor-bar { display: none !important; } html.tractor :is(.top, .doc) * { color: #000 !important; } }
+@media (max-width: 600px) { .tractor-bar { font-size: 12px; padding: 4px 8px; } .tractor-bar .tb-hint { display: none; } }
