@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/rain.css">
-  <script>/* hide the page until swarm-intro takes over (same check as the motion switch in rain.js) */try{var m=localStorage.getItem("motion"),r=matchMedia("(prefers-reduced-motion: reduce)").matches;if(m==="on"||(m!=="off"&&!r)){document.documentElement.setAttribute("data-swarm-intro","");var st=document.createElement("style");st.id="swarm-intro-preload";st.textContent="html[data-swarm-intro] body>*{opacity:0;animation:swarm-intro-failsafe 0s 4s forwards}@keyframes swarm-intro-failsafe{to{opacity:1}}";document.head.appendChild(st)}}catch(e){}</script>
+  <script>/* hide the page until swarm-intro takes over (same check as the motion switch in rain.js) */try{var m=localStorage.getItem("motion"),r=matchMedia("(prefers-reduced-motion: reduce)").matches,tm=localStorage.getItem("tractor")==="on"||location.hash==="#tractor";if(tm)document.documentElement.classList.add("tractor");if(!tm&&(m==="on"||(m!=="off"&&!r))){document.documentElement.setAttribute("data-swarm-intro","");var st=document.createElement("style");st.id="swarm-intro-preload";st.textContent="html[data-swarm-intro] body>*{opacity:0;animation:swarm-intro-failsafe 0s 4s forwards}@keyframes swarm-intro-failsafe{to{opacity:1}}";document.head.appendChild(st)}}catch(e){}</script>
 </head>
 <body>
   <header class="top" data-rain>
@@ -75,7 +75,14 @@
   <canvas class="amb" id="amb" aria-hidden="true"></canvas>
   <canvas class="rain" id="rain" aria-hidden="true"></canvas>
   <button class="skip" id="skip" type="button">skip ▸▸</button>
-  <div class="tractor-bar" id="tractorBar" hidden role="status">🚜 tractor mode<span class="tb-hint"> · tap the grass to mow it</span> · <button type="button" id="tractorMowAll">[ mow everything ]</button> <button type="button" id="tractorX">[ back to text ]</button></div>
+  <div class="tractor-bar" id="tractorBar" hidden role="group" aria-label="Tractor controls"><span class="tb-badge" aria-hidden="true">🚜</span><span class="tb-name">tractor mode</span><span class="tb-hint">click the grass to mow it</span>
+    <button type="button" id="tractorMowAll" aria-label="Mow everything"><span class="ic" aria-hidden="true">✂</span><span class="lb">mow all</span></button>
+    <button type="button" id="tractorSeed" aria-label="Reseed"><span class="ic" aria-hidden="true">↺</span><span class="lb">reseed</span></button>
+    <button type="button" id="tractorRain" aria-label="Rain"><span class="ic" aria-hidden="true">☂</span><span class="lb">rain</span></button>
+    <button type="button" id="tractorDrive" aria-label="Drive a tractor"><span class="ic" aria-hidden="true">◎</span><span class="lb">drive</span></button>
+    <button type="button" id="tractorSound" aria-label="Sound off" aria-pressed="false"><span class="ic" aria-hidden="true">♪</span><span class="lb">sound</span></button>
+    <button type="button" id="tractorX" aria-label="Back to text"><span class="ic" aria-hidden="true">↩</span><span class="lb">text</span></button>
+    <span class="drive-hint" id="driveHint" hidden></span><span class="tractor-tip" id="tractorTip" hidden>the text is grass now · click any of it to mow · <b>✂</b> mow it all · <b>◎</b> drive your own tractor · <b>☂</b> rain makes it grow · <b>↺</b> reseed grows it back · <b>↩</b> back to text</span></div>
   <button class="hivebtn" id="hiveBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="swarmMenu" title="Give the swarm an order"><span class="hb-l">swarm</span><span class="sr"> orders</span></button>
   <div class="swarm-menu" id="swarmMenu" role="group" aria-label="Swarm orders" hidden>
     <p class="sm-h">// swarm orders</p>

@@ -20,7 +20,7 @@ Live: https://etis-good.samueldcampbell.workers.dev
 - **Click a skill** in Systems to have the roles that used it carried to the top of Experience.
 - **[ copy ]** next to the email copies it, and the drones carry it home.
 - Keys: `1`–`4` jump between sections · `0` replay · `9` phosphor · `?` all keys.
-- **Tractor mode** (swarm menu, key `8`, or `#tractor`): the drones become tractors and the text becomes grass they grow. Click grass to mow it and read that line.
+- **Tractor mode** (swarm menu, key `8`, or a link ending in `#tractor`): the drones become tractors and the text itself becomes grass. The tractors till the page in serpentine rows and every letter grows out of the soil (seed → shoot → rise → unfurl). Click any grass to send a tractor to mow it away. The toolbox (bottom left) has ✂ mow all, ↺ reseed, ☂ rain (the grass drinks it and grows taller), ◎ drive (steer your own tractor with arrows/WASD or by dragging; space swaps mower and tiller), ♪ sound (off by default) and ↩ back to text. The mode is remembered, so the next visit loads straight into a field being tilled.
 - Leave it idle and the swarm spells out the handle. Background rain parts around your pointer.
 
 Respects `prefers-reduced-motion` (no rain or drones; every feature still works), keyboard-only use, phones, and print.
@@ -54,6 +54,8 @@ tools/tests/          regression suite (Playwright)
 How the page is built: every load, the text is built by [swarm-intro](https://github.com/swarnadeep31/swarm-intro) (MIT, Swarnadeep Roy), vendored unmodified as `assets/swarm-intro.js` (compiled from its `src/index.ts`). Cursors gather round the `doog` badge, then each one drags a selection box with a live size label over an element and types its text in; sections lower down build as you scroll to them. Skip with its button, Esc or any key. When it finishes, the site's own ▸ drones take over for everything interactive. An inline script in `<head>` hides the page until the intro starts, using the same motion setting as `rain.js`.
 
 To update the library: replace `swarm-intro-main/src/index.ts`, compile it (`tsc index.ts --target ES2019 --module ES2015 --lib ES2020,DOM`), drop the `export` keywords and wrap it as in the current `assets/swarm-intro.js`.
+
+How the grass works: each word is redrawn on the canvas as *sod*. Its letterforms are rasterised once into an offscreen canvas and filled with a fibrous grass texture, and blades are rooted on the letters' top edges, found by scanning the glyph mask. Headings also get a soil edge and shadow (cut turf). Growth, sway, wind gusts, bending around the pointer, mowing stripes and clippings are all drawn per frame from that cached data; the real text stays in the DOM, invisible (`-webkit-text-fill-color: transparent`), so search, copy and screen readers still work. When nothing is moving the field drops to 30 fps and then stops after 10 s idle.
 
 How the text rain works: the real text is in the DOM from the first frame (so layout never shifts and screen readers, search and copy/paste work), hidden with transparent colour until its words land. A canvas on top paints the falling glyphs at exactly the positions measured from the live text. The same measure → change the DOM → measure again → fly every word between the two positions engine powers sorting, the board view, gather and dispatch.
 

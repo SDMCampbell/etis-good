@@ -63,7 +63,23 @@ async def t41(pg):
 async def t43(pg): return "archive" in await pg.evaluate("(document.querySelector('.vb')||{}).textContent||''")
 async def t44(pg): await w(pg); await pg.click("#hiveBtn"); await pg.wait_for_timeout(200); return await pg.evaluate("!document.getElementById('swarmMenu').hidden")
 async def t45(pg): await w(pg); return await pg.evaluate("!!document.getElementById('amb')")
-TESTS_ALL = [(0,t0,False),(1,lambda p: climb(p,1),False),(2,t2,False),(3,t3,False),(4,t4,False),(5,t5,False),(6,t6,False),(7,t7,False),(8,t8,True),(11,t11,True),(13,t13,False),(14,t14,False),(18,t18,False)] + [(v,generic,False) for v in (19,20,21,22,23,25,26,30,33)] + [(31,t31,False),(32,t32,False),(34,t34,False),(37,t37,False),(38,t38,False),(40,t40,False),(41,t41,False),(43,t43,False),(44,t44,False),(45,t45,False)]
+
+async def t50(pg): return await pg.evaluate("!!document.getElementById('motionNote')")
+async def t51(pg): return await pg.evaluate("typeof window.swarmIntro === 'function'")
+async def t52(pg):
+    await w(pg); await pg.evaluate("document.querySelector('[data-order=\"tractor\"]').click()"); await pg.wait_for_timeout(600)
+    ok = await pg.evaluate("document.documentElement.classList.contains('tractor')"); await pg.evaluate("localStorage.clear()"); return ok
+async def grass(pg):
+    await pg.evaluate("localStorage.setItem('tractor','on')"); await pg.reload(); await pg.wait_for_timeout(5500)
+    ok = await pg.evaluate("document.documentElement.classList.contains('tractor') && (()=>{const c=document.getElementById('rain');const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=3;i<d.length;i+=40)if(d[i]>0)n++;return n})() > 2000")
+    await pg.evaluate("localStorage.clear()"); return ok
+async def t63(pg):
+    ok = await grass(pg)
+    await pg.evaluate("localStorage.setItem('tractor','on')"); await pg.reload(); await pg.wait_for_timeout(1500)
+    await pg.evaluate("document.getElementById('tractorDrive').click()"); await pg.wait_for_timeout(200)
+    d = await pg.evaluate("document.documentElement.classList.contains('driving')"); await pg.evaluate("document.getElementById('tractorDrive').click()")
+    await pg.evaluate("localStorage.clear()"); return ok and d
+TESTS_ALL = [(0,t0,False),(1,lambda p: climb(p,1),False),(2,t2,False),(3,t3,False),(4,t4,False),(5,t5,False),(6,t6,False),(7,t7,False),(8,t8,True),(11,t11,True),(13,t13,False),(14,t14,False),(18,t18,False)] + [(v,generic,False) for v in (19,20,21,22,23,25,26,30,33)] + [(31,t31,False),(32,t32,False),(34,t34,False),(37,t37,False),(38,t38,False),(40,t40,False),(41,t41,False),(43,t43,False),(44,t44,False),(45,t45,False)] + [(49,generic,False),(50,t50,False),(51,t51,False),(52,t52,False),(54,grass,False),(56,grass,False),(57,grass,False),(61,grass,False),(63,t63,False),(66,grass,False)]
 async def main():
     out = {}
     async with async_playwright() as p:

@@ -4,7 +4,7 @@
  * verdict: baseline | kept | rejected | merged (partly folded into a later version)
  */
 window.VERSIONS = {
-  "current": 53,
+  "current": 71,
   "list": [
     {
       "v": 0,
@@ -544,6 +544,186 @@ window.VERSIONS = {
       "note": "Fixes from Samuel's report. (1) With reduced motion on, tractor mode made all the text vanish and no grass appeared: the grass was drawn once and then wiped by the end-of-animation cleanup. It now stays. (2) Mowed lines could come back black-on-black, because they inherited 'transparent' from their parent elements. The glyphs are now hidden with text-fill-color, so a mowed line gets its real colours back. (3) The swarm control at bottom right was only a faint dashed outline and three tiny arrows. It's now a clearly outlined 'swarm' button. Also: grass no longer draws over the sticky header, and on phones the intro's skip button moved left so it doesn't cover the swarm button.",
       "why": "Samuel: 'once it's clicked and goes active it seems to go to a completely black color on a black background' and 'there's nothing in the bottom right that indicates where that control box would be'. Both reproduced in his own browser on the live site.",
       "try": "Open the swarm button, turn on tractor mode, then click a job bullet.",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 54,
+      "title": "Text becomes grass",
+      "verdict": "kept",
+      "featured": true,
+      "note": "Tractor mode is rebuilt around Samuel's brief: the text IS the grass. Each word's letterforms are rendered as sod (a fibrous grass texture, dark at the roots and bright at the tips), with tapered blades sprouting from the letters' top edges. Tractors till each line first, laying a soil furrow and seeds; then each letter rises out of the ground with a little overshoot, and its blades unfurl one by one on their own delays and sway, with gusts rolling across the page. Clicking grass sends a tractor to mow it: the letters are cut away, clippings fly and stubble fades. Tractor mode is now remembered, so loading the page in tractor mode sends the tractors out to till and grow the whole page instead of running the swarm intro.",
+      "why": "Samuel: the grass was 'very basic… just a 2D line upward'; 'the text should BE the grass'; tractors should erase text when clicked; on load the tractors should till the area and grow the text grass.",
+      "try": "Swarm → tractor mode, then reload. Click your name to mow it.",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 55,
+      "title": "Growth stages",
+      "verdict": "kept",
+      "featured": false,
+      "note": "Each letter now grows in stages, the way time-lapse grass does. A seed swells in the tilled furrow, a hooked shoot breaks the soil and straightens, the letter rises out of the ground, and then its blades unroll from a curl and lengthen. Letters get their own random start and speed, so a line comes up organically instead of in one sweep. Blades have anatomy: a tapered leaf with a light midrib. There are two layers: darker blades behind the letters and brighter ones in front, which gives the turf depth.",
+      "why": "Samuel wants it to 'almost seem like it is really growing, rather than just being a 2D line upward'.",
+      "try": "Turn on tractor mode and reload; watch the first seconds near your name.",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 56,
+      "title": "Cut turf",
+      "verdict": "merged",
+      "featured": true,
+      "note": "Alternate direction: letters as raised slabs of cut turf, with a soil edge extruded underneath and a soft shadow on the page. As a letter grows, its slab rises out of the furrow and the soil side gets taller. On the big name it looks like physical pieces of lawn. On body text the brown edges made words muddy, so the final version gives only headings (20 px and up) the turf slab, and small text stays flat grass.",
+      "why": "The cycle needed a substantially different direction from 'flat texture'. Thickness and soil sell the idea that the letters are real lawn.",
+      "try": "Tractor mode → watch your name rise as turf.",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 57,
+      "title": "Drawn tractors",
+      "verdict": "kept",
+      "featured": true,
+      "note": "The emoji is replaced by a drawn tractor that looks the same on every device: red hood and cab, a big rear wheel and a small front wheel that turn as it drives, and an exhaust that puffs while it works. You can see each tractor's job: tilling tractors drag a tiller that kicks up soil, mowing tractors run a spinning mower deck. Tractors scale with the text they're working on, so the one mowing the name is big. Click a tractor and it heads off to mow the nearest grass. In tractor mode the fleet no longer follows the mouse around; idle tractors wait at the barn (bottom right).",
+      "why": "The emoji looked different on every system, was tiny next to the headline, and couldn't show what it was doing.",
+      "try": "Tractor mode → click your name; then click any parked tractor.",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 58,
+      "title": "Lawn care",
+      "verdict": "kept",
+      "featured": false,
+      "note": "Mowing now leaves a result: where the letters stood there's a freshly cut strip of lawn with alternating light and dark mowing stripes, and the clippings thrown by the deck fall, land on the strip and slowly fade. A new [ reseed ] control sends the fleet back over every mowed line to till it again and regrow the text through the full seed → shoot → rise → unfurl sequence, without leaving tractor mode.",
+      "why": "Erasing text with nothing left behind felt like deleting rather than mowing, and there was no way to grow the page back except leaving tractor mode.",
+      "try": "Tractor mode → [ mow everything ] → [ reseed ].",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 59,
+      "title": "Quiet lawn",
+      "verdict": "kept",
+      "featured": false,
+      "note": "The field now stops costing anything when nothing is happening. While letters are growing, tractors are driving or clippings are flying it runs at full speed. When only the sway is left it drops to 30 fps, and after 10 s with no input it stops completely, with the lawn frozen exactly where it was. Any mouse move, key, touch or scroll wakes it. The background glyph rain is now switched off in tractor mode (it was hidden but still running), and the idle 'spell the handle' formation is skipped so parked tractors stay at the barn.",
+      "why": "Measured: tractor mode was requesting 120 animation frames a second forever, from two loops (the field plus the hidden background rain), even with nothing changing.",
+      "try": "Turn on tractor mode, wait 10 s without touching anything, then move the mouse.",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 60,
+      "title": "The field",
+      "verdict": "kept",
+      "featured": false,
+      "note": "In tractor mode the page itself becomes a field. The black background turns into tilled soil: an earthy noise texture, fine furrows plus deeper ones at irregular spacing, and a soft morning light falling from the top of the screen. The header, menus and tractor bar take on the soil colour, and the grass letters were brightened a touch to stay crisp on brown. On phones the tractor bar labels shorten to [ mow ] [ reseed ] [ text ].",
+      "why": "The cycle review: 'Everything happens on a black void; the page doesn't feel like a place.'",
+      "try": "Tractor mode: look at the ground between the lines.",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 61,
+      "title": "Fieldwork",
+      "verdict": "kept",
+      "featured": true,
+      "note": "Tilling now looks like real fieldwork. A capped fleet (7 on desktop, 4 on phones) works the page, and each tractor starts from whichever end of a line is closer. A tractor finishing a row swings out past the end in a U-turn and drives the next row the other way, so neighbouring lines are tilled back and forth in a serpentine. Tilling and mowing both work in either direction, and clippings fly out behind whichever way the tractor is heading.",
+      "why": "Every tractor used to fly in from the barn for every line and always drive left to right, which looked like a printer rather than tractors working a field.",
+      "try": "Turn on tractor mode and reload; watch the tractors turn at the line ends.",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 62,
+      "title": "Rain",
+      "verdict": "kept",
+      "featured": false,
+      "note": "A [ rain ] control brings a six-second shower over the field. Drops streak down at a slant and splash with little ripples where they land, and the gusts through the grass get stronger while it rains. The grass drinks it: blades lengthen (up to 45% taller over repeated showers) and the front blades turn a deeper green. With reduced motion, the grass just gets lusher instantly.",
+      "why": "Once grown, the lawn never changed except by mowing. Rain is a second, playful way to grow it, and a nod to the site's rain roots.",
+      "try": "Tractor mode → [ rain ] a couple of times.",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 63,
+      "title": "Drive it yourself",
+      "verdict": "kept",
+      "featured": true,
+      "note": "[ drive ] gives you your own tractor. Steer with the arrow keys or WASD on a keyboard, or hold and drag on a phone or with a mouse. The mower cuts every letter it rolls over, throwing clippings and leaving the striped strip. Space switches to the tiller, which re-tills mowed letters and grows them back. Drive to the top or bottom edge and the page scrolls with you. A small panel shows the controls; Esc or [ park ] ends the drive. While driving, keys steer instead of starting a search, and clicks steer instead of mowing.",
+      "why": "Until now visitors only commanded tractors indirectly. Driving is the most hands-on, toy-like interaction yet.",
+      "try": "Tractor mode → [ drive ] → hold ← across your name, press space and drive back.",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 64,
+      "title": "Touch the grass",
+      "verdict": "kept",
+      "featured": false,
+      "note": "The lawn now reacts to what moves through it. Blades bend away from the mouse pointer and from tractors rolling past (bigger tractors push a wider path), then spring back slowly once the pointer has gone. Brushing the cursor along your name parts the grass like a hand through a lawn.",
+      "why": "Every blade ignored the pointer and the tractors, which is the quickest giveaway that it's a drawing.",
+      "try": "Tractor mode → move the mouse slowly along the top of your name.",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 65,
+      "title": "Tractor regression + first-time tip",
+      "verdict": "kept",
+      "featured": false,
+      "note": "A full pass over every tractor feature on desktop, phone and reduced motion: entering with the 8 key, tilling, click-to-mow, mow everything, reseed, rain, driving, keyboard focus on the tractor bar, and leaving tractor mode (the real text comes back and the choice is remembered as off). Everything passed, and the normal text site also passed its regression run. New: the first time someone opens tractor mode, a tip above the bar explains it: the text is grass, click it to mow, drive, rain, reseed. It disappears after nine seconds or on the first click, and never shows again.",
+      "why": "Lots of features had landed in one bar; the cycle closes by proving they work together and helping newcomers find them.",
+      "try": "Clear the site's storage, open tractor mode.",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 66,
+      "title": "Wildflowers",
+      "verdict": "kept",
+      "featured": true,
+      "note": "The field isn't a monoculture any more. Anything you can click (links and buttons such as the email, github and copy) flowers: about a quarter of its blades end in small blossoms in yellow, white, pink, blue or orange that open once the blade is nearly full height. That makes links findable in tractor mode. Ordinary text gets a light sprinkle of white daisies. Headings keep their lush long grass and small text stays a fine, shorter lawn.",
+      "why": "Cycle review: 'the grass looks the same everywhere'. Flowering also answers a real problem: in tractor mode you couldn't tell which words were links.",
+      "try": "Tractor mode → look at the email and github line.",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 67,
+      "title": "Tractor toolbox",
+      "verdict": "kept",
+      "featured": false,
+      "note": "The tractor bar is now a tidy toolbox. Each control is an icon plus a short label (✂ mow all, ↺ reseed, ☂ rain, ◎ drive, ↩ text) with a hover/focus highlight instead of bracketed links. On desktop it reads 'tractor mode · click the grass to mow it' followed by the tools. On phones it's a single row of large icon buttons with accessible names. The first-time tip now explains each icon.",
+      "why": "Cycle review: the bar had grown to six bracketed buttons and wrapped to two rows on phones.",
+      "try": "Tractor mode on a phone: one row of icons above the bottom nav.",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 68,
+      "title": "Sound (opt-in)",
+      "verdict": "kept",
+      "featured": false,
+      "note": "A ♪ sound toggle in the tractor toolbox, off by default. When on, everything is synthesised live with Web Audio (no files downloaded): a low putt-putting engine that gets louder and higher-pitched as more tractors work (and as you drive faster), a whirr from the mower deck while anything is mowing, and a soft hiss during rain. Leaving tractor mode turns it off.",
+      "why": "From the run-3 backlog ('opt-in sound'). Tractors are the one place on the site where sound obviously belongs.",
+      "try": "Tractor mode → ♪ → reseed or drive.",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 69,
+      "title": "Phone performance",
+      "verdict": "kept",
+      "featured": false,
+      "note": "Measured the field's draw cost per frame (phone emulation with the CPU throttled 4×): 8.5 ms average, 17.4 ms at the 95th percentile. Two changes. Blades are now batched into one path per colour per word, plus one path for all the midribs, instead of one fill per blade. And on phones the darker back layer of blades is skipped. Result: about 7 ms average and 14 ms at p95 on the throttled phone (desktop 3 ms), with the lawn looking the same apart from slightly sparser depth on phones.",
+      "why": "Phones were hitting 33 ms frames while the field swayed.",
+      "try": "Tractor mode on a phone: the sway should be smooth.",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 70,
+      "title": "Documented + verified",
+      "verdict": "kept",
+      "featured": false,
+      "note": "README: tractor mode is now documented (how to enter it, every toolbox control, that the mode is remembered) along with how the grass engine works: sod rasterised from each word's letterforms, blades rooted on the glyphs' top edges, real text kept invisible in the DOM, and the idle throttling. The featured-version verifier now covers v49 onward (swarm build, motion switch, swarm-intro, tractor mode, text-as-grass, turf, drawn tractors, fieldwork, driving, wildflowers). All ten pass: each archived version's defining interaction works, its archive bar is present, and back-to-current and Esc both return to the live site.",
+      "why": "End-of-run requirement: every featured timeline entry must be verified, and the repo should explain the feature.",
+      "try": "Open the changelog and step through the ★ milestones from v54 onward.",
+      "date": "2026-11-23"
+    },
+    {
+      "v": 71,
+      "title": "Tidy barn + run wrap-up",
+      "verdict": "kept",
+      "featured": false,
+      "note": "Parked tractors no longer pile into a heap over the swarm button: they line up in neat rows beside it (smaller and tighter on phones, so they don't cover text). Final regression across tractor mode (enter, till, click-mow, mow all, reseed, rain, drive, toolbox keyboard focus, leave) and the normal text site, on desktop, phone and reduced motion: no errors.",
+      "why": "Last round of the run: fix the one visual mess left and prove everything still works together.",
+      "try": "Tractor mode: watch the fleet park when tilling finishes.",
       "date": "2026-11-23"
     }
   ]
