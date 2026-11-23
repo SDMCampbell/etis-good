@@ -24,6 +24,7 @@
 <body>
   <canvas id="matrix" class="matrix" aria-hidden="true"></canvas>
   <p class="motion-note" id="motionNote" hidden>animation is paused because your device is set to reduce motion · <button type="button" id="motionOn">play it anyway</button></p>
+  <nav class="modes" aria-label="Display mode">mode: <button type="button" data-mode="normal">normal</button> <button type="button" data-mode="samurai">samurai</button></nav>
   <main id="content" class="content"></main>
   <noscript><p class="content">Samuel Campbell · Full Stack Web Developer · Lexington, SC · SamuelDCampbell@gmail.com</p></noscript>
 
@@ -31,12 +32,25 @@
   <script src="assets/content.js"></script>
   <script src="assets/matrix.js"></script>
   <script src="assets/swarm-intro.js"></script>
+  <script src="assets/samurai.js"></script>
   <script>
-    // The one place the swarm library is used. Swap this call out to try a new way of showing the content.
-    if (window.MOTION) swarmIntro({ root: "#content", logo: RESUME.handle, respectReducedMotion: false });
-    else {
+    // Modes: each one is a different way of using the swarm library to show the content.
+    // Picked with the switch at the top right (remembered) or a link ending in #mode=NAME.
+    var MODES = ["normal", "samurai"];
+    var MODE = (location.hash.match(/mode=(\w+)/) || [])[1];
+    if (MODES.indexOf(MODE) < 0) { try { MODE = localStorage.getItem("mode"); } catch (e) {} }
+    if (MODES.indexOf(MODE) < 0) MODE = "normal";
+    document.querySelectorAll("[data-mode]").forEach(function (b) {
+      b.setAttribute("aria-pressed", b.dataset.mode === MODE);
+      b.onclick = function () { try { localStorage.setItem("mode", b.dataset.mode); } catch (e) {} location.hash = ""; location.reload(); };
+    });
+
+    if (!window.MOTION) {
       var note = document.getElementById("motionNote"); note.hidden = false;
       document.getElementById("motionOn").onclick = function () { try { localStorage.setItem("motion", "on"); } catch (e) {} location.reload(); };
+    } else {
+      if (MODE === "samurai") samuraiMode();
+      swarmIntro({ root: "#content", logo: RESUME.handle, respectReducedMotion: false });
     }
   </script>
 </body>
