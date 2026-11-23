@@ -1,10 +1,10 @@
 // The scrolling "matrix" background: faint columns of glyphs drifting down behind the page.
 // They part around the pointer, run at ~20 fps, pause when the tab is hidden or after 20 s without input,
-// and are off entirely for visitors who ask for reduced motion.
+// and are off for visitors whose device asks for reduced motion, unless they choose 'play it anyway'.
 (function () {
   var cv = document.getElementById("matrix");
   if (!cv) return;
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { cv.remove(); return; }
+  if (window.MOTION === false) { cv.remove(); return; }       // set in index.html: reduced motion unless the visitor opted in
   var GLYPHS = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789<>/=+*#%$&{}[]~^│┼├┤─";
   var RGB = "57,255,122";                      // phosphor green
   var c2 = cv.getContext("2d"), cols = [], CW = 22, last = 0, lastPoke = performance.now(), on = false;

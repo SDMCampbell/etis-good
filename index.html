@@ -17,11 +17,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/site.css">
-  <!-- swarm-intro's own preload: keeps the page blank until the intro starts (skipped with reduced motion) -->
-  <script>(function(){try{if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;var d=document.documentElement;d.setAttribute("data-swarm-intro","");var s=document.createElement("style");s.id="swarm-intro-preload";s.textContent="html[data-swarm-intro] body>*{opacity:0;animation:swarm-intro-failsafe 0s 4s forwards}@keyframes swarm-intro-failsafe{to{opacity:1}}";document.head.appendChild(s);}catch(e){}})();</script>
+  <!-- Motion: devices set to reduce motion get a still page unless the visitor opts in (remembered as motion=on).
+       This mirrors swarm-intro's own preload, but with that opt-in: it keeps the page blank until the intro starts. -->
+  <script>window.MOTION=(function(){try{var m=localStorage.getItem("motion");if(m==="on")return true;if(m==="off")return false}catch(e){}return !matchMedia("(prefers-reduced-motion: reduce)").matches})();(function(){try{if(!window.MOTION)return;var d=document.documentElement;d.setAttribute("data-swarm-intro","");var s=document.createElement("style");s.id="swarm-intro-preload";s.textContent="html[data-swarm-intro] body>*{opacity:0;animation:swarm-intro-failsafe 0s 4s forwards}@keyframes swarm-intro-failsafe{to{opacity:1}}";document.head.appendChild(s);}catch(e){}})();</script>
 </head>
 <body>
   <canvas id="matrix" class="matrix" aria-hidden="true"></canvas>
+  <p class="motion-note" id="motionNote" hidden>animation is paused because your device is set to reduce motion · <button type="button" id="motionOn">play it anyway</button></p>
   <main id="content" class="content"></main>
   <noscript><p class="content">Samuel Campbell · Full Stack Web Developer · Lexington, SC · SamuelDCampbell@gmail.com</p></noscript>
 
@@ -31,7 +33,11 @@
   <script src="assets/swarm-intro.js"></script>
   <script>
     // The one place the swarm library is used. Swap this call out to try a new way of showing the content.
-    swarmIntro({ root: "#content", logo: RESUME.handle });
+    if (window.MOTION) swarmIntro({ root: "#content", logo: RESUME.handle, respectReducedMotion: false });
+    else {
+      var note = document.getElementById("motionNote"); note.hidden = false;
+      document.getElementById("motionOn").onclick = function () { try { localStorage.setItem("motion", "on"); } catch (e) {} location.reload(); };
+    }
   </script>
 </body>
 </html>
