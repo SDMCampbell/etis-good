@@ -44,8 +44,8 @@ html.samurai .swarm-intro-cursor.slash .sam path:nth-child(3) { filter: drop-sha
 html.samurai .swarm-intro-box { border: 0; border-radius: 0; background: linear-gradient(to bottom left, transparent calc(50% - 1px), var(--swarm-intro-fg) 50%, transparent calc(50% + 1.5px)); filter: drop-shadow(0 0 4px var(--swarm-intro-fg)); }
 html.samurai .swarm-intro-badge { display: none; }
 /* no typing: the whole element appears when it's cut (the caret stays in the layout, invisible) */
-html.samurai .swarm-intro-rest { color: inherit !important; }
-html.samurai .swarm-intro-caret { visibility: hidden; }
+html.samurai:not(.type-all) .swarm-intro-rest { color: inherit !important; }
+html.samurai:not(.type-all) .swarm-intro-caret { visibility: hidden; }
 
 /* modes */
 .modes { position: fixed; top: 12px; right: 16px; z-index: 10; color: var(--dim); font-size: 12px; }
@@ -55,6 +55,8 @@ html.samurai .swarm-intro-caret { visibility: hidden; }
 .swarm-size { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; }
 .swarm-size input { width: 110px; accent-color: var(--accent); }
 .swarm-size output { min-width: 2ch; color: var(--accent); }
+.type-all { display: inline-flex; align-items: center; gap: 4px; margin-left: 10px; cursor: pointer; }
+.type-all input { accent-color: var(--accent); margin: 0; }
 :is(html.samurai, html.robot, html.wizard) .sam-clash { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; pointer-events: none; animation: sam-clash .38s ease-out forwards; }
 :is(html.samurai, html.robot, html.wizard) .sam-clash svg { width: 100%; height: 100%; fill: none; stroke: var(--swarm-intro-fg); stroke-width: 1.6; stroke-linecap: round; filter: drop-shadow(0 0 3px var(--swarm-intro-fg)); }
 @keyframes sam-clash { from { transform: scale(.4) rotate(0); opacity: 1; } to { transform: scale(1.5) rotate(20deg); opacity: 0; } }
@@ -72,8 +74,8 @@ html.robot .robot path.beam { stroke: #EAFFE7; stroke-width: 2.2; filter: drop-s
 html.robot .robot circle.beam { fill: #EAFFE7; stroke: none; filter: drop-shadow(0 0 5px #39FF7A); }
 html.robot .swarm-intro-box { border: 1px solid var(--swarm-intro-fg); border-radius: 0; background: repeating-linear-gradient(0deg, rgb(57 255 122 / .07) 0 1px, transparent 1px 4px); box-shadow: 0 0 10px rgb(57 255 122 / .35), inset 0 0 10px rgb(57 255 122 / .2); }
 html.robot .swarm-intro-badge { display: none; }
-html.robot .swarm-intro-rest { color: inherit !important; }
-html.robot .swarm-intro-caret { visibility: hidden; }
+html.robot:not(.type-all) .swarm-intro-rest { color: inherit !important; }
+html.robot:not(.type-all) .swarm-intro-caret { visibility: hidden; }
 
 /* each mode's page ground, under its background animation */
 html[data-mode="samurai"] { --bg: #0c0709; }
@@ -100,8 +102,8 @@ html.wizard .wizard .orb { fill: #FFF6DE; stroke: none; filter: drop-shadow(0 0 
 html.wizard .wizard .bolt { stroke: #F4ECFF; stroke-width: 1.5; filter: drop-shadow(0 0 3px #B48CFF) drop-shadow(0 0 6px #8F5BFF); }
 html.wizard .swarm-intro-box { border: 1px dashed var(--swarm-intro-fg); border-radius: 6px; background: radial-gradient(ellipse at center, rgb(180 140 255 / .14), transparent 72%); box-shadow: 0 0 12px rgb(180 140 255 / .45), inset 0 0 12px rgb(180 140 255 / .22); }
 html.wizard .swarm-intro-badge { display: none; }
-html.wizard .swarm-intro-rest { color: inherit !important; }
-html.wizard .swarm-intro-caret { visibility: hidden; }
+html.wizard:not(.type-all) .swarm-intro-rest { color: inherit !important; }
+html.wizard:not(.type-all) .swarm-intro-caret { visibility: hidden; }
 html.wizard .wz-spark { position: absolute; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; pointer-events: none; background: #FFF6DE; opacity: 0;
   clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); filter: drop-shadow(0 0 3px #B48CFF); animation: wz-spark .65s ease-out forwards; }
 @keyframes wz-spark { 0% { opacity: 0; transform: scale(.2) rotate(0); } 30% { opacity: 1; transform: scale(1.1) rotate(25deg); } 100% { opacity: 0; transform: scale(.3) rotate(70deg) translateY(-6px); } }

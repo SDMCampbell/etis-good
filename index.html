@@ -27,7 +27,8 @@
   <canvas id="matrix" class="matrix" aria-hidden="true"></canvas>
   <p class="motion-note" id="motionNote" hidden>animation is paused because your device is set to reduce motion · <button type="button" id="motionOn">play it anyway</button></p>
   <nav class="modes" aria-label="Display mode">mode: <button type="button" data-mode="normal">normal</button> <button type="button" data-mode="samurai">samurai</button> <button type="button" data-mode="robot">robot</button> <button type="button" data-mode="wizard">wizard</button>
-    <label class="swarm-size">swarm: <input type="range" id="swarmSize" min="1" max="30" step="1"> <output id="swarmSizeOut"></output></label></nav>
+    <label class="swarm-size">swarm: <input type="range" id="swarmSize" min="1" max="30" step="1"> <output id="swarmSizeOut"></output></label>
+    <label class="type-all"><input type="checkbox" id="typeAll"> type</label></nav>
   <main id="content" class="content"></main>
   <noscript><p class="content">Samuel Campbell · Full Stack Web Developer · Lexington, SC · SamuelDCampbell@gmail.com</p></noscript>
 
@@ -108,7 +109,8 @@
         if (intro) intro.destroy();
         intro = swarmIntro({ root: "#content", logo: first ? RESUME.handle : false, respectReducedMotion: false,
           cursors: size, maxCursors: Math.min(30, Math.max(size, narrow ? 14 : 24)),
-          persist: true, idle: IDLE[MODE], type: MODE === "normal" });      // the figure modes show text whole, so they don't type it
+          persist: true, idle: IDLE[MODE], type: typeAll ? "all" : MODE === "normal" });   // the figure modes show text whole unless "type" is on
+        document.documentElement.classList.toggle("type-all", typeAll);
         document.documentElement.classList.add("swarm-live");
         var mine = intro; intro.done.then(function () { if (intro === mine) document.documentElement.classList.remove("swarm-live"); });
       }
@@ -119,6 +121,11 @@
         var sel = getSelection && getSelection(); if (sel && String(sel)) return;        // selecting text isn't a click
         intro.rework(e.target);
       });
+      // "type" toggle: every mode types all of the text in, character by character (and deletes it backwards on a click)
+      var typeAll = false, typeBox = document.getElementById("typeAll");
+      try { typeAll = localStorage.getItem("typeAll") === "on"; } catch (e) {}
+      typeBox.checked = typeAll;
+      typeBox.onchange = function () { typeAll = typeBox.checked; try { localStorage.setItem("typeAll", typeAll ? "on" : "off"); } catch (e) {} launch(false); };
       slider.value = size; out.textContent = size;
       slider.oninput = function () { out.textContent = slider.value; };
       slider.onchange = function () { size = +slider.value; try { localStorage.setItem("swarmSize", size); } catch (e) {} launch(false); };

@@ -2,7 +2,7 @@
    Local patch (marked "etis-good patch" below), adding two options:
      idle(agent, now) -> {x, y, ms, wait} | null : where an idle cursor should go instead of wandering at random
      persist: true                                : keep the swarm on screen (idling) after the page is built
-   and type: false (never type text in; just fade it in), and returning rework(el) from swarmIntro(): one cursor takes a built element apart (the build in reverse, from
+   and type: false (never type text in; just fade it in) or "all" (type every text element in, however long), and returning rework(el) from swarmIntro(): one cursor takes a built element apart (the build in reverse, from
    its bottom-right corner back to the top-left), then after a short pause another cursor builds it again.
 MIT License
 
@@ -197,7 +197,12 @@ function swarmIntro(options = {}) {
         if (!TYPEABLE.has(el.tagName))
             return false;
         const len = ((_a = el.textContent) !== null && _a !== void 0 ? _a : "").trim().length;
-        if (len === 0 || len > 400)
+        if (len === 0)
+            return false;
+        // etis-good patch: type: "all" types every text element, however long or however many lines
+        if (options.type === "all")
+            return !isTransparent(getComputedStyle(el).color);
+        if (len > 400)
             return false;
         // etis-good patch: `type: false` turns typing off, and text that wraps onto more than one line is faded in
         // instead: typing it sends the cursor zigzagging back and forth through the middle of the block, chasing the caret
