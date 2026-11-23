@@ -4,17 +4,21 @@
 // Every frame each samurai's real on-screen velocity is read from the library's CSS transition, and its
 // skeleton is posed to match how it is moving:
 //   standing still  -> ready stance, hand on the hilt, breathing
-//   moving sideways -> running (legs cycle with distance covered, body leans into it, faces the way it's going)
-//   moving up       -> leaping: knees tucked, arm reaching up
-//   moving down     -> dropping: legs out for the landing, arms up for balance
+//   moving sideways -> a ninja sprint: pitched far forward, arms swept straight back, legs striding with distance covered
+//   moving up       -> levitating: upright, legs hanging, arms eased out, faint lift lines under the feet
+//   moving down     -> a controlled descent in a crouched ready stance, hand on the hilt
 //   building        -> draws the sword and slashes across the element; sheathes it again when done
 (function () {
   var SVGNS = "http://www.w3.org/2000/svg";
+  // running is a full sprint: torso pitched far forward, both arms swept straight back
+  var RUN = { lean: .95, aF: -1.3, eF: -.1, aB: -1.5, eB: -.08 };
   // joint angles: 0 = straight down, positive = forward (the way the samurai faces)
   var POSES = {
     idle: { lean: .05, tF: .22, kF: -.12, tB: -.22, kB: .08, aF: .7, eF: 1.3, aB: .15, eB: .3 },
-    up:   { lean: .12, tF: 1.25, kF: -2.1, tB: .9, kB: -1.9, aF: .8, eF: 1.2, aB: 2.7, eB: .2 },
-    down: { lean: -.12, tF: .45, kF: -.25, tB: -.4, kB: .15, aF: 2.2, eF: .3, aB: -2.3, eB: -.3 },
+    // rising: upright and still, legs hanging together with the toes down, arms eased slightly out from the body
+    up:   { lean: 0, tF: .1, kF: -.18, tB: -.05, kB: -.12, aF: .5, eF: .2, aB: -.5, eB: -.2 },
+    // dropping: a controlled descent in a crouched ready stance, hand on the hilt, the other arm out for balance
+    down: { lean: .18, tF: .9, kF: -1.55, tB: -.3, kB: -.85, aF: .75, eF: 1.25, aB: -.75, eB: .35 },
     slash: { lean: .45, tF: 1.0, kF: -.6, tB: -.85, kB: .15, aF: 1.45, eF: .05, aB: 1.35, eB: .1 }
   };
   function dir(p, a, l) { return [p[0] + Math.sin(a) * l, p[1] + Math.cos(a) * l]; }
@@ -30,7 +34,8 @@
       body: el("path", { "stroke-width": 2.2 }),                   // torso, legs, arms
       blade: el("path", { "stroke-width": 1.5 }),
       head: el("circle", { r: 3.4, "stroke-width": 2 }),
-      knot: el("path", { "stroke-width": 1.6 })                    // topknot
+      knot: el("path", { "stroke-width": 1.6 }),                   // topknot
+      aura: el("path", { "stroke-width": 1, opacity: .45 })        // faint lift lines under the feet when rising
     };
     svg.appendChild(g); cursor.appendChild(svg);
     return { g: g, p: parts, pose: JSON.parse(JSON.stringify(POSES.idle)), phase: 0, face: 1, x: null, y: null, vx: 0, vy: 0, slashT: 0, state: "idle" };
@@ -41,11 +46,10 @@
     // a running stride is driven by the distance covered, so faster samurai take quicker steps
     if (run) {
       var ph = s.phase, sw = Math.sin(ph);
-      P.tF = sw * .85; P.kF = -(1 + Math.cos(ph)) * .65; P.tB = -sw * .85; P.kB = -(1 - Math.cos(ph)) * .65;
-      P.aB = -sw * .9; P.eB = .6;
+      P.tF = .25 + sw * 1.0; P.kF = -(1 + Math.cos(ph)) * .8; P.tB = .25 - sw * 1.0; P.kB = -(1 - Math.cos(ph)) * .8;
     }
-    var bob = run ? Math.abs(Math.cos(s.phase)) * 1.6 : st === "idle" ? Math.sin(now / 420) * .5 : 0;
-    var hip = [0, -14 - bob + (st === "up" ? -2 : 0)];
+    var bob = run ? Math.abs(Math.cos(s.phase)) * 1.4 + 1.5 : st === "idle" ? Math.sin(now / 420) * .5 : st === "up" ? -2 + Math.sin(now / 260) * 1 : st === "down" ? 3 : 0;
+    var hip = [0, -14 - bob];
     var neck = dir(hip, Math.PI - P.lean, 11);          // lean > 0 tips the torso forward
     var kF = dir(hip, P.tF, 7), fF = dir(kF, P.tF + P.kF, 7.2), kB = dir(hip, P.tB, 7), fB = dir(kB, P.tB + P.kB, 7.2);
     var shoulder = dir(neck, P.lean, 1), eF = dir(shoulder, P.aF, 5.5), hF = dir(eF, P.aF + P.eF, 5.5), eB = dir(shoulder, P.aB, 5.5), hB = dir(eB, P.aB + P.eB, 5.5);
@@ -55,7 +59,7 @@
     s.p.head.setAttribute("cx", head[0].toFixed(1)); s.p.head.setAttribute("cy", head[1].toFixed(1));
     s.p.knot.setAttribute("d", seg(dir(head, Math.PI - P.lean + .6, 3.2), dir(head, Math.PI - P.lean + 1.3, 6)));
     // scabbard sits on the hip, angled back; the hilt pokes forward to where the hand rests
-    var sHip = [hip[0] + 1, hip[1] - 1], sTip = dir(sHip, -1.05 - (run ? .2 : 0), 12), hilt = dir(sHip, 2.1, 4);
+    var sHip = [hip[0] + 1, hip[1] - 1], sTip = dir(sHip, -1.05 - P.lean * .55, 12), hilt = dir(sHip, 2.1, 4);
     if (st === "slash") {
       // the draw: the blade sweeps from over the shoulder down through the cut in the first ~220 ms
       var k = Math.min(1, (now - s.slashT) / 220), a = -2.4 + k * 3.7;
@@ -65,6 +69,11 @@
       s.p.saya.setAttribute("d", seg(hilt, sHip, sTip));
       s.p.blade.setAttribute("d", "");
     }
+    if (st === "up") {
+      var t = (now / 300) % 1, l = 4 + t * 5;
+      s.p.aura.setAttribute("d", seg([fF[0] - 2, fF[1] + 2 + t * 4], [fF[0] - 2, fF[1] + 2 + t * 4 + l]) + seg([fB[0] + 2, fB[1] + 4 + ((t + .5) % 1) * 4], [fB[0] + 2, fB[1] + 4 + ((t + .5) % 1) * 4 + l]));
+      s.p.aura.setAttribute("opacity", (.5 * (1 - t)).toFixed(2));
+    } else s.p.aura.setAttribute("d", "");
     s.g.setAttribute("transform", "scale(" + s.face + " 1)");
   }
 
@@ -95,9 +104,8 @@
         if (s.state === "slash" && prev !== "slash") s.slashT = now;
         if (s.state !== "slash" && Math.abs(s.vx) > .03) s.face = s.vx > 0 ? 1 : -1;
         if (s.state === "slash") s.face = 1;                                // the cut always runs to the bottom-right
-        if (s.state === "run") lerp(s.pose, { lean: .38, aF: .95, eF: 1.25 }, .3);
+        if (s.state === "run") lerp(s.pose, RUN, .3);
         else lerp(s.pose, POSES[s.state], s.state === "slash" ? .45 : .22);
-        if (s.state === "down") { s.pose.aF = 2.2 + Math.sin(now / 70) * .35; s.pose.aB = -2.3 + Math.cos(now / 70) * .35; }   // arms flailing for balance
         render(s, now);
       });
       sprites.forEach(function (s, c) { if (!c.isConnected) sprites.delete(c); });
