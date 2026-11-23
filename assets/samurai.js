@@ -34,6 +34,8 @@
     var x = (a * a - b * b + d * d) / (2 * d), y = Math.sqrt(Math.max(0, a * a - x * x)), ux = dx / Math.hypot(dx, dy), uy = dy / Math.hypot(dx, dy);
     return [s[0] + ux * x - uy * y * side, s[1] + uy * x + ux * y * side];
   }
+  // iaijutsu strike timing (ms from the start): the visible start of the draw, back in place, blade home
+  var IAI = { draw: 210, back: 560, sheathed: 920 };
   function lerp(cur, tgt, k) { for (var key in tgt) cur[key] += (tgt[key] - cur[key]) * k; }
 
   function makeSprite(cursor) {
@@ -47,7 +49,8 @@
       blade: el("path", { "stroke-width": 1.5 }),
       head: el("circle", { r: 3.4, "stroke-width": 2 }),
       knot: el("path", { "stroke-width": 1.6 }),                   // topknot
-      aura: el("path", { "stroke-width": 1, opacity: .45 })        // faint lift lines under the feet when rising
+      aura: el("path", { "stroke-width": 1, opacity: .45 }),       // faint lift lines under the feet when rising
+      gleam: el("path", { "stroke-width": 1.3, class: "gleam" })   // bare blade showing at the scabbard mouth (iaijutsu draw / sheathing)
     };
     svg.appendChild(g); cursor.appendChild(svg);
     return { g: g, p: parts, pose: JSON.parse(JSON.stringify(POSES.idle)), phase: 0, face: 1, x: null, y: null, vx: 0, vy: 0, slashT: 0, state: "idle", ox: 0, oy: 0, ovx: 0, ovy: 0, recoil: 0, lastClash: 0 };
@@ -77,17 +80,32 @@
       // drawing hand is on the hilt, the other hand grips the scabbard mouth. Both arms reach their grips by IK.
       var sa = Math.PI - 1.2 - P.lean * .3;                           // sword direction: forward, ~20° above level
       var sd = [Math.sin(sa), Math.cos(sa)], guard = [hip[0] + 4.5, hip[1] - 2.5], tail = [guard[0] - sd[0] * 19, guard[1] - sd[1] * 19];
-      var grip = [guard[0] + sd[0] * 2.6, guard[1] + sd[1] * 2.6], mouth = [guard[0] - sd[0] * 2.4, guard[1] - sd[1] * 2.4];
+      // A strike at the pointer (s.iaiT): first the draw begins, the elbow pushing forward and the hilt coming a few px out
+      // of the scabbard so a sliver of blade gleams at its mouth; then the samurai is gone (see below); then it's back with
+      // the blade part-way out, sliding it home.
+      var t = s.iaiT ? now - s.iaiT : 1e9, out = 0;
+      if (t < IAI.draw) { var e1 = t / IAI.draw; out = 4.2 * e1 * e1 * (3 - 2 * e1); }
+      else if (t >= IAI.back && t < IAI.sheathed) { var e2 = (t - IAI.back) / (IAI.sheathed - IAI.back); out = 5.5 * (1 - e2 * e2); }
+      var hilt = [guard[0] + sd[0] * out, guard[1] + sd[1] * out];      // where the guard (tsuba) is now
+      var grip = [hilt[0] + sd[0] * 2.6, hilt[1] + sd[1] * 2.6], mouth = [guard[0] - sd[0] * 2.4, guard[1] - sd[1] * 2.4];
       var eGrip = ik(shoulder, grip, 5.5, 5.5, 1), eMouth = ik(shoulder, mouth, 5.5, 5.5, 1);
+      if (out > 0) { var push = Math.min(out, 4.2) * .75; eGrip = [eGrip[0] + sd[0] * push, eGrip[1] + sd[1] * push - push * .3]; }   // the elbow drives forward
       s.p.body.setAttribute("d", seg(hip, neck) + seg(hip, kF, fF) + seg(hip, kB, fB) + seg(shoulder, eGrip, grip) + seg(shoulder, eMouth, mouth));
-      s.p.saya.setAttribute("d", seg(guard, tail) + seg([guard[0] - sd[1] * 1.8, guard[1] + sd[0] * 1.8], [guard[0] + sd[1] * 1.8, guard[1] - sd[0] * 1.8]));
-      s.p.blade.setAttribute("d", seg(guard, [guard[0] + sd[0] * 4, guard[1] + sd[1] * 4]));     // the grip, ahead of the guard (tsuba)
+      s.p.saya.setAttribute("d", seg(guard, tail) + seg([hilt[0] - sd[1] * 1.8, hilt[1] + sd[0] * 1.8], [hilt[0] + sd[1] * 1.8, hilt[1] - sd[0] * 1.8]));
+      s.p.blade.setAttribute("d", seg(hilt, [hilt[0] + sd[0] * 4, hilt[1] + sd[1] * 4]));     // the grip, ahead of the guard (tsuba)
+      var g = out > .2 ? seg(guard, hilt) : "";
+      if (t >= IAI.sheathed && t < IAI.sheathed + 120) {                 // home: a last glint at the scabbard mouth
+        var r = 2.2 * (1 - (t - IAI.sheathed) / 120); g = seg([guard[0] - r, guard[1]], [guard[0] + r, guard[1]]) + seg([guard[0], guard[1] - r], [guard[0], guard[1] + r]);
+      }
+      s.p.gleam.setAttribute("d", g);
     } else if (st === "slash") {
+      s.p.gleam.setAttribute("d", "");
       // the draw: the blade sweeps from over the shoulder down through the cut in the first ~220 ms
       var k = Math.min(1, (now - s.slashT) / 220), a = -2.4 + k * 3.7;
       s.p.saya.setAttribute("d", seg(sHip, sTip));
       s.p.blade.setAttribute("d", seg(hF, dir(hF, a, 17)));
     } else {
+      s.p.gleam.setAttribute("d", "");
       s.p.saya.setAttribute("d", seg(hilt, sHip, sTip));
       s.p.blade.setAttribute("d", "");
     }
@@ -97,7 +115,7 @@
       s.p.aura.setAttribute("opacity", (.5 * (1 - t)).toFixed(2));
     } else s.p.aura.setAttribute("d", "");
     // mid-strike the samurai is gone: it's in the cut across the pointer
-    var gone = s.iaiT && now - s.iaiT > 40 && now - s.iaiT < 480;
+    var gone = s.iaiT && now - s.iaiT > IAI.draw && now - s.iaiT < IAI.back;
     if (gone !== s.hidden) { s.hidden = gone; s.g.setAttribute("opacity", gone ? 0 : 1); }
     s.g.setAttribute("transform", "translate(" + s.ox.toFixed(1) + " " + s.oy.toFixed(1) + ") scale(" + s.face + " 1)");
   }
@@ -190,10 +208,9 @@
         if (delay) e.style.animationDelay = delay + "ms";
         w.appendChild(e); setTimeout(function () { e.remove(); }, 700 + (delay || 0));
       }
-      fx("iai-glint", sx, sy);                                          // the draw
-      fx("iai-path", sx + dx / 2, sy + dy / 2, len, ang, 30);           // the dash
-      fx("iai-cut", x, y, 150, ang + (Math.random() < .5 ? 24 : -24), 70);   // the cut, slightly across the line of attack
-      fx("iai-glint", sx, sy, 0, undefined, 470);                       // and back
+      fx("iai-glint", sx, sy, 0, undefined, IAI.draw - 20);              // the vanishing draw
+      fx("iai-path", sx + dx / 2, sy + dy / 2, len, ang, IAI.draw);      // the dash
+      fx("iai-cut", x, y, 150, ang + (Math.random() < .5 ? 24 : -24), IAI.draw + 40);   // the cut, slightly across the line of attack
     }
 
     function wake() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } }

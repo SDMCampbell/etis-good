@@ -150,7 +150,8 @@ html.wizard [data-team="attack"] .wizard .orb, html.wizard [data-team="attack"] 
 html.wizard .swarm-intro-box.is-attack { box-shadow: 0 0 12px rgb(255 92 112 / .45), inset 0 0 12px rgb(255 92 112 / .22); background: radial-gradient(ellipse at center, rgb(255 92 112 / .14), transparent 72%); }
 html.ninja [data-team="attack"] .ninja .band { stroke: #1B1E26; }
 
-/* samurai iaijutsu strike at the pointer (samurai.js): the draw's glint, the dash, and the cut */
+/* samurai iaijutsu strike at the pointer (samurai.js): the bare blade's gleam, the draw's glint, the dash, and the cut */
+html.samurai .sam .gleam { stroke: #fff; filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 3px #C8F7C5); }
 html.samurai .iai-glint { position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; pointer-events: none; opacity: 0;
   background: radial-gradient(circle, #fff 0 12%, rgb(200 247 197 / .7) 20%, transparent 65%); animation: iai-glint .28s ease-out forwards; }
 @keyframes iai-glint { 0% { opacity: 0; transform: scale(.3); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(1.6); } }

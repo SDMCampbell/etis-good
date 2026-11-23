@@ -91,7 +91,7 @@
           var x = scrollX + innerWidth - (narrow ? 30 : 70) - col * 46, y = scrollY + 110 + row * 58;
           a.el.dataset.rest = performance.now();
           var d = Math.hypot(x - a.x, y - a.y), back = { x: x, y: y, ms: d < 2 ? 200 : Math.max(250, d * 1.6), wait: 150 };
-          if (a._iaiT && now - a._iaiT < 560) { back.state = "striking"; back.wait = 60; return back; }
+          if (a._iaiT && now - a._iaiT < 950) { back.state = "striking"; back.wait = 60; return back; }
           if (mouse && d < 2 && now - (a._iaiT || 0) > 1400 && now - lastIai > 320) {
             var p = where(a), mx = scrollX + mouse.x, my = scrollY + mouse.y;
             if (Math.hypot(mx - p[0], my - (p[1] - 18)) < 150) {
