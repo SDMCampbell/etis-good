@@ -58,3 +58,12 @@ To add a mode: add its name to `MODES` in `index.html`, a button in the `.modes`
 Everything from earlier versions (the text rain, drones, tractor mode, the version history and the alternate rooms) is still in the git history.
 
 Run locally: `python -m http.server 8765`, then open http://localhost:8765.
+
+## Cursor Wars (`/fight_game`)
+
+A separate page with no résumé content: a small auto-battler (`fight_game.html` + `assets/fight-game.js`, one canvas, no assets), linked from the right of the "fight" toggle. You spawn units and they fight on their own; destroy the enemy core to win.
+
+- **battle vs AI**: energy (start 6, +1/s, cap 12) is spent on spawns with keys 1–5, the buttons, or a click on the arena. A red AI spawns with the same rules: it counter-picks your most common unit most of the time and panics when its core is threatened. Cores have 1000 HP and zap enemies that come close. Sudden death from 2:30.
+- **sandbox**: free spawns for both sides (click the left half for green, the right for red), no AI.
+- **Units**: cursor (cheap melee, every 3rd hit doubles), samurai (iaijutsu dash through one target; parries lasers and bolts), robot (piercing laser, armour), wizard (homing bolt with splash, keeps its distance), ninja (hunts the longest-range enemy, smoke-teleports behind it for a backstab). All numbers are in the `T` table at the top of `fight-game.js`.
+- **Balance** was tuned with simulated mass fights at equal energy (`__game.sim()` in the console steps the game without drawing): cursor beats samurai; samurai beats robot and ninja; robot beats cursor and ninja; wizard beats cursor and robot; ninja beats wizard. It hasn't had much human playtesting.

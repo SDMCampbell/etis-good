@@ -186,3 +186,5 @@ html.samurai .iai-cut { position: absolute; height: 3px; pointer-events: none; o
 @keyframes iai-cut { 0% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--a)) scaleX(.95) scaleY(1.6); } 25% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--a)) scaleX(1.15) scaleY(1); }
   100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a)) scaleX(1.6) scaleY(.25); } }
 }
+
+.modes .game-link { margin-left: 12px; color: var(--link); white-space: nowrap; }

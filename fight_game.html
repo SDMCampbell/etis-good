@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cursor Wars · Samuel Campbell</title>
+  <meta name="description" content="A small auto-battler: spawn cursors, samurai, robots, wizards and ninjas, and watch them fight.">
+  <meta name="theme-color" content="#050806">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg: #050806; --text: #C8F7C5; --dim: #7DB878; --hi: #EAFFE7; --accent: #39FF7A; --link: #8CFFB0; --red: #FF5C70; }
+    * { box-sizing: border-box; }
+    html { background: var(--bg); }
+    body { margin: 0 auto; max-width: 1000px; padding: 16px 20px 40px; color: var(--text); font: 13.5px/1.6 'JetBrains Mono', ui-monospace, monospace; }
+    a { color: var(--link); }
+    header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 20px; }
+    h1 { margin: 0; font-size: 20px; letter-spacing: .08em; color: var(--hi); }
+    header p { margin: 0; color: var(--dim); }
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0; }
+    button { font: inherit; color: var(--text); background: none; border: 1px solid rgb(57 255 122 / .35); border-radius: 4px; padding: 6px 10px; min-height: 36px; cursor: pointer; }
+    button:hover { border-color: var(--accent); }
+    button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: rgb(57 255 122 / .08); }
+    button.poor { opacity: .45; }
+    button span { color: var(--accent); }
+    kbd { font: inherit; color: var(--dim); }
+    #hud { margin: 0; white-space: pre-wrap; color: var(--accent); min-height: 1.6em; }
+    canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border: 1px solid rgb(57 255 122 / .3); cursor: crosshair; touch-action: manipulation; }
+    table { border-collapse: collapse; width: 100%; margin-top: 14px; color: var(--dim); font-size: 12.5px; }
+    th, td { text-align: left; padding: 3px 12px 3px 0; vertical-align: top; }
+    thead th { color: var(--text); border-bottom: 1px solid rgb(57 255 122 / .2); }
+    tbody th { color: var(--hi); font-weight: 400; }
+    label { color: var(--dim); }
+    .spacer { flex: 1; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CURSOR WARS</h1>
+    <p>spawn units; they fight on their own. destroy the red core. · <a href="./">← back to the résumé</a></p>
+  </header>
+  <div class="row">
+    <button type="button" data-game-mode="battle" aria-pressed="true">battle vs AI</button>
+    <button type="button" data-game-mode="sandbox" aria-pressed="false">sandbox</button>
+    <label id="breakWrap" hidden><input type="checkbox" id="breakable"> cores can be destroyed</label>
+    <span class="spacer"></span>
+    <button type="button" id="restart"><kbd>R</kbd> restart</button>
+  </div>
+  <div class="row" id="units" aria-label="Spawn a unit"></div>
+  <p id="hud" aria-live="off"></p>
+  <canvas id="arena" width="960" height="540" aria-label="The arena: green core on the left, red core on the right"></canvas>
+  <table>
+    <thead><tr><th>unit</th><th>cost</th><th>hp</th><th>what it does</th><th>beats</th></tr></thead>
+    <tbody id="legend"></tbody>
+  </table>
+  <p style="color:var(--dim)">battle: press 1–5 or a unit button to spawn it at your core (or click the arena to choose the height). energy refills over time; sudden death starts at 2:30.<br>sandbox: pick a unit, then click the left half to spawn it for green or the right half for red.</p>
+  <script src="assets/fight-game.js"></script>
+</body>
+</html>
