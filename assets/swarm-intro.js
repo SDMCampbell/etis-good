@@ -21,6 +21,8 @@
    sealed(el) (an option) says a target can't be taken at all right now, e.g. a keep while its towers stand;
    form(points, team) flies a team into formation at those page points (topping it up with extra cursors in the
    team's colour, so a few survivors can still spell a word), and clear() removes every unit quietly,
+   puppet: true, for the music page: units (added with add()) do nothing on their own. order(agent, el) sends a free
+   one to build that target; otherwise the idle hook places it,
    and type: false (never type text in; just fade it in) or "all" (type every text element in, however long), and returning rework(el) from swarmIntro(): one cursor takes a built element apart (the build in reverse, from
    its bottom-right corner back to the top-left), then after a short pause another cursor builds it again.
 MIT License
@@ -909,7 +911,7 @@ function swarmIntro(options = {}) {
             queue.push(e.target);
         });
         // Call in reinforcements for a long backlog, like a fast scroll
-        while (!options.war && queue.length > agents.length * 2 && agents.length < maxCursors) {
+        while (!options.war && !options.puppet && queue.length > agents.length * 2 && agents.length < maxCursors) {
             run(spawn(window.scrollX + rand(0, window.innerWidth), window.scrollY - 30));
         }
     }, { threshold: 0 });
@@ -952,6 +954,21 @@ function swarmIntro(options = {}) {
     };
     async function run(a) {
         while (!stopped) {
+            // etis-good patch: a puppet does what the page orders, and idles where the idle hook says
+            if (options.puppet) {
+                if (a.dead)
+                    return;
+                const job = a.job;
+                if (job) {
+                    a.job = null;
+                    a.working = true;
+                    await job(a);
+                    a.working = false;
+                }
+                else
+                    await wander(a);
+                continue;
+            }
             // etis-good patch: in a war, each unit fights for its team until it's deleted
             if (options.war) {
                 if (a.dead || a.extra)
@@ -1094,6 +1111,12 @@ function swarmIntro(options = {}) {
         rework,
         add,
         units: () => agents.filter((a) => !a.extra),
+        order: (a, el) => {
+            if (a.dead || a.working || a.job)
+                return false;
+            a.job = (b) => build(b, el);
+            return true;
+        },
         pause: (v) => { warPaused = !!v; },
         wipe,
         form,
