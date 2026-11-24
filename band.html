@@ -70,7 +70,7 @@
     <p>Then use <b>+</b> and <b>−</b> to add or remove players. Click any square to have a player add or remove that note.</p>
   </div>
 
-  <script>window.MODE = "normal"; window.MOTION = !matchMedia("(prefers-reduced-motion: reduce)").matches;</script>
+  <script>window.MODE = "normal"; /* motion: the visitor's choice from the résumé page ("play it anyway" / "without animation") wins over the device setting */ window.MOTION = (function () { try { var m = localStorage.getItem("motion"); if (m === "on") return true; if (m === "off") return false; } catch (e) {} return !matchMedia("(prefers-reduced-motion: reduce)").matches; })();</script>
   <script src="assets/matrix.js"></script>
   <script src="assets/menu.js"></script>
   <script src="assets/swarm-intro.js"></script>

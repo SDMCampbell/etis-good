@@ -47,7 +47,7 @@
   <p id="status" aria-live="polite"></p>
   <main id="stage"><div id="board" role="img" aria-label="The sign"></div></main>
 
-  <script>window.MODE = "normal"; window.MOTION = !matchMedia("(prefers-reduced-motion: reduce)").matches;</script>
+  <script>window.MODE = "normal"; /* motion: the visitor's choice from the résumé page ("play it anyway" / "without animation") wins over the device setting */ window.MOTION = (function () { try { var m = localStorage.getItem("motion"); if (m === "on") return true; if (m === "off") return false; } catch (e) {} return !matchMedia("(prefers-reduced-motion: reduce)").matches; })();</script>
   <script src="assets/matrix.js"></script>
   <script src="assets/menu.js"></script>
   <script src="assets/swarm-intro.js"></script>
@@ -152,6 +152,7 @@
       function set(msg, fromUrl) {
         message = clean(msg); $("say").value = message; $("clock").classList.toggle("on", !message);
         if (!fromUrl) history.replaceState(null, "", location.pathname + (message ? "?say=" + encodeURIComponent(message).replace(/%20/g, "+") : ""));
+        if (!MOTION) { $("status").innerHTML = 'the swarm is resting because your device is set to reduce motion · <button type="button" id="motionOn">play it anyway</button>'; $("motionOn").onclick = function () { try { localStorage.setItem("motion", "on"); } catch (e) {} location.reload(); }; update(); return; }
         $("status").textContent = message ? "the swarm is writing your message · \"copy link\" shares it · \"clock\" goes back to the time"
           : "showing the time · type a message (letters, numbers and . , : ! ? ' - + / *) and press Enter";
         update();

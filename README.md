@@ -98,6 +98,6 @@ A sign written by the swarm (`signs.html`; the old `/other` address redirects he
 
 - **The board**: 59 x 15 pixels, two lines of a 5 x 7 pixel font (up to 10 characters a line; the second line is gold). The page works out which pixels the text needs; 24 units (every kind) each take the nearest pixel that's wrong, building the missing ones and taking apart the ones that shouldn't be lit, with their own animations. When the sign is right they line up underneath and rest.
 - **What it says**: by default the time and date (in the visitor's own time zone), so the swarm rewrites the changed digits every minute. Type a message (up to 20 characters: letters, numbers and `. , : ! ? ' - + / *`, where `*` is a heart) and the swarm rewrites the sign. The message goes into the address as `?say=...`, so "copy link" gives a link that opens with your message being written: e.g. `/signs?say=HELLO+WORLD`.
-- With reduced motion, the sign just shows the text, without the swarm.
+- With reduced motion (and no "play it anyway" choice saved from the résumé page), the sign just shows the text, with a "play it anyway" button to bring the swarm in. The music pages follow the same saved choice for their backgrounds.
 
 **Page menu**: every page has a "more" dropdown in its top right (`assets/menu.js`) listing the site's pages: résumé, game, music, make music, signs.
