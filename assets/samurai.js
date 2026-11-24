@@ -34,8 +34,27 @@
     var x = (a * a - b * b + d * d) / (2 * d), y = Math.sqrt(Math.max(0, a * a - x * x)), ux = dx / Math.hypot(dx, dy), uy = dy / Math.hypot(dx, dy);
     return [s[0] + ux * x - uy * y * side, s[1] + uy * x + ux * y * side];
   }
-  // iaijutsu strike timing (ms from the start): the visible start of the draw, back in place, blade home
-  var IAI = { draw: 210, back: 560, sheathed: 920 };
+  // The iaijutsu strike at the pointer, after real iai and anime's "invisible cut" (ms from the start):
+  //   0-crouch   sink into iai-goshi, the low crouch, while the thumb breaks the scabbard's seal (koiguchi no kirikata):
+  //              the sword pushes forward, a sliver of blade gleams, the drawing elbow drives forward
+  //   crouch-draw  hold, coiled
+  //   draw-back  gone: the draw (nukitsuke) is too fast to see; a thin, still cut line hangs across the pointer
+  //   back-zan   back in place, low, blade out (zanshin)
+  //   zan-sheathed  noto: the blade slides home slowly as the samurai rises back to its poised stance
+  //   sheathed   the click; only now does the cut across the pointer flare and fall apart
+  var IAI = { crouch: 240, draw: 330, back: 640, zan: 740, sheathed: 1220 };
+  var IAIGOSHI = { lean: .5, tF: 1.2, kF: -.45, tB: -.85, kB: -.3, aF: .55, eF: 1.3, aB: .05, eB: 1.45 };
+  function smooth(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
+  // how far into the crouch (0-1), and how far the blade is out of the scabbard, t ms into a strike
+  function crouchAt(t) { return t < IAI.crouch ? smooth(t / IAI.crouch) : t < IAI.zan ? 1 : t < IAI.sheathed ? 1 - smooth((t - IAI.zan) / (IAI.sheathed - IAI.zan)) : 0; }
+  function bladeOutAt(t) {
+    if (t < IAI.crouch) return 2.6 * smooth(t / IAI.crouch);                                  // the seal breaks
+    if (t < IAI.draw) return 2.6 + 1.4 * (t - IAI.crouch) / (IAI.draw - IAI.crouch);          // coiled, creeping out
+    if (t < IAI.back) return 0;                                                                // (gone)
+    if (t < IAI.zan) return 7;
+    if (t < IAI.sheathed) return 7 * (1 - smooth((t - IAI.zan) / (IAI.sheathed - IAI.zan)));  // slowly home
+    return 0;
+  }
   function lerp(cur, tgt, k) { for (var key in tgt) cur[key] += (tgt[key] - cur[key]) * k; }
 
   function makeSprite(cursor) {
@@ -57,14 +76,20 @@
   }
 
   function render(s, now) {
-    var P = s.pose, st = s.state, run = st === "run";
+    var P = s.pose, st = s.state, run = st === "run", drop = 0;
+    // mid-strike, blend the poised stance into the low iai-goshi crouch
+    if (st === "meditate" && s.iaiT && now - s.iaiT < IAI.sheathed) {
+      var cr = crouchAt(now - s.iaiT), B = {};
+      for (var key in P) B[key] = P[key] + ((IAIGOSHI[key] !== undefined ? IAIGOSHI[key] : P[key]) - P[key]) * cr;
+      P = B; drop = 3.2 * cr;
+    }
     // a running stride is driven by the distance covered, so faster samurai take quicker steps
     if (run) {
       var ph = s.phase, sw = Math.sin(ph);
       P.tF = .25 + sw * 1.0; P.kF = -(1 + Math.cos(ph)) * .8; P.tB = .25 - sw * 1.0; P.kB = -(1 - Math.cos(ph)) * .8;
     }
     var bob = st === "meditate" ? -3.2 + Math.sin(now / 1100) * .3 : run ? Math.abs(Math.cos(s.phase)) * 1.4 + 1.5 : st === "idle" ? Math.sin(now / 420) * .5 : st === "up" ? -2 + Math.sin(now / 260) * 1 : st === "down" ? 3 : 0;
-    var hip = [0, -14 - bob];
+    var hip = [0, -14 - bob + drop];
     var neck = dir(hip, Math.PI - P.lean, 11);          // lean > 0 tips the torso forward
     var kF = dir(hip, P.tF, 7), fF = dir(kF, P.tF + P.kF, 7.2), kB = dir(hip, P.tB, 7), fB = dir(kB, P.tB + P.kB, 7.2);
     var shoulder = dir(neck, P.lean, 1), eF = dir(shoulder, P.aF, 5.5), hF = dir(eF, P.aF + P.eF, 5.5), eB = dir(shoulder, P.aB, 5.5), hB = dir(eB, P.aB + P.eB, 5.5);
@@ -83,13 +108,11 @@
       // A strike at the pointer (s.iaiT): first the draw begins, the elbow pushing forward and the hilt coming a few px out
       // of the scabbard so a sliver of blade gleams at its mouth; then the samurai is gone (see below); then it's back with
       // the blade part-way out, sliding it home.
-      var t = s.iaiT ? now - s.iaiT : 1e9, out = 0;
-      if (t < IAI.draw) { var e1 = t / IAI.draw; out = 4.2 * e1 * e1 * (3 - 2 * e1); }
-      else if (t >= IAI.back && t < IAI.sheathed) { var e2 = (t - IAI.back) / (IAI.sheathed - IAI.back); out = 5.5 * (1 - e2 * e2); }
+      var t = s.iaiT ? now - s.iaiT : 1e9, out = bladeOutAt(t);
       var hilt = [guard[0] + sd[0] * out, guard[1] + sd[1] * out];      // where the guard (tsuba) is now
       var grip = [hilt[0] + sd[0] * 2.6, hilt[1] + sd[1] * 2.6], mouth = [guard[0] - sd[0] * 2.4, guard[1] - sd[1] * 2.4];
       var eGrip = ik(shoulder, grip, 5.5, 5.5, 1), eMouth = ik(shoulder, mouth, 5.5, 5.5, 1);
-      if (out > 0) { var push = Math.min(out, 4.2) * .75; eGrip = [eGrip[0] + sd[0] * push, eGrip[1] + sd[1] * push - push * .3]; }   // the elbow drives forward
+      if (out > 0) { var push = Math.min(out, 4) * .8; eGrip = [eGrip[0] + sd[0] * push, eGrip[1] + sd[1] * push - push * .3]; }   // the elbow drives forward
       s.p.body.setAttribute("d", seg(hip, neck) + seg(hip, kF, fF) + seg(hip, kB, fB) + seg(shoulder, eGrip, grip) + seg(shoulder, eMouth, mouth));
       s.p.saya.setAttribute("d", seg(guard, tail) + seg([hilt[0] - sd[1] * 1.8, hilt[1] + sd[0] * 1.8], [hilt[0] + sd[1] * 1.8, hilt[1] - sd[0] * 1.8]));
       s.p.blade.setAttribute("d", seg(hilt, [hilt[0] + sd[0] * 4, hilt[1] + sd[1] * 4]));     // the grip, ahead of the guard (tsuba)
@@ -201,16 +224,19 @@
     function iai(s, x, y) {
       var w = document.querySelector(".swarm-intro-world"); if (!w) return;
       var sx = s.x + s.ox, sy = s.y + s.oy - 18, dx = x - sx, dy = y - sy, len = Math.hypot(dx, dy) || 1, ang = Math.atan2(dy, dx) * 180 / Math.PI;
-      function fx(cls, cx, cy, width, angle, delay) {
+      function fx(cls, cx, cy, width, angle, delay, hold) {
         var e = document.createElement("div"); e.className = cls;
         e.style.left = cx + "px"; e.style.top = cy + "px"; if (width) e.style.width = width + "px";
         if (angle !== undefined) e.style.setProperty("--a", angle + "deg");
         if (delay) e.style.animationDelay = delay + "ms";
-        w.appendChild(e); setTimeout(function () { e.remove(); }, 700 + (delay || 0));
+        if (hold) e.style.animationDuration = hold + "ms";
+        w.appendChild(e); setTimeout(function () { e.remove(); }, 800 + (delay || 0) + (hold || 0));
       }
-      fx("iai-glint", sx, sy, 0, undefined, IAI.draw - 20);              // the vanishing draw
+      var cutA = ang + (Math.random() < .5 ? 24 : -24);                  // the cut runs slightly across the line of attack
+      fx("iai-glint", sx, sy + 3, 0, undefined, IAI.draw - 20);          // the vanishing draw
       fx("iai-path", sx + dx / 2, sy + dy / 2, len, ang, IAI.draw);      // the dash
-      fx("iai-cut", x, y, 150, ang + (Math.random() < .5 ? 24 : -24), IAI.draw + 40);   // the cut, slightly across the line of attack
+      fx("iai-line", x, y, 150, cutA, IAI.draw + 30, IAI.sheathed - IAI.draw);   // a hairline, hanging still until...
+      fx("iai-cut", x, y, 150, cutA, IAI.sheathed);                      // ...the click: the cut flares and falls apart
     }
 
     function wake() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } }
