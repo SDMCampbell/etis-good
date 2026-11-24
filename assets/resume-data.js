@@ -11,7 +11,6 @@ window.RESUME = {
   title: "Full Stack Web Developer",
   location: "Lexington, SC",
   email: "SamuelDCampbell@gmail.com",
-  github: "https://github.com/SDMCampbell",
   summary:
     "I am a user-focused software and web engineer who loves creating real-world, high-quality products.",
   tagline: "I love climbing learning curves, especially for new languages and technologies.",

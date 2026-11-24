@@ -7,7 +7,7 @@
   html += '<header class="intro">';
   html += "<h1>" + esc(R.name) + "</h1>";
   html += '<p class="title">' + esc(R.title) + " · " + esc(R.location) + "</p>";
-  html += '<p class="links"><a href="mailto:' + esc(R.email) + '">' + esc(R.email) + '</a> · <a href="' + esc(R.github) + '">github</a></p>';
+  html += '<p class="links"><a href="mailto:' + esc(R.email) + '">' + esc(R.email) + '</a></p>';
   html += '<p class="summary">' + esc(R.summary) + " " + esc(R.tagline) + "</p>";
   html += "</header>";
 
@@ -27,6 +27,6 @@
   });
   html += "</section>";
 
-  html += '<footer><p><a href="mailto:' + esc(R.email) + '">' + esc(R.email) + '</a> · <a href="' + esc(R.github) + '">' + esc(R.github.replace(/^https?:\/\//, "")) + "</a></p></footer>";
+  html += '<footer><p><a href="mailto:' + esc(R.email) + '">' + esc(R.email) + '</a></p></footer>';
   el.innerHTML = html;
 })();
