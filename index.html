@@ -56,7 +56,9 @@
       b.onclick = function () {
         // the hash carries the choice through the reload (storage isn't available everywhere, e.g. sandboxed frames)
         try { localStorage.setItem("mode", b.dataset.mode); } catch (e) {}
-        location.hash = "mode=" + b.dataset.mode; location.reload();
+        // ...along with anything else in it (a fight=1 from a link)
+        var rest = location.hash.replace(/^#/, "").split("&").filter(function (p) { return p && !/^mode=/.test(p); });
+        location.hash = ["mode=" + b.dataset.mode].concat(rest).join("&"); location.reload();
       };
     });
 
@@ -182,10 +184,26 @@
       try { typeAll = localStorage.getItem("typeAll") === "on"; } catch (e) {}
       typeBox.checked = typeAll;
       // "fight" toggle: half the swarm (rounded down) attacks the page, tearing elements down; the rest defend it
-      var fightOn = false, fightBox = document.getElementById("fightOn");
-      try { fightOn = localStorage.getItem("fight") === "on"; } catch (e) {}
+      // A link can turn it on or off for that visit, without changing the visitor's saved choice: ?fight=1 or #fight=1
+      // (also #mode=samurai&fight=1; fight=0 turns it off). Ticking the box yourself takes over: it's saved, and the
+      // fight setting comes out of the address so a reload doesn't undo it.
+      function urlFight() {
+        var v = new URLSearchParams(location.search).get("fight");
+        if (v === null) v = (location.hash.match(/[#&]fight=([^&]*)/) || [])[1];
+        return v == null ? null : /^(1|on|true|yes)$/i.test(v) ? true : /^(0|off|false|no)$/i.test(v) ? false : null;
+      }
+      var fightOn = urlFight(), fightBox = document.getElementById("fightOn");
+      if (fightOn === null) { fightOn = false; try { fightOn = localStorage.getItem("fight") === "on"; } catch (e) {} }
       fightBox.checked = fightOn;
-      fightBox.onchange = function () { fightOn = fightBox.checked; try { localStorage.setItem("fight", fightOn ? "on" : "off"); } catch (e) {} launch(false); };
+      fightBox.onchange = function () {
+        fightOn = fightBox.checked; try { localStorage.setItem("fight", fightOn ? "on" : "off"); } catch (e) {}
+        if (urlFight() !== null) {
+          var q = new URLSearchParams(location.search); q.delete("fight");
+          var h = location.hash.replace(/^#/, "").split("&").filter(function (p) { return p && !/^fight=/.test(p); }).join("&");
+          history.replaceState(null, "", location.pathname + (String(q) ? "?" + q : "") + (h ? "#" + h : ""));
+        }
+        launch(false);
+      };
       typeBox.onchange = function () { typeAll = typeBox.checked; try { localStorage.setItem("typeAll", typeAll ? "on" : "off"); } catch (e) {} launch(false); };
       slider.value = size; out.textContent = size;
       slider.oninput = function () { out.textContent = slider.value; };
