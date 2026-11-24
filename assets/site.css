@@ -27,9 +27,24 @@ footer { margin-top: 56px; color: var(--dim); }
 
 @media print { .matrix { display: none; } body { background: #fff; color: #000; } a { color: #000; } }
 
-.motion-note { max-width: 880px; margin: 0 auto; padding: 16px 24px 0; color: var(--accent); font-size: 13.5px; }
+.motion-note { max-width: 880px; margin: 0 auto; padding: 56px 24px 0; color: var(--accent); font-size: 13.5px; }   /* clear of the mode bar */
 .motion-note[hidden] { display: none; }
+.motion-note p { display: inline; margin: 0; }
+.motion-note p + p::before { content: " · "; }
 .motion-note button { background: none; border: 0; padding: 0; min-height: 32px; font: inherit; color: var(--link); text-decoration: underline; cursor: pointer; }
+.motion-note .gate-only { display: none; }
+/* Until the visitor chooses, the notice is the only thing on the screen: large and centred, everything else hidden */
+html.motion-gate body > :not(.motion-note) { display: none !important; }
+html.motion-gate .motion-note, html.motion-gate .motion-note[hidden] { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 28px; max-width: none; padding: 32px; text-align: center; font-size: clamp(20px, 3.2vw, 34px); line-height: 1.4; }
+html.motion-gate .motion-note p { display: block; max-width: 22em; }
+html.motion-gate .motion-note p + p::before { content: none; }
+html.motion-gate .motion-note .gate-only { display: inline; }
+html.motion-gate .motion-note .gate-off { display: none; }
+html.motion-gate .motion-choices { display: flex !important; flex-wrap: wrap; justify-content: center; gap: 12px 28px; font-size: .7em; }
+html.motion-gate .motion-choices .gate-only { display: contents; }
+html.motion-gate .motion-note button { padding: 10px 22px; border: 1px solid currentColor; border-radius: 999px; text-decoration: none; min-height: 44px; }
+html.motion-gate .motion-note #motionOn { background: var(--accent); color: var(--bg); border-color: var(--accent); }
 
 /* ---------- samurai mode ----------
    The swarm-intro cursors become animated stick-figure samurai (drawn and posed by samurai.js). The library's

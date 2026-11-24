@@ -17,15 +17,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/site.css">
-  <!-- Motion: devices set to reduce motion get a still page unless the visitor opts in (remembered as motion=on).
+  <!-- Motion: devices set to reduce motion get a full-screen notice first, and nothing else, until the visitor picks:
+       play the animation anyway (remembered as motion=on) or see the page without it (remembered as motion=off).
        This mirrors swarm-intro's own preload, but with that opt-in: it keeps the page blank until the intro starts. -->
   <!-- Mode: from a #mode=NAME link, else the last one picked, else normal. Sets html[data-mode] for the background. -->
   <script>window.MODES=["normal","samurai","robot","wizard","ninja"];window.MODE=(function(){var m=(location.hash.match(/mode=(\w+)/)||[])[1];if(MODES.indexOf(m)<0){try{m=localStorage.getItem("mode")}catch(e){}}if(m==="mech")m="robot";return MODES.indexOf(m)<0?"normal":m})();document.documentElement.setAttribute("data-mode",window.MODE);</script>
-  <script>window.MOTION=(function(){try{var m=localStorage.getItem("motion");if(m==="on")return true;if(m==="off")return false}catch(e){}return !matchMedia("(prefers-reduced-motion: reduce)").matches})();(function(){try{if(!window.MOTION)return;var d=document.documentElement;d.setAttribute("data-swarm-intro","");var s=document.createElement("style");s.id="swarm-intro-preload";s.textContent="html[data-swarm-intro] body>*{opacity:0;animation:swarm-intro-failsafe 0s 4s forwards}@keyframes swarm-intro-failsafe{to{opacity:1}}";document.head.appendChild(s);}catch(e){}})();</script>
+  <script>window.MOTION=(function(){try{var m=localStorage.getItem("motion");if(m==="on")return true;if(m==="off")return false}catch(e){}return !matchMedia("(prefers-reduced-motion: reduce)").matches})();(function(){try{if(!window.MOTION&&localStorage.getItem("motion")!=="off")document.documentElement.classList.add("motion-gate")}catch(e){if(!window.MOTION)document.documentElement.classList.add("motion-gate")}})();(function(){try{if(!window.MOTION)return;var d=document.documentElement;d.setAttribute("data-swarm-intro","");var s=document.createElement("style");s.id="swarm-intro-preload";s.textContent="html[data-swarm-intro] body>*{opacity:0;animation:swarm-intro-failsafe 0s 4s forwards}@keyframes swarm-intro-failsafe{to{opacity:1}}";document.head.appendChild(s);}catch(e){}})();</script>
 </head>
 <body>
   <canvas id="matrix" class="matrix" aria-hidden="true"></canvas>
-  <p class="motion-note" id="motionNote" hidden>animation is paused because your device is set to reduce motion · <button type="button" id="motionOn">play it anyway</button></p>
+  <div class="motion-note" id="motionNote" role="dialog" aria-labelledby="motionMsg" hidden>
+    <p id="motionMsg"><span class="gate-only">This page is animated, and </span><span class="gate-off">animation is off because </span>your device is set to reduce motion<span class="gate-only">.</span></p>
+    <p class="motion-choices"><button type="button" id="motionOn">play it anyway</button><span class="gate-only"> <button type="button" id="motionOff">show it without animation</button></span></p>
+  </div>
   <nav class="modes" aria-label="Display mode">mode: <button type="button" data-mode="normal">normal</button> <button type="button" data-mode="samurai">samurai</button> <button type="button" data-mode="robot">robot</button> <button type="button" data-mode="wizard">wizard</button> <button type="button" data-mode="ninja">ninja</button>
     <label class="swarm-size">swarm: <input type="range" id="swarmSize" min="1" max="30" step="1"> <output id="swarmSizeOut"></output></label>
     <label class="type-all"><input type="checkbox" id="typeAll"> type</label>
@@ -57,6 +61,9 @@
     if (!window.MOTION) {
       var note = document.getElementById("motionNote"); note.hidden = false;
       document.getElementById("motionOn").onclick = function () { try { localStorage.setItem("motion", "on"); } catch (e) {} location.reload(); };
+      // the still page: the notice shrinks to a one-line reminder at the top, keeping the way back to the animation
+      document.getElementById("motionOff").onclick = function () { try { localStorage.setItem("motion", "off"); } catch (e) {} document.documentElement.classList.remove("motion-gate"); };
+      if (document.documentElement.classList.contains("motion-gate")) document.getElementById("motionOn").focus();
     } else {
       if (MODE === "samurai") samuraiMode();
       if (MODE === "robot") robotMode();
