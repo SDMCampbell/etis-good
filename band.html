@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Swarm Band · Samuel Campbell</title>
+  <meta name="description" content="Make music by spawning a swarm: every samurai, robot, wizard, ninja and cursor is a musician that writes its own part.">
+  <meta name="theme-color" content="#050806">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
+  <style>
+    /* Swarm Band: a 16-step sequencer that the swarm writes. Each kind of unit is a musician with its own rows; it
+       builds notes there (and now and then takes one apart), and a playhead sweeping left to right plays what's built. */
+    html, body { height: 100%; overflow: hidden; }
+    body.band { display: flex; flex-direction: column; font-size: 13px; }
+    .b-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 12px 18px 6px; position: relative; z-index: 2; }
+    .b-top h1 { margin: 0 8px 0 0; font-size: 18px; letter-spacing: .14em; color: var(--hi); }
+    .b-top .links { margin-left: auto; display: flex; gap: 14px; } .b-top a { color: var(--dim); }
+    .band button { font: inherit; color: var(--text); background: rgb(5 8 6 / .7); border: 1px solid rgb(255 255 255 / .18); border-radius: 3px; padding: 4px 9px; min-height: 30px; cursor: pointer; }
+    .band button:hover { border-color: var(--accent); color: var(--accent); }
+    .band input[type=number] { width: 7ch; font: inherit; color: var(--accent); background: none; border: 0; border-bottom: 1px dashed rgb(57 255 122 / .45); text-align: center; }
+    .players { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 0 18px 8px; position: relative; z-index: 2; }
+    .player { display: inline-flex; align-items: center; gap: 5px; color: var(--c); }
+    .player b { font-weight: 400; min-width: 2.5ch; text-align: center; }
+    .player button { color: var(--c); min-width: 30px; }
+    .player button:hover { border-color: var(--c); color: var(--c); }
+    [data-part="wizard"] { --c: #C7A6FF; } [data-part="samurai"] { --c: #FFE27A; } [data-part="ninja"] { --c: #FF8FA0; }
+    [data-part="cursor"] { --c: #5BC8FF; } [data-part="robot"] { --c: #39FF7A; }
+    #field { flex: 1; display: grid; grid-template-columns: 9ch repeat(16, 1fr); grid-template-rows: repeat(14, 1fr); gap: 4px; padding: 6px 28px 22px 18px; min-height: 0; position: relative; z-index: 1; }
+    .lab { display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; color: var(--c); font-size: 11px; white-space: nowrap; transition: opacity .3s; }
+    .cell { position: relative; min-width: 0; min-height: 0; display: flex; border: 1px solid color-mix(in srgb, var(--c) 14%, transparent); cursor: pointer; transition: opacity .3s, background .1s; }
+    .cell.beat { border-left-color: color-mix(in srgb, var(--c) 45%, transparent); }
+    .cell.now { background: color-mix(in srgb, var(--c) 14%, transparent); border-color: color-mix(in srgb, var(--c) 45%, transparent); }
+    .muted { opacity: .35; }
+    .note { flex: 1; background: color-mix(in srgb, var(--c) 55%, transparent); border: 1px solid var(--c); box-shadow: 0 0 8px color-mix(in srgb, var(--c) 35%, transparent); transition: opacity .25s; }
+    .note.hit { animation: note-hit .28s ease-out; }
+    @keyframes note-hit { 0% { background: #fff; box-shadow: 0 0 26px 6px var(--c); transform: scale(1.18); } 100% { transform: none; } }
+    .band .swarm-intro-cursor[data-kind="wizard"], .band .swarm-intro-box[data-kind="wizard"] { --swarm-intro-fg: #C7A6FF; }
+    .band .swarm-intro-cursor[data-kind="samurai"], .band .swarm-intro-box[data-kind="samurai"] { --swarm-intro-fg: #FFE27A; }
+    .band .swarm-intro-cursor[data-kind="ninja"], .band .swarm-intro-box[data-kind="ninja"] { --swarm-intro-fg: #FF8FA0; }
+    .band .swarm-intro-cursor[data-kind="cursor"], .band .swarm-intro-box[data-kind="cursor"] { --swarm-intro-fg: #5BC8FF; }
+    .band .swarm-intro-cursor[data-kind="robot"], .band .swarm-intro-box[data-kind="robot"] { --swarm-intro-fg: #39FF7A; }
+    .band .swarm-intro-cursor[data-kind="cursor"] { filter: drop-shadow(0 0 4px var(--swarm-intro-fg)); }
+    .cover { position: fixed; inset: 0; z-index: 2147483647; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; text-align: center; background: rgb(5 8 6 / .86); }
+    .cover[hidden] { display: none; }
+    .cover h2 { margin: 0; font-size: clamp(26px, 5vw, 48px); letter-spacing: .16em; color: var(--hi); }
+    .cover p { margin: 0; max-width: 36em; color: var(--text); font-size: clamp(14px, 1.6vw, 17px); line-height: 1.6; }
+    .cover .big { font-size: clamp(16px, 2vw, 20px); padding: 12px 26px; min-height: 48px; border-color: var(--accent); background: var(--accent); color: #050806; border-radius: 999px; }
+    @media (max-width: 900px) { #field { grid-template-columns: 5ch repeat(16, 1fr); padding: 4px 8px 12px 4px; gap: 2px; } .lab { font-size: 8px; padding-right: 3px; } }
+  </style>
+</head>
+<body class="band war">
+  <canvas id="matrix" class="matrix" aria-hidden="true"></canvas>
+  <header class="b-top">
+    <h1>SWARM BAND</h1>
+    <button type="button" id="playBtn">pause</button>
+    <label>tempo <input type="number" id="bpm" min="60" max="180" value="110" aria-label="Tempo in beats per minute"></label>
+    <button type="button" id="clearBtn">clear the notes</button>
+    <span class="links"><a href="music.html">visualizer →</a><a href="./">← résumé</a></span>
+  </header>
+  <div class="players" id="players" aria-label="The band"></div>
+  <main id="field" aria-label="The sequencer: 16 steps across, one row per sound"></main>
+
+  <div class="cover" id="startCover">
+    <h2>SWARM BAND</h2>
+    <p>Make music by spawning a swarm. Every unit is a musician: robots drum, cursors play bass, samurai stab chords, wizards play the lead, ninjas tick the hi-hats. They write their own parts on the grid, and keep changing them.</p>
+    <button type="button" class="big" id="start">▶ start the band</button>
+    <p>Then use <b>+</b> and <b>−</b> to add or remove players. Click any square to have a player add or remove that note.</p>
+  </div>
+
+  <script>window.MODE = "normal"; window.MOTION = !matchMedia("(prefers-reduced-motion: reduce)").matches;</script>
+  <script src="assets/matrix.js"></script>
+  <script src="assets/swarm-intro.js"></script>
+  <script src="assets/samurai.js"></script>
+  <script src="assets/robot.js"></script>
+  <script src="assets/wizard.js"></script>
+  <script src="assets/ninja.js"></script>
+  <script>
+    (function () {
+      var STEPS = 16, $ = function (id) { return document.getElementById(id); }, field = $("field");
+      // ---------- the parts: who plays what, on which rows (top to bottom), and where their notes tend to go ----------
+      function w(base, map) { var a = []; for (var s = 0; s < STEPS; s++) a.push(map[s] !== undefined ? map[s] : typeof base === "function" ? base(s) : base); return a; }
+      var evenOdd = function (e, o) { return function (s) { return s % 2 ? o : e; }; };
+      var PARTS = [
+        { kind: "wizard", name: "lead", mono: true, max: 10, rows: [
+          { label: "lead A", w: w(evenOdd(3, 1.2), { 0: 4 }) }, { label: "lead G", w: w(evenOdd(3, 1.2), {}) }, { label: "lead E", w: w(evenOdd(3, 1.2), {}) }, { label: "lead C", w: w(evenOdd(3, 1.2), {}) }] },
+        { kind: "samurai", name: "chords", max: 8, rows: [
+          { label: "chord 5", w: w(.6, { 2: 5, 6: 5, 10: 5, 14: 5, 0: 2, 8: 2 }) }, { label: "chord 3", w: w(.6, { 2: 5, 6: 5, 10: 5, 14: 5, 4: 2, 12: 2 }) }, { label: "chord 1", w: w(.6, { 2: 5, 6: 5, 10: 5, 14: 5, 0: 2, 8: 2 }) }] },
+        { kind: "ninja", name: "hats", max: 16, rows: [
+          { label: "click", w: w(evenOdd(.5, 1.5), { 3: 3, 11: 3 }) }, { label: "hi-hat", w: w(evenOdd(3, 1.5), { 2: 6, 6: 6, 10: 6, 14: 6 }) }] },
+        { kind: "cursor", name: "bass", mono: true, max: 10, rows: [
+          { label: "bass oct", w: w(evenOdd(.6, .3), { 3: 1.5, 6: 2, 11: 1.5, 14: 2 }) }, { label: "bass 5th", w: w(evenOdd(.8, .3), { 6: 2, 11: 2, 14: 2 }) }, { label: "bass root", w: w(evenOdd(1.5, .5), { 0: 9, 8: 6, 3: 3, 11: 3 }) }] },
+        { kind: "robot", name: "drums", max: 12, rows: [
+          { label: "snare", w: w(.2, { 4: 8, 12: 8, 7: 1.2, 15: 1.5, 10: 1 }) }, { label: "kick", w: w(.2, { 0: 9, 8: 8, 4: 4, 12: 4, 10: 1.5, 14: 1.5, 7: 1, 3: 1 }) }] }
+      ];
+      var rows = [], byKind = {};
+      PARTS.forEach(function (p) { byKind[p.kind] = p; p.rowIdx = []; p.rows.forEach(function (r, i) { r.part = p; r.i = i; r.cells = []; r.notes = []; p.rowIdx.push(rows.length); rows.push(r); }); });
+      rows.forEach(function (r, ri) {
+        var lab = document.createElement("div"); lab.className = "lab"; lab.dataset.part = r.part.kind; lab.textContent = r.label; lab.style.gridArea = (ri + 1) + " / 1"; field.appendChild(lab); r.lab = lab;
+        for (var s = 0; s < STEPS; s++) {
+          var cell = document.createElement("div"); cell.className = "cell" + (s % 4 === 0 ? " beat" : ""); cell.dataset.part = r.part.kind; cell.style.gridArea = (ri + 1) + " / " + (s + 2);
+          var note = document.createElement("div"); note.className = "note"; note._row = r; note._step = s;
+          cell.appendChild(note); field.appendChild(cell); r.cells.push(cell); r.notes.push(note);
+        }
+      });
+      function on(n) { return !n.hasAttribute("data-swarm-intro-pending"); }
+      function partNotes(p) { var out = []; p.rows.forEach(function (r) { r.notes.forEach(function (n) { if (on(n)) out.push(n); }); }); return out; }
+
+      // ---------- the swarm: puppets that write the parts ----------
+      samuraiMode({ scoped: true }); robotMode({ scoped: true }); wizardMode({ scoped: true }); ninjaMode({ scoped: true });
+      var fast = { speed: 1.8 }, playing = false, col = 0, stepDur = 60 / 110 / 4;
+      var swarm = swarmIntro({ root: "#field", targets: ".note", logo: false, cursors: 0, skipButton: false, respectReducedMotion: false,
+        persist: true, puppet: true, type: false,
+        traits: { cursor: fast, samurai: fast, robot: fast, wizard: fast, ninja: fast },
+        buildPause: function (a) { return a.kind === "samurai" ? 150 : 0; },
+        revealPause: function (a) { return a.kind === "samurai" ? 280 : 0; },
+        // between jobs a player walks along its own rows with the playhead
+        idle: function (a) {
+          var p = byKind[a.kind], r0 = rows[p.rowIdx[0]].cells, r1 = rows[p.rowIdx[p.rowIdx.length - 1]].cells;
+          var c = r0[playing ? col : (a.n * 5) % STEPS].getBoundingClientRect(), top = r0[0].getBoundingClientRect().top, bot = r1[0].getBoundingClientRect().bottom;
+          return { x: c.left + c.width / 2 + (a.n % 2 ? 10 : -10), y: top + (bot - top) * ((a.n % 4) + .8) / 4.4 + 8, ms: Math.max(120, stepDur * 1000), wait: 90 };
+        } });
+      function members(kind) { return swarm.units().filter(function (a) { return a.kind === kind; }); }
+      var serial = 0;
+      function addPlayer(kind) {
+        if (members(kind).length >= 4) return;
+        var left = Math.random() < .5, a = swarm.add({ kind: kind, team: "g", x: left ? -24 : innerWidth + 24, y: Math.random() * innerHeight });
+        if (a) { a.n = serial++; a.nextAct = 0; }
+        refresh();
+      }
+      function removePlayer(kind) { var m = members(kind); if (m.length) swarm.remove(m[m.length - 1]); setTimeout(refresh, 50); }
+      PARTS.slice().reverse().forEach(function (p) {
+        var el = document.createElement("span"); el.className = "player"; el.dataset.part = p.kind;
+        el.innerHTML = '<button type="button" aria-label="Remove a ' + p.kind + '">−</button><span>' + p.kind + " · " + p.name + ' <b></b></span><button type="button" aria-label="Add a ' + p.kind + '">+</button>';
+        el.children[0].onclick = function () { removePlayer(p.kind); }; el.children[2].onclick = function () { addPlayer(p.kind); };
+        p.count = el.querySelector("b"); $("players").appendChild(el);
+      });
+      function refresh() {
+        PARTS.forEach(function (p) {
+          var n = members(p.kind).length; p.active = n > 0; p.count.textContent = "×" + n;
+          p.rows.forEach(function (r) { r.lab.classList.toggle("muted", !n); r.cells.forEach(function (c) { c.classList.toggle("muted", !n); }); });
+        });
+      }
+      // a place for a new note: weighted towards where that sound usually falls; one note per step for bass and lead
+      function spot(p, now) {
+        var taken = {}; if (p.mono) partNotes(p).forEach(function (n) { taken[n._step] = 1; });
+        var opts = [], total = 0;
+        p.rows.forEach(function (r) { r.notes.forEach(function (n, s) { if (on(n) || n._busy > now || taken[s]) return; total += r.w[s]; opts.push([n, r.w[s]]); }); });
+        var x = Math.random() * total; for (var i = 0; i < opts.length; i++) { x -= opts[i][1]; if (x <= 0) return opts[i][0]; }
+        return null;
+      }
+      function send(a, n, how, now) { if (swarm.order(a, n, how)) { n._busy = now + 5000; return true; } return false; }
+      // each free player, every couple of seconds: fill its part up to a size that grows with the section, then keep
+      // it moving by taking a note out now and then (the next turn puts a new one somewhere else)
+      setInterval(function () {
+        if (!playing) return;
+        var now = performance.now();
+        swarm.units().forEach(function (a) {
+          if (a.working || a.job || now < a.nextAct) return;
+          var p = byKind[a.kind], have = partNotes(p), want = Math.min(p.max, 2 + members(p.kind).length * 2 + (p.kind === "ninja" ? 2 : 0));
+          a.nextAct = now + 1300 + Math.random() * 2400;
+          if (have.length < want) { var n = spot(p, now); if (n) send(a, n, "build", now); }
+          else if (Math.random() < .45) { var free = have.filter(function (n) { return !(n._busy > now); }); if (free.length) send(a, free[Math.random() * free.length | 0], "unbuild", now); }
+        });
+      }, 300);
+      new MutationObserver(function (ms) { ms.forEach(function (m) { m.target._busy = 0; }); }).observe(field, { subtree: true, attributes: true, attributeFilter: ["data-swarm-intro-pending"] });
+      // click a square: a player of that part (or anyone free) adds or removes that note
+      field.addEventListener("click", function (e) {
+        var cell = e.target.closest(".cell"); if (!cell) return;
+        var n = cell.firstChild, now = performance.now(); if (n._busy > now) return;
+        var free = swarm.units().filter(function (a) { return !a.working && !a.job; });
+        free.sort(function (x, y) { return (y.kind === n._row.part.kind) - (x.kind === n._row.part.kind); });
+        if (free.length) { send(free[0], n, on(n) ? "unbuild" : "build", now); free[0].nextAct = now + 2500; }
+      });
+      $("clearBtn").onclick = function () { rows.forEach(function (r) { r.notes.forEach(function (n) { n.setAttribute("data-swarm-intro-pending", ""); }); }); };
+
+      // ---------- sound: a 16-step loop over a 4-bar chord cycle (A minor, A minor, F, G) ----------
+      var AC, bus, noise, timer = null, nextT = 0, step = 0, ROOT = [55, 55, 43.65, 49], THIRD = [3, 3, 4, 4], stats = { played: 0 };
+      function semis(f, n) { return f * Math.pow(2, n / 12); }
+      function audio() {
+        if (AC) return AC;
+        AC = new (window.AudioContext || window.webkitAudioContext)();
+        var comp = AC.createDynamicsCompressor(); comp.connect(AC.destination);
+        bus = AC.createGain(); bus.gain.value = .7; bus.connect(comp);
+        var delay = AC.createDelay(1), fb = AC.createGain(), wet = AC.createGain(); delay.delayTime.value = .33; fb.gain.value = .32; wet.gain.value = .35;
+        delay.connect(fb); fb.connect(delay); delay.connect(wet); wet.connect(comp); bus.echo = delay;
+        noise = AC.createBuffer(1, AC.sampleRate, AC.sampleRate); var d = noise.getChannelData(0); for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+        return AC;
+      }
+      function env(node, t, peak, dur, echo) { var g = AC.createGain(); g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); node.connect(g); g.connect(bus); if (echo) g.connect(bus.echo); }
+      function tone(type, f, t, peak, dur, cutoff, echo, detune) {
+        var o = AC.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t); if (detune) o.detune.value = detune; var out = o;
+        if (cutoff) { var lp = AC.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.setValueAtTime(cutoff, t); lp.frequency.exponentialRampToValueAtTime(Math.max(200, cutoff * .35), t + dur); o.connect(lp); out = lp; }
+        env(out, t, peak, dur, echo); o.start(t); o.stop(t + dur + .02); return o;
+      }
+      function hit(t, type, f, peak, dur) { var s = AC.createBufferSource(); s.buffer = noise; var fl = AC.createBiquadFilter(); fl.type = type; fl.frequency.value = f; s.connect(fl); env(fl, t, peak, dur); s.start(t, Math.random() * .5, dur + .02); }
+      function sound(r, t, bar) {
+        var k = r.part.kind, i = r.i, root = ROOT[bar], d = stepDur;
+        if (k === "robot") { if (i === 1) tone("sine", 150, t, 1, .3).frequency.exponentialRampToValueAtTime(42, t + .13); else { hit(t, "bandpass", 1900, .55, .17); tone("triangle", 190, t, .25, .09); } }
+        else if (k === "cursor") tone("sawtooth", semis(root, [12, 7, 0][i]), t, .5, d * 1.9, 520);
+        else if (k === "ninja") { if (i === 1) hit(t, "highpass", 7500, .2, .05); else hit(t, "bandpass", 4200, .25, .025); }
+        else if (k === "samurai") { var f = semis(root * 4, [7, THIRD[bar], 0][i]); tone("sawtooth", f, t, .13, d * 1.6, 2400, false, -8); tone("sawtooth", f, t, .13, d * 1.6, 2400, false, 8); }
+        else tone("triangle", semis(440, [12, 10, 7, 3][i]), t, .2, d * 2.2, 0, true);
+      }
+      function schedule() {
+        while (nextT < AC.currentTime + .15) {
+          var s = step % STEPS, bar = (step >> 4) % 4, t = nextT, hits = [];
+          rows.forEach(function (r) { if (r.part.active && on(r.notes[s])) { sound(r, t, bar); hits.push(r.notes[s]); stats.played++; } });
+          (function (s, hits) { setTimeout(function () { show(s, hits); }, Math.max(0, (t - AC.currentTime) * 1000)); })(s, hits);
+          nextT += stepDur; step++;
+        }
+      }
+      function show(s, hits) {
+        rows.forEach(function (r) { r.cells[col].classList.remove("now"); r.cells[s].classList.add("now"); }); col = s;
+        hits.forEach(function (n) { n.classList.remove("hit"); void n.offsetWidth; n.classList.add("hit"); });
+      }
+      function play() { audio(); AC.resume(); playing = true; nextT = AC.currentTime + .08; timer = setInterval(schedule, 40); $("playBtn").textContent = "pause"; }
+      function pause() { playing = false; clearInterval(timer); $("playBtn").textContent = "play"; }
+      $("playBtn").onclick = function () { playing ? pause() : play(); };
+      $("bpm").onchange = function () { var v = Math.max(60, Math.min(180, Math.round(+this.value) || 110)); this.value = v; stepDur = 60 / v / 4; };
+      $("start").onclick = function () { $("startCover").hidden = true; play(); addPlayer("robot"); addPlayer("cursor"); addPlayer("ninja"); };
+      refresh();
+      window.__band = { swarm: swarm, stats: stats, add: addPlayer, remove: removePlayer, notes: function () { var o = {}; PARTS.forEach(function (p) { o[p.kind] = partNotes(p).length; }); return o; } };
+    })();
+  </script>
+</body>
+</html>

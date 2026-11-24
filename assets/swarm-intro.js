@@ -22,7 +22,7 @@
    form(points, team) flies a team into formation at those page points (topping it up with extra cursors in the
    team's colour, so a few survivors can still spell a word), and clear() removes every unit quietly,
    puppet: true, for the music page: units (added with add()) do nothing on their own. order(agent, el) sends a free
-   one to build that target; otherwise the idle hook places it,
+   one to build that target (or, with "unbuild", take it apart); remove(agent) deletes one; otherwise the idle hook places it,
    and type: false (never type text in; just fade it in) or "all" (type every text element in, however long), and returning rework(el) from swarmIntro(): one cursor takes a built element apart (the build in reverse, from
    its bottom-right corner back to the top-left), then after a short pause another cursor builds it again.
 MIT License
@@ -1111,12 +1111,13 @@ function swarmIntro(options = {}) {
         rework,
         add,
         units: () => agents.filter((a) => !a.extra),
-        order: (a, el) => {
+        order: (a, el, how) => {
             if (a.dead || a.working || a.job)
                 return false;
-            a.job = (b) => build(b, el);
+            a.job = how === "unbuild" ? (b) => unbuild(b, el) : (b) => build(b, el);
             return true;
         },
+        remove: (a) => { if (!a.dead) kill(a); },
         pause: (v) => { warPaused = !!v; },
         wipe,
         form,
