@@ -150,6 +150,8 @@ html.wizard [data-team="attack"] .wizard .orb, html.wizard [data-team="attack"] 
 html.wizard .swarm-intro-box.is-attack { box-shadow: 0 0 12px rgb(255 92 112 / .45), inset 0 0 12px rgb(255 92 112 / .22); background: radial-gradient(ellipse at center, rgb(255 92 112 / .14), transparent 72%); }
 html.ninja [data-team="attack"] .ninja .band { stroke: #1B1E26; }
 
+/* building with a strike: the box itself isn't drawn; the cut across the element is (samurai.js) */
+html.samurai .swarm-intro-box:not(.is-unbuild) { background: none; filter: none; }
 /* samurai iaijutsu strike at the pointer (samurai.js): the bare blade's gleam, the draw's glint, the dash, and the cut */
 html.samurai .sam .gleam { stroke: #fff; filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 3px #C8F7C5); }
 html.samurai .iai-glint { position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; pointer-events: none; opacity: 0;

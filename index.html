@@ -154,7 +154,9 @@
         if (intro) intro.destroy();
         intro = swarmIntro({ root: "#content", logo: first ? RESUME.handle : false, respectReducedMotion: false,
           cursors: size, maxCursors: Math.min(30, Math.max(size, narrow ? 14 : 24)),
-          persist: true, idle: IDLE[MODE], type: typeAll ? "all" : MODE === "normal", fight: fightOn });   // the figure modes show text whole unless "type" is on
+          persist: true, idle: IDLE[MODE], type: typeAll ? "all" : MODE === "normal", fight: fightOn,
+          // samurai build with an iaijutsu strike: crouch at the corner first, and sheathe before the element appears
+          buildPause: MODE === "samurai" ? 330 : 0, revealPause: MODE === "samurai" ? 580 : 0 });   // the figure modes show text whole unless "type" is on
         document.documentElement.classList.toggle("type-all", typeAll);
         document.documentElement.classList.add("swarm-live");
         var mine = intro; intro.done.then(function () { if (intro === mine) document.documentElement.classList.remove("swarm-live"); });

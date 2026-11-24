@@ -7,7 +7,9 @@
 //   moving sideways -> a ninja sprint: pitched far forward, arms swept straight back, legs striding with distance covered
 //   moving up       -> levitating: upright, legs hanging, arms eased out, faint lift lines under the feet
 //   moving down     -> a controlled descent in a crouched ready stance, hand on the hilt
-//   building        -> draws the sword and slashes across the element; sheathes it again when done
+//   building        -> an iaijutsu strike: crouches at the element's top-left corner, vanishes through it leaving a
+//                      hairline cut, reappears at the bottom-right corner sheathing, and at the click the cut flares
+//                      and the element appears. (Taking one apart after a click is a reverse slash instead.)
 //   nothing to do   -> lines up down the right side of the screen, poised in a low iaijutsu stance: one hand on the
 //                      hilt, the other on the scabbard, sword sheathed and ready to draw. If the mouse pointer comes near,
 //                      it strikes: a flash as it draws, it vanishes into a cut straight across the pointer, then
@@ -24,6 +26,7 @@
     // dropping: a controlled descent in a crouched ready stance, hand on the hilt, the other arm out for balance
     down: { lean: .18, tF: .9, kF: -1.55, tB: -.3, kB: -.85, aF: .75, eF: 1.25, aB: -.75, eB: .35 },
     // iaijutsu ready: low wide stance, leaning in, drawing hand on the hilt, the other gripping the scabbard at the hip
+    iai: { lean: .26, tF: .85, kF: -.95, tB: -.7, kB: .3, aF: .55, eF: 1.3, aB: .05, eB: 1.45 },   // building: the strike, from the same stance
     meditate: { lean: .26, tF: .85, kF: -.95, tB: -.7, kB: .3, aF: .55, eF: 1.3, aB: .05, eB: 1.45 },
     slash: { lean: .45, tF: 1.0, kF: -.6, tB: -.85, kB: .15, aF: 1.45, eF: .05, aB: 1.35, eB: .1 }
   };
@@ -78,7 +81,7 @@
   function render(s, now) {
     var P = s.pose, st = s.state, run = st === "run", drop = 0;
     // mid-strike, blend the poised stance into the low iai-goshi crouch
-    if (st === "meditate" && s.iaiT && now - s.iaiT < IAI.sheathed) {
+    if ((st === "meditate" || st === "iai") && s.iaiT && now - s.iaiT < IAI.sheathed) {
       var cr = crouchAt(now - s.iaiT), B = {};
       for (var key in P) B[key] = P[key] + ((IAIGOSHI[key] !== undefined ? IAIGOSHI[key] : P[key]) - P[key]) * cr;
       P = B; drop = 3.2 * cr;
@@ -88,7 +91,7 @@
       var ph = s.phase, sw = Math.sin(ph);
       P.tF = .25 + sw * 1.0; P.kF = -(1 + Math.cos(ph)) * .8; P.tB = .25 - sw * 1.0; P.kB = -(1 - Math.cos(ph)) * .8;
     }
-    var bob = st === "meditate" ? -3.2 + Math.sin(now / 1100) * .3 : run ? Math.abs(Math.cos(s.phase)) * 1.4 + 1.5 : st === "idle" ? Math.sin(now / 420) * .5 : st === "up" ? -2 + Math.sin(now / 260) * 1 : st === "down" ? 3 : 0;
+    var bob = st === "meditate" || st === "iai" ? -3.2 + Math.sin(now / 1100) * .3 : run ? Math.abs(Math.cos(s.phase)) * 1.4 + 1.5 : st === "idle" ? Math.sin(now / 420) * .5 : st === "up" ? -2 + Math.sin(now / 260) * 1 : st === "down" ? 3 : 0;
     var hip = [0, -14 - bob + drop];
     var neck = dir(hip, Math.PI - P.lean, 11);          // lean > 0 tips the torso forward
     var kF = dir(hip, P.tF, 7), fF = dir(kF, P.tF + P.kF, 7.2), kB = dir(hip, P.tB, 7), fB = dir(kB, P.tB + P.kB, 7.2);
@@ -100,7 +103,7 @@
     s.p.knot.setAttribute("d", seg(dir(head, Math.PI - P.lean + .6, 3.2), dir(head, Math.PI - P.lean + 1.3, 6)));
     // scabbard sits on the hip, angled back; the hilt pokes forward to where the hand rests
     var sHip = [hip[0] + 1, hip[1] - 1], sTip = dir(sHip, -1.05 - P.lean * .55, 12), hilt = dir(sHip, 2.1, 4);
-    if (st === "meditate") {
+    if (st === "meditate" || st === "iai") {
       // sheathed katana at the hip, hilt forward and a little up, scabbard running back past the hip: the
       // drawing hand is on the hilt, the other hand grips the scabbard mouth. Both arms reach their grips by IK.
       var sa = Math.PI - 1.2 - P.lean * .3;                           // sword direction: forward, ~20° above level
@@ -165,7 +168,19 @@
         var speed = Math.hypot(s.vx, s.vy), prev = s.state;
         // an iaijutsu strike at the pointer (started by the idle behaviour, which sets data-iai): vanish, cut, reappear
         if (c.dataset.iai && c.dataset.iai !== s.iaiSeen) { s.iaiSeen = c.dataset.iai; s.iaiT = now; iai(s, +c.dataset.ix, +c.dataset.iy); }
+        // building with a strike: the library's build steps ("aim" at the corner, "drag" through, "reveal") drive it
+        var stp = c.dataset.step || "";
+        if (stp !== s.step) {
+          var was = s.step; s.step = stp;
+          if (stp === "aim") s.iaiT = now;                                  // crouch and break the seal
+          if (stp === "drag" && c._iaiBox) s.cutLine = buildCut(c._iaiBox, "iai-line", 1600);
+          if (stp === "reveal") s.iaiT = now - IAI.back;                    // back, low, then sheathing
+          if (!stp && was === "reveal" && s.lastBox) { if (s.cutLine) s.cutLine.remove(); buildCut(s.lastBox, "iai-cut"); }   // the click
+        }
+        if (c._iaiBox) s.lastBox = c._iaiBox;
+        if (stp === "drag") s.iaiT = now - IAI.draw - 1;                   // gone for however long the dash takes
         if (c.classList.contains("slash")) s.state = "slash";
+        else if (stp && c._iaiBox) s.state = "iai";
         else if (speed < .04 && c.dataset.rest && now - c.dataset.rest < 500) s.state = "meditate";
         else if (speed < .04) s.state = "idle";
         else if (Math.abs(s.vx) >= Math.abs(s.vy) * .7) s.state = "run";
@@ -175,6 +190,7 @@
         if (s.state !== "slash" && Math.abs(s.vx) > .03) s.face = s.vx > 0 ? 1 : -1;
         if (s.state === "slash") s.face = c.classList.contains("rev") ? -1 : 1;   // cuts run to the bottom-right; un-cuts back to the top-left
         if (s.state === "meditate") s.face = -1;                            // facing in towards the page
+        if (s.state === "iai") s.face = 1;                                  // the strike runs to the bottom-right
         if (s.state === "run") lerp(s.pose, RUN, .3);
         else lerp(s.pose, POSES[s.state], s.state === "slash" ? .45 : .22);
         if (now < s.recoil) { s.pose.lean += (-.45 - s.pose.lean) * .5; s.pose.aB += (-1.2 - s.pose.aB) * .5; }   // knocked back by a clash
@@ -194,7 +210,7 @@
         var dx = (b.x + b.ox) - (a.x + a.ox), dy = (b.y + b.oy) - (a.y + a.oy), d = Math.hypot(dx, dy);
         if (d >= R * 2 || d < .01) { if (d < .01) { a.ox -= .5; b.ox += .5; } continue; }
         var nx = dx / d, ny = dy / d, push = (R * 2 - d) / 2;
-        var aFixed = a.state === "slash", bFixed = b.state === "slash";      // a samurai mid-cut holds its line
+        var aFixed = a.state === "slash" || a.state === "iai", bFixed = b.state === "slash" || b.state === "iai";      // a samurai mid-cut holds its line
         if (!aFixed) { a.ox -= nx * push * (bFixed ? 2 : 1); a.oy -= ny * push * (bFixed ? 2 : 1); }
         if (!bFixed) { b.ox += nx * push * (aFixed ? 2 : 1); b.oy += ny * push * (aFixed ? 2 : 1); }
         var closing = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;               // how fast they're running into each other
@@ -210,7 +226,7 @@
       list.forEach(function (s) {                                            // knockback drifts, then springs home
         s.ox += s.ovx * k; s.oy += s.ovy * k; s.ovx *= Math.pow(.82, k); s.ovy *= Math.pow(.82, k);
         s.ox -= s.ox * .06 * k; s.oy -= s.oy * .06 * k;
-        if (s.state === "slash") { s.ox *= .6; s.oy *= .6; }
+        if (s.state === "slash" || s.state === "iai") { s.ox *= .6; s.oy *= .6; }
       });
     }
     function spark(world, x, y) {
@@ -237,6 +253,18 @@
       fx("iai-path", sx + dx / 2, sy + dy / 2, len, ang, IAI.draw);      // the dash
       fx("iai-line", x, y, 150, cutA, IAI.draw + 30, IAI.sheathed - IAI.draw);   // a hairline, hanging still until...
       fx("iai-cut", x, y, 150, cutA, IAI.sheathed);                      // ...the click: the cut flares and falls apart
+    }
+
+    // a cut across an element being built, along the box's diagonal (the samurai's path from corner to corner)
+    function buildCut(box, cls, hold) {
+      var w = document.querySelector(".swarm-intro-world"); if (!w) return null;
+      var l = parseFloat(box.style.left), t = parseFloat(box.style.top), bw = +box.dataset.w || 0, bh = +box.dataset.h || 0;
+      var e = document.createElement("div"); e.className = cls;
+      e.style.left = (l + bw / 2) + "px"; e.style.top = (t + bh / 2) + "px"; e.style.width = (Math.hypot(bw, bh) + 24) + "px";
+      e.style.setProperty("--a", Math.atan2(bh, bw) * 180 / Math.PI + "deg");
+      if (hold) e.style.animationDuration = hold + "ms";
+      w.appendChild(e); setTimeout(function () { e.remove(); }, (hold || 0) + 700);
+      return e;
     }
 
     function wake() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } }
@@ -269,13 +297,15 @@
             if (n.classList.contains("swarm-intro-box")) {
               // the box opens where its cursor was standing: that samurai draws and cuts
               var c = n._cursor || cursorAt(parseFloat(n.style.left), parseFloat(n.style.top));
-              if (c) { c.classList.add("slash"); c.classList.toggle("rev", n.classList.contains("is-unbuild")); n._samurai = c; }
+              // taking an element apart is a reverse slash; building is the strike (driven by data-step, above)
+              if (c && n.classList.contains("is-unbuild")) { c.classList.add("slash", "rev"); n._samurai = c; }
+              else if (c) { c._iaiBox = n; n._samurai = c; }
             }
           });
           m.removedNodes.forEach(function (n) { if (n.nodeType === 1 && n.classList && n.classList.contains("swarm-intro-cursor")) trail.delete(n); });
         } else if (m.attributeName === "class") {
           var t = m.target;
-          if (t.classList.contains("swarm-intro-box") && t.classList.contains("is-done") && t._samurai) { t._samurai.classList.remove("slash", "rev"); t._samurai = null; }   // sword back in its sheath
+          if (t.classList.contains("swarm-intro-box") && t.classList.contains("is-done") && t._samurai) { t._samurai.classList.remove("slash", "rev"); if (t._samurai._iaiBox === t) t._samurai._iaiBox = null; t._samurai = null; }   // sword back in its sheath
         } else if (m.attributeName === "data-swarm-intro-pending" && !m.target.hasAttribute("data-swarm-intro-pending")) cut(m.target);
       });
     }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ["class", "style", "data-swarm-intro-pending"] });

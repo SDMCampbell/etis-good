@@ -9,6 +9,8 @@
    Defenders rush any attacker that's mid-teardown: catching it cancels the attack, restores the element and knocks
    the attacker back, stunned. Otherwise defenders rebuild what was torn down. Extra states: "attacking" (on its way to
    tear something down), "defending" (chasing an attacker) and "stunned",
+   buildPause / revealPause (ms): a pause after the box opens, before the drag, and after the drag, before the element
+   appears; the cursor's data-step says which part of a build it's in ("aim", "drag", "reveal"), for a mode to animate,
    and type: false (never type text in; just fade it in) or "all" (type every text element in, however long), and returning rework(el) from swarmIntro(): one cursor takes a built element apart (the build in reverse, from
    its bottom-right corner back to the top-left), then after a short pause another cursor builds it again.
 MIT License
@@ -178,6 +180,13 @@ function swarmIntro(options = {}) {
         agents.push(agent);
         return agent;
     };
+    // etis-good patch: which part of a build a cursor is in, as data-step
+    function step(a, s) {
+        if (s)
+            a.el.dataset.step = s;
+        else
+            delete a.el.dataset.step;
+    }
     // etis-good patch: what each cursor is doing right now, readable from the page as data-state
     function setState(a, st) {
         if (a.state === st)
@@ -290,10 +299,17 @@ function swarmIntro(options = {}) {
         box.className = "swarm-intro-box";
         box._cursor = a.el;  // etis-good patch: lets a mode see which cursor opened the box
         box.style.cssText = `left:${r.x}px;top:${r.y}px`;
+        box.dataset.w = r.w;  // ...and how big it will be
+        box.dataset.h = r.h;
         const badge = document.createElement("span");
         badge.className = "swarm-intro-badge";
         box.appendChild(badge);
         world.appendChild(box);
+        if (options.buildPause) {
+            step(a, "aim");
+            await wait(options.buildPause);
+        }
+        step(a, "drag");
         const dragMs = (clamp(Math.hypot(r.w, r.h) * 1.05, 260, 720) * pace) / boost();
         const start = performance.now();
         const grow = () => {
@@ -307,6 +323,11 @@ function swarmIntro(options = {}) {
         };
         requestAnimationFrame(grow);
         await moveTo(a, r.x + r.w, r.y + r.h, dragMs);
+        if (options.revealPause && !stopped) {
+            step(a, "reveal");
+            await wait(options.revealPause);
+        }
+        step(a, "");
         if (stopped)
             return void box.remove();
         if (canType(el))
