@@ -31,7 +31,7 @@
     <p class="motion-choices"><button type="button" id="motionOn">play it anyway</button><span class="gate-only"> <button type="button" id="motionOff">show it without animation</button></span></p>
   </div>
   <nav class="modes" aria-label="Display mode">mode: <button type="button" data-mode="normal">normal</button> <button type="button" data-mode="samurai">samurai</button> <button type="button" data-mode="robot">robot</button> <button type="button" data-mode="wizard">wizard</button> <button type="button" data-mode="ninja">ninja</button>
-    <label class="swarm-size">swarm: <input type="range" id="swarmSize" min="1" max="30" step="1"> <output id="swarmSizeOut"></output></label>
+    <label class="swarm-size" title="How many in the swarm (1-30): click to type a number, or use the arrow keys">swarm: <input type="number" id="swarmSize" min="1" max="30" step="1" inputmode="numeric" aria-label="Swarm size, 1 to 30"></label>
     <label class="type-all"><input type="checkbox" id="typeAll"> type</label>
     <label class="type-all"><input type="checkbox" id="fightOn"> fight</label>
     <a class="game-link" href="fight_game.html">game →</a>
@@ -74,7 +74,7 @@
       if (MODE === "wizard") wizardMode();
       if (MODE === "ninja") ninjaMode();
       // Swarm size: swarm-intro takes its cursor count at start-up and can't add cursors to a running build,
-      // so changing the slider tears the current swarm down and rebuilds the page with the new count.
+      // so changing the number tears the current swarm down and rebuilds the page with the new count.
       var narrow = innerWidth < 768, size = narrow ? 8 : 14, intro = null;
 
       // What a cursor does when it has nothing to build (the swarm now stays on screen after the page is built).
@@ -159,7 +159,7 @@
         }
       };
       try { size = Math.min(30, +localStorage.getItem("swarmSize") || size); } catch (e) {}
-      var slider = document.getElementById("swarmSize"), out = document.getElementById("swarmSizeOut");
+      var sizeBox = document.getElementById("swarmSize");
       function launch(first) {
         slots = new Map();
         if (intro) intro.destroy();
@@ -205,9 +205,22 @@
         launch(false);
       };
       typeBox.onchange = function () { typeAll = typeBox.checked; try { localStorage.setItem("typeAll", typeAll ? "on" : "off"); } catch (e) {} launch(false); };
-      slider.value = size; out.textContent = size;
-      slider.oninput = function () { out.textContent = slider.value; };
-      slider.onchange = function () { size = +slider.value; try { localStorage.setItem("swarmSize", size); } catch (e) {} launch(false); };
+      // the swarm size: shown as a number you can click and edit. Enter (or clicking away) applies it, kept to 1-30;
+      // Esc or anything that isn't a number puts the old one back. The arrow keys step it and apply at once.
+      sizeBox.value = size;
+      function applySize() {
+        var v = Math.round(+sizeBox.value);
+        if (!sizeBox.value.trim() || !isFinite(v)) { sizeBox.value = size; return; }
+        v = Math.max(1, Math.min(30, v)); sizeBox.value = v;
+        if (v === size) return;
+        size = v; try { localStorage.setItem("swarmSize", size); } catch (e) {} launch(false);
+      }
+      sizeBox.onchange = applySize;
+      sizeBox.onkeydown = function (e) {
+        if (e.key === "Enter") { applySize(); sizeBox.blur(); }
+        else if (e.key === "Escape") { e.stopPropagation(); sizeBox.value = size; sizeBox.blur(); }
+      };
+      sizeBox.onfocus = function () { sizeBox.select(); };
       launch(true);
     }
   </script>
