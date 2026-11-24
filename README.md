@@ -91,3 +91,11 @@ Make music by spawning the swarm (`band.html`), linked from the music page as "m
 - **The players**: each kind of unit is a musician with its own rows: robots drum (kick, snare), cursors play bass, ninjas tick the hats, samurai stab chords, wizards play the lead. Use + and − to add or remove players (up to 4 of a kind). A part only sounds while it has at least one player; its rows dim otherwise, and the notes are kept.
 - **How they write**: every couple of seconds a free player builds a note in its rows, weighted towards where that sound usually falls (kick on the beat, snare on 2 and 4, chords off the beat), up to a size that grows with the number of players; after that it now and then takes a note apart so the part keeps changing. Between jobs the players walk along their rows with the playhead. Clicking a square has a player add or remove that note. Tempo, pause and "clear the notes" are in the header.
 - Built on the library's puppet mode: `order(agent, el, "unbuild")` and `remove(agent)` were added for it.
+
+## Swarm Sign (`/other`)
+
+A sign written by the swarm (`other.html`), linked as "other →" from the résumé, the game and the music pages.
+
+- **The board**: 59 x 15 pixels, two lines of a 5 x 7 pixel font (up to 10 characters a line; the second line is gold). The page works out which pixels the text needs; 24 units (every kind) each take the nearest pixel that's wrong, building the missing ones and taking apart the ones that shouldn't be lit, with their own animations. When the sign is right they line up underneath and rest.
+- **What it says**: by default the time and date (in the visitor's own time zone), so the swarm rewrites the changed digits every minute. Type a message (up to 20 characters: letters, numbers and `. , : ! ? ' - + / *`, where `*` is a heart) and the swarm rewrites the sign. The message goes into the address as `?say=...`, so "copy link" gives a link that opens with your message being written: e.g. `/other?say=HELLO+WORLD`.
+- With reduced motion, the sign just shows the text, without the swarm.
