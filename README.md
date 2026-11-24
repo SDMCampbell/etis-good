@@ -63,6 +63,13 @@ Run locally: `python -m http.server 8765`, then open http://localhost:8765.
 
 A separate page with no résumé content (`fight_game.html`), linked from the right of the "fight" toggle. It runs swarm-intro and all four figure modes at once: two swarms fight over a field of glowing code panels, each panel a swarm target.
 
-- **Spawning**: one row of buttons per side (cursor, samurai, robot, wizard, ninja; up to 14 a side). Units fly in from their side's edge. **Auto battle** keeps both sides spawning random units, the losing side a bit faster. **Reset** starts over.
-- **What units do, on their own** (the library's `war` option): rush any enemy on its way to tear down one of their team's panels (the clash knocks it back and costs it one of its 3 lives; at 0 it's deleted in a burst of glyphs), tear down enemy panels with their mode's teardown, and build empty panels in their team's colour with their mode's build (the samurai's iaijutsu, the robot's laser, the wizard's bolt, the ninja's shuriken). The meter at the top shows who holds how much of the field.
+- **The field**: a 24 x 12 grid of about 120 panels. Each side has a fortress that starts built in its colour (corner towers, brick walls with a gate facing the middle, a keep in the centre); between them is a mirrored no-man's-land of empty panels.
+- **Spawning**: one row of buttons per side (up to 18 a side); units march in from their own edge. **Auto battle** keeps both sides spawning (mostly fighters, a few sentinels and warders, the losing side a bit faster). **Reset** starts over.
+- **Roles** (the `traits` option; lives show as pips under each unit):
+  - **cursor**, swarmer (2 lives, fast): grabs empty panels first; defends nearby.
+  - **samurai**, duelist (4 lives, hits for 2): hunts enemy units, raiders first, and duels them with its iaijutsu; defends from far away.
+  - **robot**, sentinel (5 lives, slow): plants itself on one of its fortress panels (keep, then towers, then walls). That panel can't be torn down while it stands, and it lasers any enemy that comes close. To take the panel, an enemy has to beat it in a duel.
+  - **wizard**, warder (2 lives): holds a spot in its fortress and casts a ward circle; every one of its team's panels inside is shielded the same way.
+  - **ninja**, raider (2 lives, very fast): ignores the middle and goes for the enemy's keep and towers; dodges half of all interceptions and duels with a smoke blink.
+- **Everyone** also rushes enemies on their way to tear down their team's panels (a clash costs the raider lives equal to the defender's hits), tears down enemy panels with their mode's teardown, and builds empty panels with their mode's build. Shielded panels are outlined with a ◆. At 0 lives a unit is deleted in a burst of glyphs.
 - **How it fits together**: the library's `add({team, kind})` spawns a unit at any time; each mode script can be scoped to its own kind (`samuraiMode({ scoped: true })`, keyed on the cursor's `data-kind`), and every mode rule in `site.css` has a per-unit twin keyed on `data-kind` / `data-side`, so all the figures share one page in team colours.

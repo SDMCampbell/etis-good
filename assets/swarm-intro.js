@@ -204,7 +204,7 @@ function swarmIntro(options = {}) {
     const boost = () => options.war ? 1 : clamp(1 + queue.length / 12, 1, 3);   // etis-good patch: no rush in a war
     const moveTo = (a, x, y, ms) => {
         const dist = Math.hypot(x - a.x, y - a.y);
-        const d = ms !== null && ms !== void 0 ? ms : (clamp(dist * 0.95, 240, 840) * pace) / boost();
+        const d = ms !== null && ms !== void 0 ? ms : (clamp(dist * 0.95, 240, 840) * pace) / boost() / (a.speed || 1);   // etis-good patch: per-unit speed
         a.x = x;
         a.y = y;
         a.el.style.transition = `transform ${d}ms cubic-bezier(.45,.05,.25,1)`;
@@ -362,12 +362,13 @@ function swarmIntro(options = {}) {
         // etis-good patch (fight): a defender can call el._abort to stop the teardown part-way
         let abortedBy = null, abortNow;
         const aborted = new Promise((res) => (abortNow = res));
-        el._abort = (from) => { abortedBy = from || [a.x, a.y]; abortNow(); };
+        let abortPower = 1;
+        el._abort = (from, power) => { abortedBy = from || [a.x, a.y]; abortPower = power || 1; abortNow(); };
         setState(a, label || "moving");
         await Promise.race([moveTo(a, r.x + r.w, r.y + r.h), aborted]);
         if (stopped || abortedBy) {
             el._abort = null;
-            if (abortedBy) await knockedBack(a, abortedBy);
+            if (abortedBy) await knockedBack(a, abortedBy, abortPower);
             return abortedBy ? "aborted" : undefined;
         }
         setState(a, "unbuilding");
@@ -436,7 +437,7 @@ function swarmIntro(options = {}) {
             el.style.clipPath = clip;
             box.classList.add("is-done");
             setTimeout(() => box.remove(), 400);
-            await knockedBack(a, abortedBy);
+            await knockedBack(a, abortedBy, abortPower);
             return "aborted";
         }
         // gone: hide it the way the library hides anything not yet built, then put its text back underneath
@@ -459,9 +460,9 @@ function swarmIntro(options = {}) {
         const r = el.getBoundingClientRect();
         return r.bottom > 40 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth;
     };
-    async function knockedBack(a, from) {
-        if (options.war && --a.hp <= 0)
-            return kill(a);
+    async function knockedBack(a, from, power) {
+        if (options.war && hurt(a, power || 1))
+            return;
         const p = cursorPos(a);
         let dx = p[0] - from[0], dy = p[1] - from[1], d = Math.hypot(dx, dy) || 1;
         if (d < 1) { dx = 1; dy = 0; d = 1; }
@@ -542,8 +543,14 @@ function swarmIntro(options = {}) {
                 return;
             const p = cursorPos(foe), q = cursorPos(a), d = Math.hypot(p[0] - q[0], p[1] - q[1]);
             if (d < 34) {
+                if (options.war && foe.state === "attacking" && Math.random() < (TR(foe).dodge || 0)) {
+                    blink(foe);                           // gone in a puff of smoke: the chase goes on
+                    await wait(120);
+                    continue;
+                }
                 clash((p[0] + q[0]) / 2, (p[1] + q[1]) / 2 - 10);
-                el._abort(q);
+                strikeFx(a, p);
+                el._abort(q, TR(a).power || 1);
                 await wait(250);
                 return;
             }
@@ -560,6 +567,7 @@ function swarmIntro(options = {}) {
         box.dataset.side = a.team;
     }
     function kill(a) {
+        release(a);
         a.dead = true;
         setState(a, "dead");
         const i = agents.indexOf(a);
@@ -578,18 +586,170 @@ function swarmIntro(options = {}) {
         const a = spawn(o.x, o.y);
         a.team = o.team;
         a.kind = o.kind;
-        a.hp = o.hp || 3;
+        a.hp = o.hp || TR(a).hp || 3;
+        a.speed = TR(a).speed || 1;
+        a.el.dataset.hp = a.hp;
         a.el.dataset.kind = o.kind;
         a.el.dataset.side = o.team;
         run(a);
         return a;
     }
+    // Unit traits, from options.traits[kind]: role ("claim" | "hunt" | "guard" | "ward" | "raid"), hp, power (damage per
+    // hit), watch (how far it will go to stop a raid on its team's panels), speed, dodge (chance), ward (radius, px)
+    const TR = (a) => (options.traits && options.traits[a.kind]) || {};
+    const centre = (el) => {
+        const r = el.getBoundingClientRect();
+        return [r.left + window.scrollX + r.width / 2, r.top + window.scrollY + r.height / 2];
+    };
+    const owned = (el, team) => el.dataset.owner === team && !el.hasAttribute(PENDING);
+    // takes damage; true if that was the end of it
+    function hurt(a, dmg) {
+        a.hp -= dmg;
+        a.el.dataset.hp = Math.max(0, a.hp);
+        if (a.hp > 0)
+            return false;
+        kill(a);
+        return true;
+    }
+    // a hit that isn't an interrupted teardown: damage, and a shove away from the hitter
+    function hit(b, dmg, from) {
+        if (b.dead || hurt(b, dmg))
+            return;
+        const p = cursorPos(b), dx = p[0] - from[0], dy = p[1] - from[1], d = Math.hypot(dx, dy) || 1;
+        moveTo(b, p[0] + dx / d * 26, p[1] + dy / d * 18, 160);
+    }
+    function blink(b) {
+        const p = cursorPos(b);
+        moveTo(b, p[0] + rand(-110, 110), p[1] + rand(-70, 70), 1);
+    }
+    // the samurai's hits are its iaijutsu: samurai.js draws the strike when data-iai changes
+    function strikeFx(a, at) {
+        if (a.kind !== "samurai")
+            return;
+        a.el.dataset.iai = performance.now();
+        a.el.dataset.ix = at[0];
+        a.el.dataset.iy = at[1] - 12;
+    }
+    // who's protecting a panel: a guard standing on it, or a warder whose ward covers it
+    function shielder(el) {
+        const own = el.dataset.owner;
+        if (!own || el.hasAttribute(PENDING))
+            return null;
+        const g = el._guard;
+        if (g && !g.dead && g.post === el && g.state === "guarding")
+            return g;
+        const c = centre(el);
+        for (const w of agents) {
+            if (w.team !== own || w.state !== "warding" || !w.post)
+                continue;
+            const p = centre(w.post);
+            if (Math.hypot(p[0] - c[0], p[1] - c[1]) <= (TR(w).ward || 0))
+                return w;
+        }
+        return null;
+    }
+    if (options.war)
+        setInterval(() => targets.forEach((el) => {
+            const sh = shielder(el);
+            if (sh) el.dataset.shield = sh.kind;
+            else delete el.dataset.shield;
+        }), 250);
+    function release(a) {
+        if (a.post && a.post._guard === a)
+            a.post._guard = null;
+        a.post = null;
+        if (a.ring) { a.ring.remove(); a.ring = null; }
+        delete a.el.dataset.zap;
+    }
+    // Hold a post: a guard on one of its team's panels (keep first, then towers, walls...), a warder somewhere its ward
+    // doesn't overlap another's. A guard also lasers any enemy that comes close (robot.js draws data-zap as a beam).
+    async function hold(a, role) {
+        const t = TR(a);
+        if (a.post && !owned(a.post, a.team))
+            release(a);
+        if (!a.post) {
+            const me = cursorPos(a);
+            const posts = targets.filter((el) => owned(el, a.team) && !reworking.has(el) && (role !== "guard" || !el._guard || el._guard.dead)
+                && (role !== "ward" || !agents.some((w) => w !== a && w.team === a.team && w.post && TR(w).ward
+                    && Math.hypot(centre(w.post)[0] - centre(el)[0], centre(w.post)[1] - centre(el)[1]) < (t.ward || 0) * 1.4)))
+                .map((el) => { const c = centre(el); return { el, s: (+el.dataset.prio || 0) * 1000 - Math.hypot(c[0] - me[0], c[1] - me[1]) }; })
+                .sort((x, y) => y.s - x.s);
+            if (!posts.length)
+                return false;
+            a.post = posts[0].el;
+            if (role === "guard")
+                a.post._guard = a;
+        }
+        const c = centre(a.post), me = cursorPos(a);
+        if (Math.hypot(c[0] - me[0], c[1] - me[1]) > 6) {
+            setState(a, "moving");
+            if (a.ring) { a.ring.remove(); a.ring = null; }
+            await moveTo(a, c[0], c[1] + 6);
+            if (a.dead)
+                return true;
+        }
+        setState(a, role === "guard" ? "guarding" : "warding");
+        if (role === "ward" && !a.ring) {
+            a.ring = document.createElement("div");
+            a.ring.className = "war-ward";
+            a.ring.dataset.side = a.team;
+            a.ring.style.cssText = `left:${c[0]}px;top:${c[1]}px;width:${t.ward * 2}px;height:${t.ward * 2}px`;
+            world.appendChild(a.ring);
+        }
+        if (role === "guard") {
+            let foe = null, fd = 175;
+            agents.forEach((b) => { if (b.team !== a.team && !b.dead) { const p = cursorPos(b), d = Math.hypot(p[0] - c[0], p[1] - c[1]); if (d < fd) { fd = d; foe = b; } } });
+            if (foe) {
+                const p = cursorPos(foe), now = performance.now();
+                a.el.dataset.zap = now;
+                a.el.dataset.zx = p[0];
+                a.el.dataset.zy = p[1] - 12;
+                if (now > (a.zapT || 0)) {
+                    a.zapT = now + 1300;
+                    setTimeout(() => !a.dead && !foe.dead && hit(foe, 1, c), 90);
+                }
+            }
+            else
+                delete a.el.dataset.zap;
+        }
+        await wait(260);
+        return true;
+    }
+    // A duel: close in and trade blows. The defender always strikes back.
+    async function duel(a, b) {
+        setState(a, "duelling");
+        for (let i = 0; i < 16 && !stopped && !a.dead && !b.dead; i++) {
+            const p = cursorPos(b), q = cursorPos(a), d = Math.hypot(p[0] - q[0], p[1] - q[1]);
+            if (d < 30) {
+                if (Math.random() < (TR(b).dodge || 0)) {
+                    blink(b);
+                    await wait(150);
+                    return;
+                }
+                clash((p[0] + q[0]) / 2, (p[1] + q[1]) / 2 - 10);
+                strikeFx(a, p);
+                hit(b, TR(a).power || 1, q);
+                if (!b.dead) {
+                    strikeFx(b, q);
+                    if (hurt(a, TR(b).power || 1))
+                        return;
+                }
+                setState(a, "stunned");
+                await moveTo(a, q[0] - (p[0] - q[0]) / (d || 1) * 40, q[1] - (p[1] - q[1]) / (d || 1) * 24, 220);
+                a.restUntil = performance.now() + 600;
+                return;
+            }
+            const ms = clamp(d * .9, 120, 600);
+            moveTo(a, p[0], p[1], ms);
+            await wait(Math.min(ms, 120));
+        }
+    }
     async function warTurn(a) {
         if (performance.now() < (a.restUntil || 0))
             return false;                                // still stunned
-        const me = cursorPos(a);
+        const t = TR(a), me = cursorPos(a), role = t.role;
         // 1. stop an enemy on its way to tear down, or tearing down, one of ours
-        let foe = null, fd = 460;
+        let foe = null, fd = t.watch !== undefined ? t.watch : 460;
         agents.forEach((b) => {
             if (b.team === a.team || b.dead || !b.target || b.chasedBy || !b.target._abort || b.target.dataset.owner !== a.team)
                 return;
@@ -597,19 +757,50 @@ function swarmIntro(options = {}) {
             if (d < fd) { fd = d; foe = b; }
         });
         if (foe) {
+            release(a);
             foe.chasedBy = a;
             await intercept(a, foe);
             foe.chasedBy = null;
             return true;
         }
-        // 2. take a target that isn't ours: one of the few nearest, so the front lines stay messy
-        const open = targets.filter((t) => t.dataset.owner !== a.team && !reworking.has(t)).map((t) => {
-            const r = t.getBoundingClientRect();
-            return { t, d: Math.hypot(r.left + window.scrollX + r.width / 2 - me[0], r.top + window.scrollY + r.height / 2 - me[1]) };
-        }).sort((x, y) => x.d - y.d);
-        if (!open.length)
+        // 2. the unit's own job
+        if ((role === "guard" || role === "ward") && await hold(a, role))
+            return true;
+        if (role === "hunt") {
+            let prey = null, pd = 650;
+            agents.forEach((b) => {
+                if (b.team === a.team || b.dead)
+                    return;
+                const p = cursorPos(b), busy = b.state === "attacking" || b.state === "unbuilding" ? 220 : 0, d = Math.hypot(p[0] - me[0], p[1] - me[1]) - busy;
+                if (d < pd) { pd = d; prey = b; }
+            });
+            if (prey) {
+                await duel(a, prey);
+                return true;
+            }
+        }
+        // 3. a panel that isn't ours: swarmers prefer empty ones, raiders the enemy's most precious ones
+        let open = targets.filter((el) => el.dataset.owner !== a.team && !reworking.has(el));
+        if (role === "claim") {
+            const empty = open.filter((el) => !el.dataset.owner || el.hasAttribute(PENDING));
+            if (empty.length) open = empty;
+        }
+        if (role === "raid") {
+            const theirs = open.filter((el) => el.dataset.owner && !el.hasAttribute(PENDING));
+            if (theirs.length) open = theirs;
+        }
+        const scored = open.map((el) => {
+            const c = centre(el), d = Math.hypot(c[0] - me[0], c[1] - me[1]);
+            return { el, s: d - (role === "raid" ? (+el.dataset.prio || 0) * 350 : 0) };
+        }).sort((x, y) => x.s - y.s);
+        if (!scored.length)
             return false;
-        const el = open[Math.floor(Math.random() * Math.min(3, open.length))].t;
+        const el = scored[Math.floor(Math.random() * Math.min(3, scored.length))].el;
+        const sh = shielder(el);
+        if (sh) {                                         // protected: beat its protector first
+            await duel(a, sh);
+            return true;
+        }
         reworking.add(el);
         a.target = el;
         if (el.dataset.owner && !el.hasAttribute(PENDING)) {   // the enemy's: tear it down
