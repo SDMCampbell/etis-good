@@ -44,6 +44,12 @@
     @keyframes keep-pulse { 50% { filter: brightness(1.35); } }
     /* a panel under protection: a robot standing on it, or inside a wizard's ward */
     .chip[data-shield] { outline: 1px solid currentColor; outline-offset: 2px; }
+    /* armour: each pip is one more teardown before the piece falls; lost pips show as cracks */
+    .chip[data-armor]::before { position: absolute; left: 4px; bottom: 2px; font-size: 7px; letter-spacing: 1px; }
+    .chip[data-armor="1"]::before { content: "▮"; } .chip[data-armor="2"]::before { content: "▮▮"; }
+    .chip[data-armor="3"]::before { content: "▮▮▮"; } .chip[data-armor="4"]::before { content: "▮▮▮▮"; }
+    .chip.cracked { background-image: linear-gradient(115deg, transparent 46%, rgb(255 255 255 / .22) 47%, transparent 49%), linear-gradient(35deg, transparent 58%, rgb(255 255 255 / .16) 59%, transparent 61%); }
+    .chip.keep[data-shield="sealed"] { outline-style: double; outline-width: 3px; }
     .chip[data-shield]::after { content: "◆"; position: absolute; top: 1px; right: 3px; font-size: 8px; text-shadow: 0 0 6px currentColor; }
     .war-ward { position: absolute; margin: 0; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; border: 1px dashed var(--c); background: radial-gradient(circle, transparent 55%, color-mix(in srgb, var(--c) 14%, transparent)); animation: ward-spin 9s linear infinite, ward-in .5s ease-out; }
     .war-ward[data-side="g"] { --c: #39FF7A; } .war-ward[data-side="r"] { --c: #FF5C70; }
@@ -54,6 +60,16 @@
     .war .swarm-intro-cursor[data-hp="1"]::after { content: "■"; } .war .swarm-intro-cursor[data-hp="2"]::after { content: "■■"; }
     .war .swarm-intro-cursor[data-hp="3"]::after { content: "■■■"; } .war .swarm-intro-cursor[data-hp="4"]::after { content: "■■■■"; }
     .war .swarm-intro-cursor[data-hp="5"]::after { content: "■■■■■"; }
+    /* the end of a round: the loser's panels glitch and collapse; then both fortresses rise again */
+    .chip.collapse { animation: chip-collapse .5s ease-in forwards; }
+    @keyframes chip-collapse { 0% { transform: none; } 20% { transform: translate(-3px, 1px) skewX(8deg); filter: brightness(2.2); } 40% { transform: translate(3px, -1px) skewX(-6deg); }
+      100% { transform: translateY(14px) scaleY(.1); opacity: 0; } }
+    .chip.rise { animation: chip-rise .55s cubic-bezier(.2,.9,.3,1.2); }
+    @keyframes chip-rise { from { transform: scale(.4); opacity: 0; filter: brightness(2.5); } }
+    .rounds { color: var(--dim); white-space: nowrap; }
+    .rounds .gs, .rounds .rs { font-weight: 700; }
+    .caption { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; pointer-events: none; z-index: 3; font-size: 14px; letter-spacing: .3em; color: var(--hi); text-shadow: 0 0 10px #000; opacity: 0; transition: opacity .5s; }
+    .caption.on { opacity: 1; }
     .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 22px; padding: 0 18px 10px; color: var(--dim); font-size: 11.5px; position: relative; z-index: 2; }
     .legend b { color: var(--text); font-weight: 400; }
     .chip[data-owner="g"] { color: #9DFFB9; border-color: rgb(57 255 122 / .55); background: rgb(57 255 122 / .05); box-shadow: inset 0 0 18px rgb(57 255 122 / .12), 0 0 12px rgb(57 255 122 / .15); }
@@ -78,6 +94,7 @@
   <header class="war-top">
     <h1>SWARM WARS</h1>
     <div class="meter" aria-label="Territory"><b class="gs" id="gs">0</b><div class="bar"><div class="g" id="gbar"></div><div class="r" id="rbar"></div></div><b class="rs" id="rs">0</b></div>
+    <span class="rounds">rounds <span class="gs" id="gr">0</span> – <span class="rs" id="rr">0</span></span>
     <a href="./">← résumé</a>
   </header>
   <div class="war-controls">
@@ -95,7 +112,9 @@
     <span><b>robot</b> sentinel: holds a fortress panel, lasers anyone close</span>
     <span><b>wizard</b> warder: shields every panel in its ward</span>
     <span><b>ninja</b> raider: goes for the enemy keep, dodges half the time</span>
+    <span><b>to win</b>: take the enemy keep. it's sealed while its side holds two of its four towers, and armoured (▮ = one more hit)</span>
   </p>
+  <p class="caption" id="caption"></p>
   <p class="hint" id="hint">spawn units for either side. they fight on their own.</p>
 
   <script>window.MODE = "normal"; window.MOTION = true;</script>
@@ -147,9 +166,19 @@
         // samurai strike with the full iaijutsu: crouch first, sheathe before the panel appears
         buildPause: function (a) { return a.kind === "samurai" ? 330 : 0; },
         revealPause: function (a) { return a.kind === "samurai" ? 580 : 0; },
-        onDeath: burst });
+        onDeath: burst,
+        // a keep can't be touched while its side still holds two of its four towers
+        sealed: function (el) {
+          if (!el.classList.contains("keep") || !el.dataset.owner) return false;
+          return field.querySelectorAll('.chip.tower[data-start="' + el.dataset.start + '"][data-owner="' + el.dataset.start + '"]:not([data-swarm-intro-pending])').length >= 2;
+        } });
       // the fortresses start built, in their side's colour
-      field.querySelectorAll(".chip[data-start]").forEach(function (c) { c.dataset.owner = c.dataset.start; c.removeAttribute("data-swarm-intro-pending"); });
+      var ARMOR = { keep: 4, tower: 2 };
+      function arm(c) { var k = c.classList.contains("keep") ? "keep" : c.classList.contains("tower") ? "tower" : ""; if (k) c.dataset.armor = ARMOR[k]; c.classList.remove("cracked"); }
+      field.querySelectorAll(".chip[data-start]").forEach(function (c) { c.dataset.owner = c.dataset.start; c.removeAttribute("data-swarm-intro-pending"); arm(c); });
+      // a piece that's lost armour shows it
+      new MutationObserver(function (ms) { ms.forEach(function (m) { var c = m.target; var k = c.classList.contains("keep") ? 4 : 2; c.classList.toggle("cracked", +c.dataset.armor < k); }); })
+        .observe(field, { subtree: true, attributes: true, attributeFilter: ["data-armor"] });
 
       function burst(a, x, y) {
         var w = document.querySelector(".swarm-intro-world"); if (!w) return;
@@ -165,9 +194,72 @@
         w.appendChild(e); setTimeout(function () { e.remove(); }, 900);
       }
 
+      // ---------- rounds: take the enemy keep to win ----------
+      // When a keep falls: the loser's units are deleted and its panels collapse, the winner's swarm spells out the win
+      // across the field, then both fortresses rise again and the next round starts.
+      var keeps = { g: field.querySelector('.chip.keep[data-start="g"]'), r: field.querySelector('.chip.keep[data-start="r"]') };
+      var roundOver = false, rounds = { g: 0, r: 0 }, NAME = { g: "GREEN", r: "RED" };
+      setInterval(function () {
+        if (roundOver) return;
+        ["g", "r"].forEach(function (side) { if (!roundOver && keeps[side].dataset.owner !== side) victory(side === "g" ? "r" : "g"); });
+      }, 200);
+      function victory(win) {
+        var lose = win === "g" ? "r" : "g";
+        roundOver = true; rounds[win]++;
+        document.getElementById(win + "r").textContent = rounds[win];
+        swarm.pause(true);
+        swarm.wipe(lose);
+        var cap = document.getElementById("caption");
+        cap.textContent = NAME[lose].toLowerCase() + " keep has fallen · round " + (rounds.g + rounds.r);
+        cap.classList.add("on");
+        // the loser's panels glitch and collapse, one after another
+        var theirs = [].slice.call(field.querySelectorAll('.chip[data-owner="' + lose + '"]')).sort(function () { return Math.random() - .5; });
+        theirs.forEach(function (c, i) {
+          setTimeout(function () {
+            c.classList.add("collapse");
+            setTimeout(function () { c.setAttribute("data-swarm-intro-pending", ""); delete c.dataset.owner; c.classList.remove("collapse"); }, 500);
+          }, 300 + i * 28);
+        });
+        setTimeout(function () { swarm.form(letters(NAME[win], "WINS"), win); }, 900);
+        setTimeout(nextRound, 7200);
+      }
+      // points in the shape of two lines of text, filling the field, spaced so there are at most about 120
+      function letters(a, b) {
+        var r = field.getBoundingClientRect(), w = Math.round(r.width), h = Math.round(r.height);
+        var cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+        var g = cv.getContext("2d"), size = Math.min(h * .46, w / Math.max(a.length, b.length) * 1.5);
+        g.fillStyle = "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.font = "700 " + size + "px 'JetBrains Mono', monospace";
+        g.fillText(a, w / 2, h * .3); g.fillText(b, w / 2, h * .72);
+        var px = g.getImageData(0, 0, w, h).data, pts = [];
+        for (var step = 10; step < 60; step += 1) {
+          pts = [];
+          for (var y = step / 2; y < h; y += step) for (var x = step / 2; x < w; x += step)
+            if (px[(Math.round(y) * w + Math.round(x)) * 4 + 3] > 128) pts.push([r.left + scrollX + x, r.top + scrollY + y + 16]);
+          if (pts.length <= 230) break;
+        }
+        return pts;
+      }
+      function nextRound() {
+        swarm.clear();
+        document.getElementById("caption").classList.remove("on");
+        field.querySelectorAll(".chip").forEach(function (c) { c.setAttribute("data-swarm-intro-pending", ""); delete c.dataset.owner; delete c.dataset.shield; delete c.dataset.armor; });
+        // both fortresses rise again, from the keeps outwards
+        var fort = [].slice.call(field.querySelectorAll(".chip[data-start]")).sort(function (x, y) { return y.dataset.prio - x.dataset.prio; });
+        fort.forEach(function (c, i) {
+          setTimeout(function () {
+            c.dataset.owner = c.dataset.start; c.removeAttribute("data-swarm-intro-pending"); arm(c);
+            c.classList.add("rise"); setTimeout(function () { c.classList.remove("rise"); }, 600);
+          }, 200 + Math.floor(i / 2) * 45);
+        });
+        setTimeout(function () {
+          swarm.pause(false); roundOver = false;
+          if (autoT) ["g", "r", "g", "r", "g", "r"].forEach(function (s) { spawn(s, pick(s)); });
+        }, 400 + fort.length * 23);
+      }
+
       function count(side, kind) { return swarm.units().filter(function (a) { return a.team === side && (!kind || a.kind === kind); }).length; }
       function spawn(side, kind) {
-        if (count(side) >= CAP) return false;
+        if (roundOver || count(side) >= CAP) return false;
         var r = field.getBoundingClientRect();     // they march in from their own edge, level with their keep
         swarm.add({ team: side, kind: kind, x: scrollX + (side === "g" ? -24 : innerWidth + 24), y: scrollY + r.top + r.height * (.3 + Math.random() * .4) });
         document.getElementById("hint").classList.add("gone");
@@ -215,7 +307,7 @@
           var k = count(b.parentNode.dataset.side, b.dataset.kind); b.querySelector(".count").textContent = k ? "×" + k : "";
         });
       }, 250);
-      window.__war = { swarm: swarm, spawn: spawn, owned: owned };     // for tinkering in the console
+      window.__war = { swarm: swarm, spawn: spawn, owned: owned, victory: victory, rounds: rounds };     // for tinkering in the console
     })();
   </script>
 </body>

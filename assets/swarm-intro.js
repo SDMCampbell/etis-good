@@ -15,7 +15,12 @@
    (data-kind and data-side on the cursor and its boxes). Each one fights for the targets on its own: it rushes any
    enemy on its way to tear down one of its team's targets (catching it knocks it back and costs it a life; at 0 it's
    deleted, and onDeath(agent, x, y) is called), tears down the enemy's targets, and builds empty ones for its team
-   (data-owner on the target). buildPause / revealPause may also be functions of the agent,
+   (data-owner on the target). buildPause / revealPause may also be functions of the agent. For the end of a round:
+   pause(true|false) stops units starting anything new, wipe(team) deletes a team's units one after another,
+   data-armor on a target: how many more teardowns it takes before it falls (each one costs a point);
+   sealed(el) (an option) says a target can't be taken at all right now, e.g. a keep while its towers stand;
+   form(points, team) flies a team into formation at those page points (topping it up with extra cursors in the
+   team's colour, so a few survivors can still spell a word), and clear() removes every unit quietly,
    and type: false (never type text in; just fade it in) or "all" (type every text element in, however long), and returning rework(el) from swarmIntro(): one cursor takes a built element apart (the build in reverse, from
    its bottom-right corner back to the top-left), then after a short pause another cursor builds it again.
 MIT License
@@ -651,7 +656,8 @@ function swarmIntro(options = {}) {
     if (options.war)
         setInterval(() => targets.forEach((el) => {
             const sh = shielder(el);
-            if (sh) el.dataset.shield = sh.kind;
+            if (options.sealed && options.sealed(el)) el.dataset.shield = "sealed";
+            else if (sh) el.dataset.shield = sh.kind;
             else delete el.dataset.shield;
         }), 250);
     function release(a) {
@@ -744,6 +750,42 @@ function swarmIntro(options = {}) {
             await wait(Math.min(ms, 120));
         }
     }
+    let warPaused = false;
+    function wipe(team) {
+        agents.filter((a) => a.team === team && !a.dead).forEach((a, i) => setTimeout(() => !a.dead && kill(a), 60 + i * 110));
+    }
+    function clearAll() {
+        agents.slice().forEach((a) => {
+            release(a);
+            a.dead = true;
+            a.el.remove();
+        });
+        agents.length = 0;
+    }
+    function form(points, team) {
+        warPaused = true;
+        const squad = agents.filter((a) => a.team === team && !a.dead);
+        while (squad.length < points.length) {         // reinforcements, in the team's colour, from its own edge
+            const a = spawn(window.scrollX + (team === "g" ? -30 : window.innerWidth + 30), window.scrollY + rand(0, window.innerHeight));
+            a.team = team;
+            a.kind = "cursor";
+            a.hp = 1;
+            a.extra = true;
+            a.el.dataset.kind = "cursor";
+            a.el.dataset.side = team;
+            squad.push(a);
+        }
+        // the real units take the first places (shuffled, so the sprites are spread through the letters)
+        const order = points.map((p, i) => i).sort(() => Math.random() - .5);
+        squad.slice(0, points.length).forEach((a, i) => {
+            const p = points[order[i]];
+            release(a);
+            a.target = null;
+            setState(a, "victory");
+            moveTo(a, p[0], p[1], rand(900, 1700) * pace);
+        });
+        squad.slice(points.length).forEach((a) => kill(a));
+    }
     async function warTurn(a) {
         if (performance.now() < (a.restUntil || 0))
             return false;                                // still stunned
@@ -780,7 +822,7 @@ function swarmIntro(options = {}) {
             }
         }
         // 3. a panel that isn't ours: swarmers prefer empty ones, raiders the enemy's most precious ones
-        let open = targets.filter((el) => el.dataset.owner !== a.team && !reworking.has(el));
+        let open = targets.filter((el) => el.dataset.owner !== a.team && !reworking.has(el) && !(options.sealed && options.sealed(el)));
         if (role === "claim") {
             const empty = open.filter((el) => !el.dataset.owner || el.hasAttribute(PENDING));
             if (empty.length) open = empty;
@@ -805,7 +847,11 @@ function swarmIntro(options = {}) {
         a.target = el;
         if (el.dataset.owner && !el.hasAttribute(PENDING)) {   // the enemy's: tear it down
             const res = await unbuild(a, el, "attacking");
-            if (res === "done")
+            if (res === "done" && +el.dataset.armor > 0) {  // armour takes the hit: it's back, one crack worse
+                el.dataset.armor = +el.dataset.armor - 1;
+                el.removeAttribute(PENDING);
+            }
+            else if (res === "done")
                 delete el.dataset.owner;
         }
         else {                                            // empty: build it for our team
@@ -908,8 +954,12 @@ function swarmIntro(options = {}) {
         while (!stopped) {
             // etis-good patch: in a war, each unit fights for its team until it's deleted
             if (options.war) {
-                if (a.dead)
+                if (a.dead || a.extra)
                     return;
+                if (warPaused) {
+                    await wait(150);
+                    continue;
+                }
                 a.working = true;
                 const did = await warTurn(a);
                 a.working = false;
@@ -1043,7 +1093,11 @@ function swarmIntro(options = {}) {
         skip,
         rework,
         add,
-        units: () => agents.slice(),
+        units: () => agents.filter((a) => !a.extra),
+        pause: (v) => { warPaused = !!v; },
+        wipe,
+        form,
+        clear: clearAll,
         destroy() {
             skip();
             cleanup();
