@@ -61,7 +61,7 @@ Run locally: `python -m http.server 8765`, then open http://localhost:8765.
 
 ## Swarm Wars (`/fight_game`)
 
-A separate page with no résumé content (`fight_game.html`), linked from the right of the "fight" toggle. It runs swarm-intro and all four figure modes at once: two swarms fight over a field of glowing code panels, each panel a swarm target.
+A separate page with no résumé content (`fight_game.html`), in the page menu. It runs swarm-intro and all four figure modes at once: two swarms fight over a field of glowing code panels, each panel a swarm target.
 
 - **The field**: a 24 x 12 grid of about 120 panels. Each side has a fortress that starts built in its colour (corner towers, brick walls with a gate facing the middle, a keep in the centre); between them is a mirrored no-man's-land of empty panels.
 - **Spawning**: one row of buttons per side (up to 18 a side); units march in from their own edge. **Auto battle** keeps both sides spawning (mostly fighters, a few sentinels and warders, the losing side a bit faster). **Reset** starts over.
@@ -77,7 +77,7 @@ A separate page with no résumé content (`fight_game.html`), linked from the ri
 
 ## Swarm Music (`/music`)
 
-A music visualizer played by the swarm (`music.html`), linked as "music →" in the top bar.
+A music visualizer played by the swarm (`music.html`), in the page menu.
 
 - **Sound sources**: a built-in demo beat (a 16-bar loop synthesised in the page with Web Audio, so there's nothing to download or license), your own audio file (drag it anywhere onto the page, or use "choose a file"; it's played locally and never uploaded), or the microphone (analysed but not played back). Sound only starts after a click, as browsers require.
 - **The fast layer**: 24 frequency bands (40 Hz to 14 kHz, low to high from left to right) by 10 levels, lit every frame straight from an `AnalyserNode`. Green is bass, gold is mids, cyan is highs.
@@ -85,17 +85,19 @@ A music visualizer played by the swarm (`music.html`), linked as "music →" in 
 
 ## Swarm Band (`/band`)
 
-Make music by spawning the swarm (`band.html`), linked from the music page as "make music →".
+Make music by spawning the swarm (`band.html`), in the page menu as "make music".
 
 - **The grid**: a 16-step sequencer, one row per sound, with a playhead sweeping left to right. A built note sounds when the playhead reaches it (Web Audio, all synthesised; the bass and chords follow a 4-bar cycle of A minor, A minor, F, G, and the lead stays on the A minor pentatonic so any pattern fits).
 - **The players**: each kind of unit is a musician with its own rows: robots drum (kick, snare), cursors play bass, ninjas tick the hats, samurai stab chords, wizards play the lead. Use + and − to add or remove players (up to 4 of a kind). A part only sounds while it has at least one player; its rows dim otherwise, and the notes are kept.
 - **How they write**: every couple of seconds a free player builds a note in its rows, weighted towards where that sound usually falls (kick on the beat, snare on 2 and 4, chords off the beat), up to a size that grows with the number of players; after that it now and then takes a note apart so the part keeps changing. Between jobs the players walk along their rows with the playhead. Clicking a square has a player add or remove that note. Tempo, pause and "clear the notes" are in the header.
 - Built on the library's puppet mode: `order(agent, el, "unbuild")` and `remove(agent)` were added for it.
 
-## Swarm Sign (`/other`)
+## Swarm Sign (`/signs`)
 
-A sign written by the swarm (`other.html`), linked as "other →" from the résumé, the game and the music pages.
+A sign written by the swarm (`signs.html`; the old `/other` address redirects here, message included).
 
 - **The board**: 59 x 15 pixels, two lines of a 5 x 7 pixel font (up to 10 characters a line; the second line is gold). The page works out which pixels the text needs; 24 units (every kind) each take the nearest pixel that's wrong, building the missing ones and taking apart the ones that shouldn't be lit, with their own animations. When the sign is right they line up underneath and rest.
-- **What it says**: by default the time and date (in the visitor's own time zone), so the swarm rewrites the changed digits every minute. Type a message (up to 20 characters: letters, numbers and `. , : ! ? ' - + / *`, where `*` is a heart) and the swarm rewrites the sign. The message goes into the address as `?say=...`, so "copy link" gives a link that opens with your message being written: e.g. `/other?say=HELLO+WORLD`.
+- **What it says**: by default the time and date (in the visitor's own time zone), so the swarm rewrites the changed digits every minute. Type a message (up to 20 characters: letters, numbers and `. , : ! ? ' - + / *`, where `*` is a heart) and the swarm rewrites the sign. The message goes into the address as `?say=...`, so "copy link" gives a link that opens with your message being written: e.g. `/signs?say=HELLO+WORLD`.
 - With reduced motion, the sign just shows the text, without the swarm.
+
+**Page menu**: every page has a "more" dropdown in its top right (`assets/menu.js`) listing the site's pages: résumé, game, music, make music, signs.

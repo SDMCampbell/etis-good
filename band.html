@@ -43,7 +43,7 @@
     .band .swarm-intro-cursor[data-kind="cursor"], .band .swarm-intro-box[data-kind="cursor"] { --swarm-intro-fg: #5BC8FF; }
     .band .swarm-intro-cursor[data-kind="robot"], .band .swarm-intro-box[data-kind="robot"] { --swarm-intro-fg: #39FF7A; }
     .band .swarm-intro-cursor[data-kind="cursor"] { filter: drop-shadow(0 0 4px var(--swarm-intro-fg)); }
-    .cover { position: fixed; inset: 0; z-index: 2147483647; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; text-align: center; background: rgb(5 8 6 / .86); }
+    .cover { position: fixed; inset: 0; z-index: 2147483646; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; text-align: center; background: rgb(5 8 6 / .86); }
     .cover[hidden] { display: none; }
     .cover h2 { margin: 0; font-size: clamp(26px, 5vw, 48px); letter-spacing: .16em; color: var(--hi); }
     .cover p { margin: 0; max-width: 36em; color: var(--text); font-size: clamp(14px, 1.6vw, 17px); line-height: 1.6; }
@@ -58,7 +58,7 @@
     <button type="button" id="playBtn">pause</button>
     <label>tempo <input type="number" id="bpm" min="60" max="180" value="110" aria-label="Tempo in beats per minute"></label>
     <button type="button" id="clearBtn">clear the notes</button>
-    <span class="links"><a href="music.html">visualizer →</a><a href="other.html">other →</a><a href="./">← résumé</a></span>
+    <span class="site-menu-slot" data-here="band"></span>
   </header>
   <div class="players" id="players" aria-label="The band"></div>
   <main id="field" aria-label="The sequencer: 16 steps across, one row per sound"></main>
@@ -72,6 +72,7 @@
 
   <script>window.MODE = "normal"; window.MOTION = !matchMedia("(prefers-reduced-motion: reduce)").matches;</script>
   <script src="assets/matrix.js"></script>
+  <script src="assets/menu.js"></script>
   <script src="assets/swarm-intro.js"></script>
   <script src="assets/samurai.js"></script>
   <script src="assets/robot.js"></script>

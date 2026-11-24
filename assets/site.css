@@ -189,6 +189,20 @@ html.samurai .iai-cut, .war .iai-cut { position: absolute; height: 3px; pointer-
   box-shadow: 0 0 8px #C8F7C5, 0 0 18px rgb(57 255 122 / .65); animation: iai-cut .55s cubic-bezier(.2,.9,.3,1) forwards; }
 @keyframes iai-cut { 0% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--a)) scaleX(.95) scaleY(1.6); } 25% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--a)) scaleX(1.15) scaleY(1); }
   100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a)) scaleX(1.6) scaleY(.25); } }
-}
 
-.modes .game-link { margin-left: 12px; color: var(--link); white-space: nowrap; }
+/* the page menu (assets/menu.js): "more" in the top right of every page, opening a list of the site's pages */
+.site-menu { position: relative; display: inline-block; margin-left: 12px; z-index: 2147483647; }
+.m-top .site-menu, .b-top .site-menu, .s-top .site-menu, .war-top .site-menu { margin-left: auto; }
+/* the start screens on the music pages sit under the header, so the menu still works there */
+.m-top, .b-top { z-index: 2147483647 !important; }
+.site-menu summary { list-style: none; cursor: pointer; color: var(--link); white-space: nowrap; padding: 2px 4px; border-bottom: 1px dashed currentColor; user-select: none; }
+.site-menu summary::-webkit-details-marker { display: none; }
+.site-menu summary::after { content: " ▾"; font-size: .85em; }
+.site-menu[open] summary::after { content: " ▴"; }
+.site-menu summary:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+.site-menu ul { position: absolute; right: 0; top: calc(100% + 8px); margin: 0; padding: 6px 0; list-style: none; min-width: 13ch; text-align: left;
+  background: #070b08; border: 1px solid rgb(57 255 122 / .4); border-radius: 4px; box-shadow: 0 10px 30px rgb(0 0 0 / .6), 0 0 14px rgb(57 255 122 / .12); }
+.site-menu a { display: block; padding: 7px 16px; color: var(--text); text-decoration: none; white-space: nowrap; }
+.site-menu a:hover, .site-menu a:focus-visible { color: var(--accent); background: rgb(57 255 122 / .08); outline: none; }
+.site-menu a[aria-current="page"] { color: var(--accent); }
+.site-menu a[aria-current="page"]::before { content: "› "; margin-left: -1.1ch; }
