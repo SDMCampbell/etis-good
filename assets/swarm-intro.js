@@ -11,6 +11,11 @@
    tear something down), "defending" (chasing an attacker) and "stunned",
    buildPause / revealPause (ms): a pause after the box opens, before the drag, and after the drag, before the element
    appears; the cursor's data-step says which part of a build it's in ("aim", "drag", "reveal"), for a mode to animate,
+   war: true, for the Swarm Wars game page: no swarm at the start; units are added with add({x, y, team, kind, hp})
+   (data-kind and data-side on the cursor and its boxes). Each one fights for the targets on its own: it rushes any
+   enemy on its way to tear down one of its team's targets (catching it knocks it back and costs it a life; at 0 it's
+   deleted, and onDeath(agent, x, y) is called), tears down the enemy's targets, and builds empty ones for its team
+   (data-owner on the target). buildPause / revealPause may also be functions of the agent,
    and type: false (never type text in; just fade it in) or "all" (type every text element in, however long), and returning rework(el) from swarmIntro(): one cursor takes a built element apart (the build in reverse, from
    its bottom-right corner back to the top-left), then after a short pause another cursor builds it again.
 MIT License
@@ -196,7 +201,7 @@ function swarmIntro(options = {}) {
     }
     // Speeds up when a fast scroll leaves a long backlog
     const queue = [];
-    const boost = () => clamp(1 + queue.length / 12, 1, 3);
+    const boost = () => options.war ? 1 : clamp(1 + queue.length / 12, 1, 3);   // etis-good patch: no rush in a war
     const moveTo = (a, x, y, ms) => {
         const dist = Math.hypot(x - a.x, y - a.y);
         const d = ms !== null && ms !== void 0 ? ms : (clamp(dist * 0.95, 240, 840) * pace) / boost();
@@ -301,13 +306,15 @@ function swarmIntro(options = {}) {
         box.style.cssText = `left:${r.x}px;top:${r.y}px`;
         box.dataset.w = r.w;  // ...and how big it will be
         box.dataset.h = r.h;
+        tagBox(a, box);
         const badge = document.createElement("span");
         badge.className = "swarm-intro-badge";
         box.appendChild(badge);
         world.appendChild(box);
-        if (options.buildPause) {
+        const bp = typeof options.buildPause === "function" ? options.buildPause(a) : options.buildPause;
+        if (bp) {
             step(a, "aim");
-            await wait(options.buildPause);
+            await wait(bp);
         }
         step(a, "drag");
         const dragMs = (clamp(Math.hypot(r.w, r.h) * 1.05, 260, 720) * pace) / boost();
@@ -323,13 +330,15 @@ function swarmIntro(options = {}) {
         };
         requestAnimationFrame(grow);
         await moveTo(a, r.x + r.w, r.y + r.h, dragMs);
-        if (options.revealPause && !stopped) {
+        const rp = typeof options.revealPause === "function" ? options.revealPause(a) : options.revealPause;
+        if (rp && !stopped) {
             step(a, "reveal");
-            await wait(options.revealPause);
+            await wait(rp);
         }
         step(a, "");
         if (stopped)
             return void box.remove();
+        el._by = a.el;  // etis-good patch: who built it, so only that unit's mode celebrates
         if (canType(el))
             await typeIn(a, el);
         else {
@@ -363,7 +372,8 @@ function swarmIntro(options = {}) {
         }
         setState(a, "unbuilding");
         const box = document.createElement("div");
-        box.className = "swarm-intro-box is-unbuild" + (label === "attacking" ? " is-attack" : "");
+        box.className = "swarm-intro-box is-unbuild" + (label === "attacking" && !options.war ? " is-attack" : "");
+        tagBox(a, box);
         box._cursor = a.el;
         box.style.cssText = `left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px`;
         const badge = document.createElement("span");
@@ -450,6 +460,8 @@ function swarmIntro(options = {}) {
         return r.bottom > 40 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth;
     };
     async function knockedBack(a, from) {
+        if (options.war && --a.hp <= 0)
+            return kill(a);
         const p = cursorPos(a);
         let dx = p[0] - from[0], dy = p[1] - from[1], d = Math.hypot(dx, dy) || 1;
         if (d < 1) { dx = 1; dy = 0; d = 1; }
@@ -540,6 +552,80 @@ function swarmIntro(options = {}) {
             await wait(Math.min(ms, 120));
         }
     }
+    /* etis-good patch: war. Every unit does everything, for its own team. */
+    function tagBox(a, box) {
+        if (!a.kind)
+            return;
+        box.dataset.kind = a.kind;
+        box.dataset.side = a.team;
+    }
+    function kill(a) {
+        a.dead = true;
+        setState(a, "dead");
+        const i = agents.indexOf(a);
+        if (i >= 0)
+            agents.splice(i, 1);
+        const p = cursorPos(a);
+        if (options.onDeath)
+            options.onDeath(a, p[0], p[1]);
+        a.el.style.transition = "opacity .25s";
+        a.el.style.opacity = "0";
+        setTimeout(() => a.el.remove(), 300);
+    }
+    function add(o) {
+        if (stopped)
+            return null;
+        const a = spawn(o.x, o.y);
+        a.team = o.team;
+        a.kind = o.kind;
+        a.hp = o.hp || 3;
+        a.el.dataset.kind = o.kind;
+        a.el.dataset.side = o.team;
+        run(a);
+        return a;
+    }
+    async function warTurn(a) {
+        if (performance.now() < (a.restUntil || 0))
+            return false;                                // still stunned
+        const me = cursorPos(a);
+        // 1. stop an enemy on its way to tear down, or tearing down, one of ours
+        let foe = null, fd = 460;
+        agents.forEach((b) => {
+            if (b.team === a.team || b.dead || !b.target || b.chasedBy || !b.target._abort || b.target.dataset.owner !== a.team)
+                return;
+            const p = cursorPos(b), d = Math.hypot(p[0] - me[0], p[1] - me[1]);
+            if (d < fd) { fd = d; foe = b; }
+        });
+        if (foe) {
+            foe.chasedBy = a;
+            await intercept(a, foe);
+            foe.chasedBy = null;
+            return true;
+        }
+        // 2. take a target that isn't ours: one of the few nearest, so the front lines stay messy
+        const open = targets.filter((t) => t.dataset.owner !== a.team && !reworking.has(t)).map((t) => {
+            const r = t.getBoundingClientRect();
+            return { t, d: Math.hypot(r.left + window.scrollX + r.width / 2 - me[0], r.top + window.scrollY + r.height / 2 - me[1]) };
+        }).sort((x, y) => x.d - y.d);
+        if (!open.length)
+            return false;
+        const el = open[Math.floor(Math.random() * Math.min(3, open.length))].t;
+        reworking.add(el);
+        a.target = el;
+        if (el.dataset.owner && !el.hasAttribute(PENDING)) {   // the enemy's: tear it down
+            const res = await unbuild(a, el, "attacking");
+            if (res === "done")
+                delete el.dataset.owner;
+        }
+        else {                                            // empty: build it for our team
+            el.dataset.owner = a.team;
+            await build(a, el);
+            el.removeAttribute(PENDING);
+        }
+        a.target = null;
+        reworking.delete(el);
+        return true;
+    }
     // Jobs handed to one particular cursor (the nearest free one), or queued for the next to come free
     const jobs = [];
     const reworking = new Set();
@@ -586,7 +672,7 @@ function swarmIntro(options = {}) {
             queue.push(e.target);
         });
         // Call in reinforcements for a long backlog, like a fast scroll
-        while (queue.length > agents.length * 2 && agents.length < maxCursors) {
+        while (!options.war && queue.length > agents.length * 2 && agents.length < maxCursors) {
             run(spawn(window.scrollX + rand(0, window.innerWidth), window.scrollY - 30));
         }
     }, { threshold: 0 });
@@ -629,6 +715,19 @@ function swarmIntro(options = {}) {
     };
     async function run(a) {
         while (!stopped) {
+            // etis-good patch: in a war, each unit fights for its team until it's deleted
+            if (options.war) {
+                if (a.dead)
+                    return;
+                a.working = true;
+                const did = await warTurn(a);
+                a.working = false;
+                if (a.dead)
+                    return;
+                if (!did)
+                    await wander(a);
+                continue;
+            }
             // etis-good patch: a rework job handed to this cursor (or waiting for anyone) comes first
             const job = a.job || jobs.shift();
             if (job) {
@@ -677,7 +776,7 @@ function swarmIntro(options = {}) {
         }
     }
     /* ---------------- teardown ---------------- */
-    const onKey = (e) => e.key === "Escape" && skip();
+    const onKey = (e) => e.key === "Escape" && !options.war && skip();
     window.addEventListener("keydown", onKey);
     let finished = false;
     function finish(fast) {
@@ -752,6 +851,8 @@ function swarmIntro(options = {}) {
     return {
         skip,
         rework,
+        add,
+        units: () => agents.slice(),
         destroy() {
             skip();
             cleanup();

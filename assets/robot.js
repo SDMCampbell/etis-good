@@ -94,8 +94,12 @@
     s.g.setAttribute("transform", "translate(" + s.ox.toFixed(1) + " " + s.oy.toFixed(1) + ") scale(" + s.face + " 1)");
   }
 
-  window.robotMode = function () {
-    var root = document.documentElement; root.classList.add("robot");
+  // opts.scoped: animate only cursors with data-kind="robot" (the Swarm Wars page runs every mode at once);
+  // otherwise this is the page's one mode and every cursor is a robot
+  window.robotMode = function (opts) {
+    var SEL = opts && opts.scoped ? '.swarm-intro-cursor[data-kind="robot"]' : null;
+    function mine(c) { return !SEL || !!(c && c.matches && c.matches(SEL)); }
+    var root = document.documentElement; if (!SEL) root.classList.add("robot");
     var sprites = new Map(), raf = 0, last = performance.now();
     function posOf(c) {
       var v = /matrix\(([^)]+)\)/.exec(getComputedStyle(c).transform);
@@ -104,7 +108,7 @@
     function tick(now) {
       raf = 0;
       var dt = Math.max(1, now - last); last = now;
-      document.querySelectorAll(".swarm-intro-cursor").forEach(function (c) {
+      document.querySelectorAll(SEL || ".swarm-intro-cursor").forEach(function (c) {
         var s = sprites.get(c); if (!s) { s = makeSprite(c); sprites.set(c, s); }
         var p = posOf(c); if (!p) return;
         if (s.x !== null) {
@@ -132,7 +136,7 @@
       });
       collide(now, dt, document.querySelector(".swarm-intro-world"));
       sprites.forEach(function (s, c) { if (!c.isConnected) sprites.delete(c); else render(s, now); });
-      if (document.querySelector(".swarm-intro-cursor")) raf = requestAnimationFrame(tick);
+      if (document.querySelector(SEL || ".swarm-intro-cursor")) raf = requestAnimationFrame(tick);
     }
     function wake() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } }
 
@@ -199,6 +203,7 @@
             if (n.classList.contains("swarm-intro-cursor")) wake();
             if (n.classList.contains("swarm-intro-box")) {
               var c = n._cursor || cursorAt(parseFloat(n.style.left), parseFloat(n.style.top));
+              if (!mine(c)) c = null;
               if (c) { c._box = n; n._robot = c; }
             }
           });
@@ -206,7 +211,7 @@
         } else if (m.attributeName === "class") {
           var t = m.target;
           if (t.classList.contains("swarm-intro-box") && t.classList.contains("is-done") && t._robot) { t._robot._box = null; t._robot = null; }
-        } else if (m.attributeName === "data-swarm-intro-pending" && !m.target.hasAttribute("data-swarm-intro-pending")) blasted(m.target);
+        } else if (m.attributeName === "data-swarm-intro-pending" && !m.target.hasAttribute("data-swarm-intro-pending") && (!SEL || mine(m.target._by))) blasted(m.target);
       });
     }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ["class", "style", "data-swarm-intro-pending"] });
     wake();

@@ -146,8 +146,12 @@
     s.g.setAttribute("transform", "translate(" + s.ox.toFixed(1) + " " + s.oy.toFixed(1) + ") scale(" + s.face + " 1)");
   }
 
-  window.samuraiMode = function () {
-    var root = document.documentElement; root.classList.add("samurai");
+  // opts.scoped: animate only cursors with data-kind="samurai" (the Swarm Wars page runs every mode at once);
+  // otherwise this is the page's one mode and every cursor is a samurai
+  window.samuraiMode = function (opts) {
+    var SEL = opts && opts.scoped ? '.swarm-intro-cursor[data-kind="samurai"]' : null;
+    function mine(c) { return !SEL || !!(c && c.matches && c.matches(SEL)); }
+    var root = document.documentElement; if (!SEL) root.classList.add("samurai");
     var sprites = new Map(), raf = 0, last = performance.now();
     function posOf(c) {
       var m = getComputedStyle(c).transform, v = /matrix\(([^)]+)\)/.exec(m);
@@ -156,7 +160,7 @@
     function tick(now) {
       raf = 0;
       var dt = Math.max(1, now - last); last = now;
-      document.querySelectorAll(".swarm-intro-cursor").forEach(function (c) {
+      document.querySelectorAll(SEL || ".swarm-intro-cursor").forEach(function (c) {
         var s = sprites.get(c); if (!s) { s = makeSprite(c); sprites.set(c, s); }
         var p = posOf(c); if (!p) return;
         if (s.x !== null) {
@@ -197,7 +201,7 @@
       });
       collide(now, dt, document.querySelector(".swarm-intro-world"));
       sprites.forEach(function (s, c) { if (!c.isConnected) sprites.delete(c); else render(s, now); });
-      if (document.querySelector(".swarm-intro-cursor")) raf = requestAnimationFrame(tick);
+      if (document.querySelector(SEL || ".swarm-intro-cursor")) raf = requestAnimationFrame(tick);
     }
     // collisions: swarm-intro decides where every cursor goes, so the samurai can't change their real routes.
     // Instead each figure carries a small offset from its cursor: overlapping figures are shoved apart, a fast
@@ -297,6 +301,7 @@
             if (n.classList.contains("swarm-intro-box")) {
               // the box opens where its cursor was standing: that samurai draws and cuts
               var c = n._cursor || cursorAt(parseFloat(n.style.left), parseFloat(n.style.top));
+              if (!mine(c)) c = null;
               // taking an element apart is a reverse slash; building is the strike (driven by data-step, above)
               if (c && n.classList.contains("is-unbuild")) { c.classList.add("slash", "rev"); n._samurai = c; }
               else if (c) { c._iaiBox = n; n._samurai = c; }
@@ -306,7 +311,7 @@
         } else if (m.attributeName === "class") {
           var t = m.target;
           if (t.classList.contains("swarm-intro-box") && t.classList.contains("is-done") && t._samurai) { t._samurai.classList.remove("slash", "rev"); if (t._samurai._iaiBox === t) t._samurai._iaiBox = null; t._samurai = null; }   // sword back in its sheath
-        } else if (m.attributeName === "data-swarm-intro-pending" && !m.target.hasAttribute("data-swarm-intro-pending")) cut(m.target);
+        } else if (m.attributeName === "data-swarm-intro-pending" && !m.target.hasAttribute("data-swarm-intro-pending") && (!SEL || mine(m.target._by))) cut(m.target);
       });
     }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ["class", "style", "data-swarm-intro-pending"] });
     wake();

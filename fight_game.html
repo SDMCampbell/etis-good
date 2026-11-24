@@ -3,58 +3,170 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cursor Wars · Samuel Campbell</title>
-  <meta name="description" content="A small auto-battler: spawn cursors, samurai, robots, wizards and ninjas, and watch them fight.">
+  <title>Swarm Wars · Samuel Campbell</title>
+  <meta name="description" content="Spawn samurai, robots, wizards, ninjas and plain cursors, and watch two swarms fight over the screen.">
   <meta name="theme-color" content="#050806">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
   <style>
-    :root { --bg: #050806; --text: #C8F7C5; --dim: #7DB878; --hi: #EAFFE7; --accent: #39FF7A; --link: #8CFFB0; --red: #FF5C70; }
-    * { box-sizing: border-box; }
-    html { background: var(--bg); }
-    body { margin: 0 auto; max-width: 1000px; padding: 16px 20px 40px; color: var(--text); font: 13.5px/1.6 'JetBrains Mono', ui-monospace, monospace; }
-    a { color: var(--link); }
-    header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 20px; }
-    h1 { margin: 0; font-size: 20px; letter-spacing: .08em; color: var(--hi); }
-    header p { margin: 0; color: var(--dim); }
-    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0; }
-    button { font: inherit; color: var(--text); background: none; border: 1px solid rgb(57 255 122 / .35); border-radius: 4px; padding: 6px 10px; min-height: 36px; cursor: pointer; }
-    button:hover { border-color: var(--accent); }
-    button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: rgb(57 255 122 / .08); }
-    button.poor { opacity: .45; }
-    button span { color: var(--accent); }
-    kbd { font: inherit; color: var(--dim); }
-    #hud { margin: 0; white-space: pre-wrap; color: var(--accent); min-height: 1.6em; }
-    canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border: 1px solid rgb(57 255 122 / .3); cursor: crosshair; touch-action: manipulation; }
-    table { border-collapse: collapse; width: 100%; margin-top: 14px; color: var(--dim); font-size: 12.5px; }
-    th, td { text-align: left; padding: 3px 12px 3px 0; vertical-align: top; }
-    thead th { color: var(--text); border-bottom: 1px solid rgb(57 255 122 / .2); }
-    tbody th { color: var(--hi); font-weight: 400; }
-    label { color: var(--dim); }
-    .spacer { flex: 1; }
+    /* Swarm Wars: two swarms (built on swarm-intro, with every mode's figures at once) fight over a field of panels.
+       Each panel is a swarm target; a team claims an empty one by building it, and takes the enemy's by tearing it down. */
+    html, body { height: 100%; overflow: hidden; }
+    body.war { display: flex; flex-direction: column; font-size: 13px; }
+    .war-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding: 12px 18px 8px; position: relative; z-index: 2; }
+    .war-top h1 { margin: 0; font-size: 18px; letter-spacing: .14em; color: var(--hi); }
+    .war-top a { color: var(--dim); }
+    .meter { flex: 1 1 260px; display: flex; align-items: center; gap: 10px; min-width: 240px; }
+    .meter .bar { flex: 1; height: 10px; display: flex; background: rgb(255 255 255 / .06); border: 1px solid rgb(255 255 255 / .12); }
+    .meter .g { background: #39FF7A; box-shadow: 0 0 10px #39FF7A; transition: width .4s; }
+    .meter .r { background: #FF5C70; box-shadow: 0 0 10px #FF5C70; transition: width .4s; margin-left: auto; }
+    .meter b { min-width: 4ch; text-align: center; }
+    .meter .gs { color: #39FF7A; } .meter .rs { color: #FF5C70; }
+    .war-controls { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; padding: 0 18px 10px; position: relative; z-index: 2; }
+    .squad { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .squad > span { min-width: 7ch; }
+    .squad.g > span { color: #39FF7A; } .squad.r > span { color: #FF5C70; }
+    .war button { font: inherit; color: var(--text); background: rgb(5 8 6 / .7); border: 1px solid rgb(255 255 255 / .18); border-radius: 3px; padding: 4px 10px; min-height: 30px; cursor: pointer; }
+    .squad.g button:hover { border-color: #39FF7A; color: #39FF7A; }
+    .squad.r button:hover { border-color: #FF5C70; color: #FF5C70; }
+    .war button.on { border-color: var(--accent); color: var(--accent); }
+    .war .count { color: var(--dim); }
+    #field { flex: 1; display: grid; grid-template-columns: repeat(var(--cols), 1fr); gap: 14px; padding: 8px 64px 22px; min-height: 0; position: relative; z-index: 1; }
+    .slot { border: 1px dashed rgb(200 247 197 / .12); min-height: 0; display: flex; }
+    .chip { flex: 1; margin: 0; padding: 8px 10px; overflow: hidden; font-size: 11px; line-height: 1.45; white-space: pre; color: var(--dim); border: 1px solid transparent; transition: color .4s, border-color .4s, box-shadow .4s, background .4s; }
+    .chip[data-owner="g"] { color: #9DFFB9; border-color: rgb(57 255 122 / .55); background: rgb(57 255 122 / .05); box-shadow: inset 0 0 18px rgb(57 255 122 / .12), 0 0 12px rgb(57 255 122 / .15); }
+    .chip[data-owner="r"] { color: #FFB3BD; border-color: rgb(255 92 112 / .55); background: rgb(255 92 112 / .05); box-shadow: inset 0 0 18px rgb(255 92 112 / .12), 0 0 12px rgb(255 92 112 / .15); }
+    .chip b { font-weight: 700; color: inherit; letter-spacing: .06em; }
+    .war .swarm-intro-cursor[data-side="g"], .war .swarm-intro-box[data-side="g"] { --swarm-intro-fg: #39FF7A; }
+    .war .swarm-intro-cursor[data-side="r"], .war .swarm-intro-box[data-side="r"] { --swarm-intro-fg: #FF5C70; }
+    .war .swarm-intro-cursor[data-kind="cursor"] { filter: drop-shadow(0 0 4px var(--swarm-intro-fg)); }
+    .hint { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 3; color: var(--hi); font-size: clamp(14px, 2vw, 20px); letter-spacing: .08em; text-shadow: 0 0 12px #000, 0 0 4px #000; transition: opacity .6s; }
+    .hint.gone { opacity: 0; }
+    /* a deleted unit: its glyphs scatter */
+    .war-burst { position: absolute; width: 0; height: 0; pointer-events: none; }
+    .war-burst i { position: absolute; font-style: normal; font-size: 12px; font-weight: 700; color: var(--c); text-shadow: 0 0 6px var(--c); animation: war-burst .8s cubic-bezier(.2,.7,.4,1) forwards; }
+    @keyframes war-burst { from { transform: translate(0, 0) rotate(0); opacity: 1; } to { transform: translate(var(--x), var(--y)) rotate(var(--r)); opacity: 0; } }
+    .war-ring { position: absolute; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; border: 2px solid var(--c); pointer-events: none; animation: war-ring .5s ease-out forwards; }
+    @keyframes war-ring { from { transform: scale(.2); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+    @media (max-width: 700px) { #field { padding: 6px 16px 16px; gap: 8px; } .chip { font-size: 9px; padding: 5px; } }
   </style>
 </head>
-<body>
-  <header>
-    <h1>CURSOR WARS</h1>
-    <p>spawn units; they fight on their own. destroy the red core. · <a href="./">← back to the résumé</a></p>
+<body class="war">
+  <canvas id="matrix" class="matrix" aria-hidden="true"></canvas>
+  <header class="war-top">
+    <h1>SWARM WARS</h1>
+    <div class="meter" aria-label="Territory"><b class="gs" id="gs">0</b><div class="bar"><div class="g" id="gbar"></div><div class="r" id="rbar"></div></div><b class="rs" id="rs">0</b></div>
+    <a href="./">← résumé</a>
   </header>
-  <div class="row">
-    <button type="button" data-game-mode="battle" aria-pressed="true">battle vs AI</button>
-    <button type="button" data-game-mode="sandbox" aria-pressed="false">sandbox</button>
-    <label id="breakWrap" hidden><input type="checkbox" id="breakable"> cores can be destroyed</label>
-    <span class="spacer"></span>
-    <button type="button" id="restart"><kbd>R</kbd> restart</button>
+  <div class="war-controls">
+    <div class="squad g" data-side="g"><span>green</span></div>
+    <div class="squad">
+      <button type="button" id="auto">auto battle</button>
+      <button type="button" id="reset">reset</button>
+    </div>
+    <div class="squad r" data-side="r"><span>red</span></div>
   </div>
-  <div class="row" id="units" aria-label="Spawn a unit"></div>
-  <p id="hud" aria-live="off"></p>
-  <canvas id="arena" width="960" height="540" aria-label="The arena: green core on the left, red core on the right"></canvas>
-  <table>
-    <thead><tr><th>unit</th><th>cost</th><th>hp</th><th>what it does</th><th>beats</th></tr></thead>
-    <tbody id="legend"></tbody>
-  </table>
-  <p style="color:var(--dim)">battle: press 1–5 or a unit button to spawn it at your core (or click the arena to choose the height). energy refills over time; sudden death starts at 2:30.<br>sandbox: pick a unit, then click the left half to spawn it for green or the right half for red.</p>
-  <script src="assets/fight-game.js"></script>
+  <main id="field" aria-label="The battlefield"></main>
+  <p class="hint" id="hint">spawn units for either side. they fight on their own.</p>
+
+  <script>window.MODE = "normal"; window.MOTION = true;</script>
+  <script src="assets/matrix.js"></script>
+  <script src="assets/swarm-intro.js"></script>
+  <script src="assets/samurai.js"></script>
+  <script src="assets/robot.js"></script>
+  <script src="assets/wizard.js"></script>
+  <script src="assets/ninja.js"></script>
+  <script>
+    (function () {
+      var KINDS = ["cursor", "samurai", "robot", "wizard", "ninja"], CAP = 14;
+      var field = document.getElementById("field"), narrow = innerWidth < 700;
+      // the field: panels of made-up machine code, an even split on the sides, a few empty in the middle
+      var cols = narrow ? 3 : 6, rows = narrow ? 5 : 4, n = cols * rows;
+      field.style.setProperty("--cols", cols);
+      field.style.gridTemplateRows = "repeat(" + rows + ", 1fr)";
+      var WORDS = ["mov", "jmp", "xor", "push", "pop", "call", "ret", "cmp", "and", "shl", "nop", "int", "lea", "inc"];
+      function hex(k) { var s = ""; for (var i = 0; i < k; i++) s += "0123456789ABCDEF"[Math.random() * 16 | 0]; return s; }
+      function code() {
+        var out = [], lines = 4 + (Math.random() * 3 | 0);
+        for (var i = 0; i < lines; i++) out.push(hex(4) + "  " + WORDS[Math.random() * WORDS.length | 0] + "  r" + (Math.random() * 16 | 0) + ", 0x" + hex(2));
+        return out.join("\n");
+      }
+      for (var i = 0; i < n; i++) {
+        var slot = document.createElement("div"); slot.className = "slot";
+        var chip = document.createElement("div"); chip.className = "chip";
+        chip.innerHTML = "<b>NODE_" + ("0" + i).slice(-2) + "</b>\n" + code();
+        slot.appendChild(chip); field.appendChild(slot);
+      }
+
+      samuraiMode({ scoped: true }); robotMode({ scoped: true }); wizardMode({ scoped: true }); ninjaMode({ scoped: true });
+      var swarm = swarmIntro({ root: "#field", targets: ".chip", logo: false, cursors: 0, skipButton: false, respectReducedMotion: false,
+        persist: true, war: true, type: false,
+        // samurai strike with the full iaijutsu: crouch first, sheathe before the panel appears
+        buildPause: function (a) { return a.kind === "samurai" ? 330 : 0; },
+        revealPause: function (a) { return a.kind === "samurai" ? 580 : 0; },
+        onDeath: burst });
+
+      function burst(a, x, y) {
+        var w = document.querySelector(".swarm-intro-world"); if (!w) return;
+        var c = a.team === "g" ? "#39FF7A" : "#FF5C70", e = document.createElement("div"), G = "/\\|_01<>{}#";
+        e.className = "war-burst"; e.style.left = x + "px"; e.style.top = (y - 16) + "px"; e.style.setProperty("--c", c);
+        for (var i = 0; i < 12; i++) {
+          var g = document.createElement("i"), ang = Math.random() * 6.28, d = 30 + Math.random() * 60;
+          g.textContent = G[Math.random() * G.length | 0];
+          g.style.setProperty("--x", Math.cos(ang) * d + "px"); g.style.setProperty("--y", Math.sin(ang) * d + 30 + "px"); g.style.setProperty("--r", (Math.random() * 720 - 360) + "deg");
+          e.appendChild(g);
+        }
+        var ring = document.createElement("div"); ring.className = "war-ring"; ring.style.setProperty("--c", c); e.appendChild(ring);
+        w.appendChild(e); setTimeout(function () { e.remove(); }, 900);
+      }
+
+      function count(side, kind) { return swarm.units().filter(function (a) { return a.team === side && (!kind || a.kind === kind); }).length; }
+      function spawn(side, kind) {
+        if (count(side) >= CAP) return false;
+        var r = field.getBoundingClientRect();
+        swarm.add({ team: side, kind: kind, x: scrollX + (side === "g" ? -24 : innerWidth + 24), y: scrollY + r.top + 20 + Math.random() * (r.height - 40) });
+        document.getElementById("hint").classList.add("gone");
+        return true;
+      }
+      // spawn buttons, one row per side
+      document.querySelectorAll(".squad[data-side]").forEach(function (row) {
+        var side = row.dataset.side;
+        KINDS.forEach(function (k) {
+          var b = document.createElement("button"); b.type = "button"; b.dataset.kind = k;
+          b.innerHTML = k + " <span class=\"count\"></span>";
+          b.onclick = function () { spawn(side, k); };
+          row.appendChild(b);
+        });
+      });
+      // auto battle: both sides keep spawning random units, a little faster for whoever is losing
+      var autoT = null, autoBtn = document.getElementById("auto");
+      autoBtn.onclick = function () {
+        if (autoT) { clearInterval(autoT); autoT = null; autoBtn.classList.remove("on"); return; }
+        autoBtn.classList.add("on");
+        ["g", "r", "g", "r", "g", "r"].forEach(function (s) { spawn(s, KINDS[Math.random() * KINDS.length | 0]); });
+        autoT = setInterval(function () {
+          var g = owned("g"), r = owned("r");
+          ["g", "r"].forEach(function (s) {
+            var behind = s === "g" ? g < r : r < g;
+            if (Math.random() < (behind ? .75 : .45)) spawn(s, KINDS[Math.random() * KINDS.length | 0]);
+          });
+        }, 1100);
+      };
+      document.getElementById("reset").onclick = function () { location.reload(); };
+
+      function owned(side) { return field.querySelectorAll('.chip[data-owner="' + side + '"]:not([data-swarm-intro-pending])').length; }
+      setInterval(function () {
+        var g = owned("g"), r = owned("r");
+        document.getElementById("gs").textContent = g; document.getElementById("rs").textContent = r;
+        document.getElementById("gbar").style.width = (g / n * 100) + "%"; document.getElementById("rbar").style.width = (r / n * 100) + "%";
+        document.querySelectorAll(".squad[data-side] button").forEach(function (b) {
+          var k = count(b.parentNode.dataset.side, b.dataset.kind); b.querySelector(".count").textContent = k ? "×" + k : "";
+        });
+      }, 250);
+      window.__war = { swarm: swarm, spawn: spawn, owned: owned };     // for tinkering in the console
+    })();
+  </script>
 </body>
 </html>

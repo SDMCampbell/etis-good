@@ -59,11 +59,10 @@ Everything from earlier versions (the text rain, drones, tractor mode, the versi
 
 Run locally: `python -m http.server 8765`, then open http://localhost:8765.
 
-## Cursor Wars (`/fight_game`)
+## Swarm Wars (`/fight_game`)
 
-A separate page with no résumé content: a small auto-battler (`fight_game.html` + `assets/fight-game.js`, one canvas, no assets), linked from the right of the "fight" toggle. You spawn units and they fight on their own; destroy the enemy core to win.
+A separate page with no résumé content (`fight_game.html`), linked from the right of the "fight" toggle. It runs swarm-intro and all four figure modes at once: two swarms fight over a field of glowing code panels, each panel a swarm target.
 
-- **battle vs AI**: energy (start 6, +1/s, cap 12) is spent on spawns with keys 1–5, the buttons, or a click on the arena. A red AI spawns with the same rules: it counter-picks your most common unit most of the time and panics when its core is threatened. Cores have 1000 HP and zap enemies that come close. Sudden death from 2:30.
-- **sandbox**: free spawns for both sides (click the left half for green, the right for red), no AI.
-- **Units**: cursor (cheap melee, every 3rd hit doubles), samurai (iaijutsu dash through one target; parries lasers and bolts), robot (piercing laser, armour), wizard (homing bolt with splash, keeps its distance), ninja (hunts the longest-range enemy, smoke-teleports behind it for a backstab). All numbers are in the `T` table at the top of `fight-game.js`.
-- **Balance** was tuned with simulated mass fights at equal energy (`__game.sim()` in the console steps the game without drawing): cursor beats samurai; samurai beats robot and ninja; robot beats cursor and ninja; wizard beats cursor and robot; ninja beats wizard. It hasn't had much human playtesting.
+- **Spawning**: one row of buttons per side (cursor, samurai, robot, wizard, ninja; up to 14 a side). Units fly in from their side's edge. **Auto battle** keeps both sides spawning random units, the losing side a bit faster. **Reset** starts over.
+- **What units do, on their own** (the library's `war` option): rush any enemy on its way to tear down one of their team's panels (the clash knocks it back and costs it one of its 3 lives; at 0 it's deleted in a burst of glyphs), tear down enemy panels with their mode's teardown, and build empty panels in their team's colour with their mode's build (the samurai's iaijutsu, the robot's laser, the wizard's bolt, the ninja's shuriken). The meter at the top shows who holds how much of the field.
+- **How it fits together**: the library's `add({team, kind})` spawns a unit at any time; each mode script can be scoped to its own kind (`samuraiMode({ scoped: true })`, keyed on the cursor's `data-kind`), and every mode rule in `site.css` has a per-unit twin keyed on `data-kind` / `data-side`, so all the figures share one page in team colours.
