@@ -123,7 +123,7 @@
       // ---------- the circle: for each figure in the ring, three places to play outward from it (softer notes nearer) ----------
       var ringBox = document.createElement("div"); ringBox.id = "ring"; field.appendChild(ringBox);
       var guide = document.createElement("div"); guide.id = "ringGuide"; ringBox.appendChild(guide);
-      var rnotes = [], OUT = [1.22, 1.44, 1.66], rot = 0;   // rot: how far the ring has turned (it turns all the time)
+      var rnotes = [], OUT = [1.22, 1.44, 1.66], rot = 0, spin = .13;   // rot: how far the ring has turned (it turns all the time)
       function groupOf(slot) { return Math.min(2, Math.floor(slot * 3 / N)); }
       for (var i = 0; i < N; i++) {
         rnotes.push([]);
@@ -157,11 +157,10 @@
         // in the circle, it goes back to its own place in the ring
         idle: function (a, now) {
           if (a.slot === undefined) return { x: a.x, y: a.y, ms: 50, wait: 30 };   // just spawned: its place is set a moment later
-          if (layout === "circle") {
-            var r = field.getBoundingClientRect(), p = ring().at(a.slot, 1), x = r.left + scrollX + p[0], y = r.top + scrollY + p[1] + 16, d = Math.hypot(x - a.x, y - a.y);
+          if (layout === "circle") {                                  // riding the ring: moved every frame by ride(), below
             var side = GROUPS[groupOf(a.slot)]; if (a.el.dataset.side !== side) { a.team = side; a.el.dataset.side = side; }
-            if (d > 30) return { x: x, y: y, ms: Math.max(250, Math.min(1400, d * 2.2 / pace)), wait: 0 };   // back to its place
-            return { x: x, y: y, ms: 90, wait: 0 };                                                            // riding the ring round
+            a.ride = true;
+            return { x: a.x, y: a.y, ms: 0, wait: 150 };
           }
           if (!a.placed) {
             a.placed = true;
@@ -209,6 +208,23 @@
         note._busy = now + 6000; return true;
       }
 
+      // The ring's motion is drawn here, every frame, rather than by the library's moves (which ease in and out, so a
+      // chain of short ones stutters): each riding figure is set straight onto its turning place. A figure coming back
+      // from playing a note (or arriving) eases in at a capped speed, and joins the ring once it gets there.
+      function ride(dt) {
+        if (layout !== "circle" || !dt) return;
+        var r = field.getBoundingClientRect(), g = ring(), ox = r.left + scrollX, oy = r.top + scrollY + 16;
+        swarm.units().forEach(function (a) {
+          if (a.slot === undefined) return;
+          if (a.working || a.job) { a.ride = false; return; }
+          if (!a.ride) return;
+          var p = g.at(a.slot, 1), tx = ox + p[0], ty = oy + p[1], dx = tx - a.x, dy = ty - a.y, d = Math.hypot(dx, dy), max = (260 + 260 * pace) * dt;
+          if (d > max) { a.x += dx / d * max; a.y += dy / d * max; a.locked = false; } else { a.x = tx; a.y = ty; a.locked = true; }
+          a.el.style.transition = "none";
+          a.el.style.transform = "translate(" + a.x.toFixed(1) + "px, " + a.y.toFixed(1) + "px)";
+        });
+      }
+
       // in the circle: the figure for that slice of the sound (or a neighbour, if it's busy) plays outward from its place,
       // nearer for a soft note and further out for a loud one
       function dispatchRing(col, level, now) {
@@ -222,7 +238,7 @@
           if (!note) continue;
           var g2 = ring(), at = g2.at(s2, OUT[ks[k - 1]]);                  // played outward from where the figure is right now
           note.parentNode.style.left = at[0] + "px"; note.parentNode.style.top = at[1] + "px";
-          a.speed = pace;
+          a.speed = pace; a.ride = false;
           if (!swarm.order(a, note)) continue;
           note._busy = now + 6000; return true;
         }
@@ -241,7 +257,7 @@
         document.body.classList.toggle("circle", l === "circle"); $("legend").innerHTML = LEGEND[l];
         [].forEach.call($("layouts").children, function (o) { o.classList.toggle("on", o.dataset.layout === l); });
         placeRing();
-        swarm.units().forEach(function (a) { a.placed = false; });          // walk over to the new places
+        swarm.units().forEach(function (a) { a.placed = false; a.ride = false; });   // walk over to the new places
       }
       ["blocks", "circle"].forEach(function (l) {
         var b = document.createElement("button"); b.type = "button"; b.textContent = l; b.dataset.layout = l; b.style.marginRight = "4px";
@@ -336,7 +352,9 @@
       function frame(now) {
         requestAnimationFrame(frame);
         var dt = Math.min(.1, (now - last) / 1000 || 0); last = now;
-        rot += dt * .22 * (quiet ? .6 : pace);                             // the ring turns clockwise, faster with the music
+        spin += (.22 * (quiet ? .6 : pace) - spin) * Math.min(1, dt * .8);  // the ring turns clockwise, easing faster with the music
+        rot += dt * spin;
+        ride(dt);
         if (!analyser) return;
         analyser.getByteFrequencyData(freq);
         var hz = AC.sampleRate / analyser.fftSize, total = 0, flux = [0, 0, 0], best = [0, 8, 16], bestF = [0, 0, 0], lvl = new Float32Array(COLS);
