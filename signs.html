@@ -31,6 +31,10 @@
     .sign .swarm-intro-cursor, .sign .swarm-intro-box { --swarm-intro-fg: #C8F7C5; }
     .sign .swarm-intro-cursor[data-kind="cursor"] { filter: drop-shadow(0 0 4px var(--swarm-intro-fg)); }
     .sign .swarm-intro-badge { display: none; }
+    /* trace: the letters are drawn by the figures themselves, running along each stroke and leaving a fading light trail */
+    #trail { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+    .tracing .dot { opacity: 0; }
+    .tracing .px { border-color: rgb(57 255 122 / .04); }
     @media (max-width: 900px) { #stage { padding: 6px 6px 70px; } #board { gap: 1px; width: 100%; } #say { width: 16ch; } }
   </style>
 </head>
@@ -41,10 +45,12 @@
     <input id="say" type="text" maxlength="20" placeholder="type a message" aria-label="Message for the swarm to write, up to 20 characters" autocomplete="off" spellcheck="false">
     <button type="button" id="write">write it</button>
     <button type="button" id="clock">clock</button>
+    <button type="button" id="traceBtn" title="Pixels: the swarm builds the sign pixel by pixel. Trace: each letter is drawn by figures running along its strokes">style: pixels</button>
     <button type="button" id="copy">copy link</button>
     <span class="site-menu-slot" data-here="signs"></span>
   </header>
   <p id="status" aria-live="polite"></p>
+  <canvas id="trail" aria-hidden="true"></canvas>
   <main id="stage"><div id="board" role="img" aria-label="The sign"></div></main>
 
   <script>window.MODE = "normal"; /* motion: the visitor's choice from the résumé page ("play it anyway" / "without animation") wins over the device setting */ window.MOTION = (function () { try { var m = localStorage.getItem("motion"); if (m === "on") return true; if (m === "off") return false; } catch (e) {} return !matchMedia("(prefers-reduced-motion: reduce)").matches; })();</script>
@@ -75,6 +81,51 @@
         "!": "00100 00100 00100 00100 00100 00000 00100", "?": "01110 10001 00001 00010 00100 00000 00100", "-": "00000 00000 00000 11111 00000 00000 00000",
         "'": "00100 00100 01000 00000 00000 00000 00000", ",": "00000 00000 00000 00000 00110 00100 01000", "/": "00001 00001 00010 00100 01000 10000 10000",
         "+": "00000 00100 00100 11111 00100 00100 00000", "*": "00000 01010 11111 11111 01110 00100 00000", " ": "00000 00000 00000 00000 00000 00000 00000"
+      };
+      // the same characters as strokes for trace mode, on the 5 x 7 grid (x 0-4, y 0-6, y down). A stroke that ends where it
+      // starts is a loop the figures run round; any other is run there and back
+      var O = [[1, 0], [3, 0], [4, 1], [4, 5], [3, 6], [1, 6], [0, 5], [0, 1], [1, 0]], P = [[0, 6], [0, 0], [3, 0], [4, 1], [4, 2], [3, 3], [0, 3]];
+      var STROKES = {
+        A: [[[0, 6], [0, 2], [1, 0], [3, 0], [4, 2], [4, 6]], [[0, 3.5], [4, 3.5]]],
+        B: [[[0, 3], [3, 3], [4, 2], [4, 1], [3, 0], [0, 0], [0, 6], [3, 6], [4, 5], [4, 4], [3, 3]]],
+        C: [[[4, 1], [3, 0], [1, 0], [0, 1], [0, 5], [1, 6], [3, 6], [4, 5]]],
+        D: [[[0, 0], [3, 0], [4, 1], [4, 5], [3, 6], [0, 6], [0, 0]]],
+        E: [[[4, 0], [0, 0], [0, 6], [4, 6]], [[0, 3], [3, 3]]],
+        F: [[[4, 0], [0, 0], [0, 6]], [[0, 3], [3, 3]]],
+        G: [[[4, 1], [3, 0], [1, 0], [0, 1], [0, 5], [1, 6], [3, 6], [4, 5], [4, 3], [2, 3]]],
+        H: [[[0, 0], [0, 6]], [[4, 0], [4, 6]], [[0, 3], [4, 3]]],
+        I: [[[1, 0], [3, 0]], [[2, 0], [2, 6]], [[1, 6], [3, 6]]],
+        J: [[[2, 0], [4, 0]], [[3, 0], [3, 5], [2, 6], [1, 6], [0, 5]]],
+        K: [[[0, 0], [0, 6]], [[4, 0], [0, 4]], [[1.5, 3], [4, 6]]],
+        L: [[[0, 0], [0, 6], [4, 6]]],
+        M: [[[0, 6], [0, 0], [2, 3], [4, 0], [4, 6]]],
+        N: [[[0, 6], [0, 0], [4, 6], [4, 0]]],
+        O: [O],
+        P: [P],
+        Q: [O, [[2, 4], [4, 6]]],
+        R: [P, [[2, 3], [4, 6]]],
+        S: [[[4, 1], [3, 0], [1, 0], [0, 1], [0, 2], [1, 3], [3, 3], [4, 4], [4, 5], [3, 6], [1, 6], [0, 5]]],
+        T: [[[0, 0], [4, 0]], [[2, 0], [2, 6]]],
+        U: [[[0, 0], [0, 5], [1, 6], [3, 6], [4, 5], [4, 0]]],
+        V: [[[0, 0], [0, 3], [2, 6], [4, 3], [4, 0]]],
+        W: [[[0, 0], [0, 6], [2, 4], [4, 6], [4, 0]]],
+        X: [[[0, 0], [4, 6]], [[4, 0], [0, 6]]],
+        Y: [[[0, 0], [2, 3], [4, 0]], [[2, 3], [2, 6]]],
+        Z: [[[0, 0], [4, 0], [0, 6], [4, 6]]],
+        0: [O, [[1, 5], [3, 1]]],
+        1: [[[1, 1], [2, 0], [2, 6]], [[1, 6], [3, 6]]],
+        2: [[[0, 1], [1, 0], [3, 0], [4, 1], [4, 2], [0, 6], [4, 6]]],
+        3: [[[0, 0], [3, 0], [4, 1], [4, 2], [3, 3], [4, 4], [4, 5], [3, 6], [0, 6]], [[1, 3], [3, 3]]],
+        4: [[[3, 6], [3, 0], [0, 4], [4, 4]]],
+        5: [[[4, 0], [0, 0], [0, 2], [3, 2], [4, 3], [4, 5], [3, 6], [0, 6]]],
+        6: [[[3, 0], [2, 0], [0, 2], [0, 5], [1, 6], [3, 6], [4, 5], [4, 4], [3, 3], [0, 3]]],
+        7: [[[0, 0], [4, 0], [1, 6]]],
+        8: [[[1, 3], [0, 2], [0, 1], [1, 0], [3, 0], [4, 1], [4, 2], [3, 3], [1, 3], [0, 4], [0, 5], [1, 6], [3, 6], [4, 5], [4, 4], [3, 3], [1, 3]]],
+        9: [[[4, 3], [1, 3], [0, 2], [0, 1], [1, 0], [3, 0], [4, 1], [4, 4], [2, 6], [1, 6]]],
+        ":": [[[2, 1.4], [2, 2]], [[2, 4], [2, 4.6]]], ".": [[[2, 5.4], [2, 6]]], "!": [[[2, 0], [2, 4]], [[2, 5.4], [2, 6]]],
+        "?": [[[0, 1], [1, 0], [3, 0], [4, 1], [4, 2], [2, 3.5], [2, 4]], [[2, 5.4], [2, 6]]], "-": [[[0, 3], [4, 3]]],
+        "'": [[[2, 0], [2, 1], [1.4, 2]]], ",": [[[2, 4], [2, 5], [1.4, 6]]], "/": [[[4, 0], [0, 6]]],
+        "+": [[[0, 3], [4, 3]], [[2, 1], [2, 5]]], "*": [[[2, 5], [0, 2.5], [0, 1], [1, 0], [2, 1], [3, 0], [4, 1], [4, 2.5], [2, 5]]]
       };
       var COLS = 59, ROWS = 15, PER = 10, $ = function (id) { return document.getElementById(id); }, board = $("board");
       var dots = [], want = [];
@@ -116,6 +167,7 @@
         revealPause: function (a) { return a.kind === "samurai" ? 260 : 0; },
         // nothing to fix: line up under the sign and rest (each mode's idle pose)
         idle: function (a, now) {
+          if (tracing) { a.ride = true; return { x: a.x, y: a.y, ms: 0, wait: 150 }; }   // tracing: moved every frame by traceFrame()
           var b = board.getBoundingClientRect();
           a.el.dataset.rest = now; a.el.dataset.face = a.n < N / 2 ? 1 : -1;
           return { x: b.left + (a.n + .5) / N * b.width, y: Math.min(innerHeight - 14, b.bottom + (a.n % 2 ? 44 : 70)), ms: 500, wait: 160 };
@@ -127,6 +179,7 @@
       new MutationObserver(function (ms) { ms.forEach(function (m) { m.target._busy = 0; }); }).observe(board, { subtree: true, attributes: true, attributeFilter: ["data-swarm-intro-pending"] });
       // every moment: each free unit takes the nearest pixel that's wrong
       setInterval(function () {
+        if (tracing) return;
         var now = performance.now(), free = swarm.units().filter(function (a) { return !a.working && !a.job; });
         if (!free.length) return;
         var todo = [];
@@ -143,15 +196,110 @@
         });
       }, 120);
 
+      // ---------- trace: every stroke of every letter gets 1-3 figures of that letter's kind, running along it ----------
+      var tracing = false, slots = [], V = 4.5, trailCv = $("trail"), tx = trailCv.getContext("2d");
+      function polyLen(pts) { var L = 0; for (var i = 1; i < pts.length; i++) L += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); return L; }
+      function along(pts, d) {
+        for (var i = 1; i < pts.length; i++) { var l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+          if (d <= l || i === pts.length - 1) { var t = l ? Math.min(1, d / l) : 0; return [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * t, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * t]; } d -= l; }
+        return pts[0];
+      }
+      function slotsFor(t) {
+        var out = [], letter = 0;
+        lines(t).forEach(function (line, li) {
+          var x0 = Math.floor((COLS - (line.length * 6 - 1)) / 2), y0 = li * 8;
+          line.split("").forEach(function (ch, i) {
+            var st = STROKES[ch]; if (!st) return;
+            var kind = KINDS[letter++ % KINDS.length];
+            st.forEach(function (g, si) {
+              var pts = g.map(function (q) { return [x0 + i * 6 + q[0] + .5, y0 + q[1] + .5]; }), L = polyLen(pts);
+              var closed = g[0][0] === g[g.length - 1][0] && g[0][1] === g[g.length - 1][1], loop = closed ? L : 2 * L;
+              var n = Math.max(1, Math.min(3, Math.round(loop / 9))), period = Math.max(1.6, loop / V);
+              for (var k = 0; k < n; k++) out.push({ key: li + "|" + i + "|" + ch + "|" + si + "|" + k, kind: kind, line: li, pts: pts, L: L, closed: closed, loop: loop, period: period, off: k / n, life: Math.min(3.2, period / n * 1.2) });
+            });
+          });
+        });
+        return out;
+      }
+      function nearest(list, x, y) { var best = -1, bd = 1e9; list.forEach(function (a, i) { var d = Math.hypot(a.x - x, a.y - y); if (d < bd) { bd = d; best = i; } }); return best; }
+      function retarget(t) {
+        var b = board.getBoundingClientRect(), cw = b.width / COLS, ch = b.height / ROWS;
+        slots = slotsFor(t); if (slots.length > 90) slots = slots.filter(function (s) { return s.key.slice(-2) === "|0"; });
+        var units = swarm.units(), byKey = {}, need = [];
+        units.forEach(function (a) { if (a.slot) byKey[a.slot.key] = a; });
+        var free = units.filter(function (a) { return !a.slot || !slots.some(function (s) { return s.key === a.slot.key && s.kind === a.kind; }); });
+        slots.forEach(function (s) { var a = byKey[s.key]; if (a && a.kind === s.kind) a.slot = s; else need.push(s); });
+        need.forEach(function (s) {
+          var p0 = along(s.pts, 0), x = b.left + p0[0] * cw, y = b.top + p0[1] * ch, same = free.filter(function (a) { return a.kind === s.kind; }), i = nearest(same, x, y), a;
+          if (i >= 0) { a = same[i]; free.splice(free.indexOf(a), 1); }
+          else a = swarm.add({ kind: s.kind, team: "g", x: Math.random() < .5 ? -24 : innerWidth + 24, y: Math.random() * innerHeight });
+          if (!a) return;
+          a.slot = s; a.locked = false; a.trail = []; a.ride = true;
+        });
+        free.forEach(function (a) { a.slot = null; swarm.remove(a); });
+      }
+      function untrace() {                                           // back to pixels: 24 figures, lined up under the sign
+        var units = swarm.units();
+        units.forEach(function (a) { a.slot = null; a.ride = false; a.trail = null; });
+        for (var i = N; i < units.length; i++) swarm.remove(units[i]);
+        for (var j = units.length; j < N; j++) swarm.add({ kind: KINDS[j % KINDS.length], team: "g", x: j % 2 ? -24 : innerWidth + 24, y: Math.random() * innerHeight });
+        swarm.units().forEach(function (a, k) { a.n = k; });
+        tx.clearRect(0, 0, trailCv.width, trailCv.height);
+      }
+      var lastF = performance.now();
+      function traceFrame(now) {
+        requestAnimationFrame(traceFrame);
+        var dt = Math.min(.05, (now - lastF) / 1000); lastF = now;
+        if (!tracing) return;
+        var dpr = devicePixelRatio || 1; if (trailCv.width !== Math.round(innerWidth * dpr)) { trailCv.width = Math.round(innerWidth * dpr); trailCv.height = Math.round(innerHeight * dpr); }
+        var b = board.getBoundingClientRect(), cw = b.width / COLS, ch = b.height / ROWS, sec = now / 1000;
+        tx.setTransform(dpr, 0, 0, dpr, 0, 0); tx.clearRect(0, 0, innerWidth, innerHeight); tx.lineCap = tx.lineJoin = "round";
+        swarm.units().forEach(function (a) {
+          var s = a.slot; if (!s || a.working || a.job || !a.ride) return;
+          var d = (((sec / s.period + s.off) % 1) + 1) % 1 * s.loop; if (!s.closed && d > s.L) d = 2 * s.L - d;
+          var p = along(s.pts, d), x = b.left + p[0] * cw, y = b.top + p[1] * ch, dx = x - a.x, dy = y - a.y, dist = Math.hypot(dx, dy), max = 900 * dt;
+          if (dist > 60) a.locked = false;
+          if (!a.locked && dist > Math.max(3, max)) { a.x += dx / dist * max; a.y += dy / dist * max; }
+          else { a.x = x; a.y = y; a.locked = true; }
+          a.el.style.transition = "none"; a.el.style.transform = "translate(" + a.x.toFixed(1) + "px, " + a.y.toFixed(1) + "px)";
+          var tr = a.trail || (a.trail = []);
+          if (a.locked) { var l = tr[tr.length - 1]; if (!l || Math.hypot(l[0] - a.x, l[1] - a.y) > 3) tr.push([a.x, a.y, now]); else l[2] = now; }
+          else tr.length = 0;
+          while (tr.length && now - tr[0][2] > s.life * 1000) tr.shift();
+          var col = s.line ? "255, 226, 122" : "57, 255, 122", w = Math.max(3, Math.min(cw, ch) * .55);
+          for (var i = 1; i < tr.length; i++) {
+            var f = 1 - (now - tr[i][2]) / (s.life * 1000); if (f <= 0) continue;
+            tx.strokeStyle = "rgba(" + col + ", " + (f * .22).toFixed(3) + ")"; tx.lineWidth = w * 2.2;
+            tx.beginPath(); tx.moveTo(tr[i - 1][0], tr[i - 1][1]); tx.lineTo(tr[i][0], tr[i][1]); tx.stroke();
+            tx.strokeStyle = "rgba(" + col + ", " + Math.min(1, f * 1.3).toFixed(3) + ")"; tx.lineWidth = w;
+            tx.stroke();
+          }
+        });
+      }
+      requestAnimationFrame(traceFrame);
+      function setStyle(on, fromUrl) {
+        on = !!on && MOTION;
+        if (on === tracing) { $("traceBtn").textContent = "style: " + (tracing ? "trace" : "pixels"); return; }
+        tracing = on; document.body.classList.toggle("tracing", on); $("traceBtn").classList.toggle("on", on);
+        $("traceBtn").textContent = "style: " + (on ? "trace" : "pixels");
+        try { localStorage.setItem("signStyle", on ? "trace" : "pixels"); } catch (e) {}
+        if (on) retarget(shown || ""); else untrace();
+        if (!fromUrl) link();
+      }
+
       // ---------- what the sign says: the time, or your message (?say=...) ----------
       var DAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"], MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
       var message = "", shown = null;
       function two(n) { return (n < 10 ? "0" : "") + n; }
       function timeText() { var d = new Date(); return two(d.getHours()) + ":" + two(d.getMinutes()) + " " + DAYS[d.getDay()] + " " + two(d.getDate()) + " " + MONTHS[d.getMonth()]; }   // "16:17" / "TUE 24 NOV"
-      function update() { var t = message || timeText(); if (t !== shown) { shown = t; render(t); } }
+      function update() { var t = message || timeText(); if (t !== shown) { shown = t; render(t); if (tracing) retarget(t); } }
+      function link() {
+        var q = []; if (message) q.push("say=" + encodeURIComponent(message).replace(/%20/g, "+")); if (tracing) q.push("style=trace");
+        history.replaceState(null, "", location.pathname + (q.length ? "?" + q.join("&") : ""));
+      }
       function set(msg, fromUrl) {
         message = clean(msg); $("say").value = message; $("clock").classList.toggle("on", !message);
-        if (!fromUrl) history.replaceState(null, "", location.pathname + (message ? "?say=" + encodeURIComponent(message).replace(/%20/g, "+") : ""));
+        if (!fromUrl) link();
         if (!MOTION) { $("status").innerHTML = 'the swarm is resting because your device is set to reduce motion · <button type="button" id="motionOn">play it anyway</button>'; $("motionOn").onclick = function () { try { localStorage.setItem("motion", "on"); } catch (e) {} location.reload(); }; update(); return; }
         $("status").textContent = message ? "the swarm is writing your message · \"copy link\" shares it · \"clock\" goes back to the time"
           : "showing the time · type a message (letters, numbers and . , : ! ? ' - + / *) and press Enter";
@@ -160,14 +308,17 @@
       $("write").onclick = function () { set($("say").value); };
       $("say").onkeydown = function (e) { if (e.key === "Enter") set($("say").value); };
       $("clock").onclick = function () { set(""); };
+      $("traceBtn").onclick = function () { if (!MOTION) { $("status").textContent = "trace needs the swarm moving: press \"play it anyway\" first"; return; } setStyle(!tracing); };
       $("copy").onclick = function () {
         var done = function () { $("copy").textContent = "copied"; setTimeout(function () { $("copy").textContent = "copy link"; }, 1500); };
         if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(location.href).then(done, function () { $("status").textContent = location.href; });
         else $("status").textContent = location.href;
       };
-      set(new URLSearchParams(location.search).get("say") || "", true);
+      var Q = new URLSearchParams(location.search), st0 = Q.get("style"); try { if (!st0) st0 = localStorage.getItem("signStyle"); } catch (e) {}
+      set(Q.get("say") || "", true);
+      setStyle(st0 === "trace", true);
       setInterval(update, 1000);
-      window.__sign = { swarm: swarm, set: set, wrong: function () { var n = 0; for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) if (!!want[r][c] !== lit(dots[r][c])) n++; return n; },
+      window.__sign = { swarm: swarm, set: set, style: setStyle, slots: function () { return slots; }, tracing: function () { return tracing; }, wrong: function () { var n = 0; for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) if (!!want[r][c] !== lit(dots[r][c])) n++; return n; },
         text: function () { return dots.map(function (row) { return row.map(function (d) { return lit(d) ? "#" : "."; }).join(""); }).join("\n"); } };
     })();
   </script>
