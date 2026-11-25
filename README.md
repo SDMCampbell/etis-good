@@ -80,12 +80,11 @@ A separate page with no résumé content (`fight_game.html`), in the page menu. 
 A music visualizer played by the swarm (`music.html`), in the page menu.
 
 - **Sound sources**: a built-in demo beat (a 16-bar loop synthesised in the page with Web Audio, so there's nothing to download or license), your own audio file (drag it anywhere onto the page, or use "choose a file"; it's played locally and never uploaded), or the microphone (analysed but not played back). Sound only starts after a click, as browsers require.
-- **The fast layer**: 24 frequency bands (40 Hz to 14 kHz, low to high from left to right) by 10 levels, lit every frame straight from an `AnalyserNode`. Green is bass, gold is mids, cyan is highs.
-- **The swarm layer**: 16 units as puppets (the library's `puppet` option and `order(agent, el)`). A beat is a third of the spectrum jumping above its own recent average; on each one, a few free units fly to the hottest columns there and build a bright note with their mode's build animation, which then fades. Between strikes they hold a formation: a ring that kicks outward with the bass, or "surfing" the tops of the columns (it switches every 16 kicks). In silence they spread out and rest in their idle poses. The swarm can be a mix or all one kind.
+- **The swarm is the visualizer**: 24 figures as puppets (the library's `puppet` option), one per frequency band (40 Hz to 14 kHz, bass on the left in green, mids in gold, treble on the right in cyan). Each flies as high as its band is loud, read every frame from an `AnalyserNode`, with a faint trail under it; the whole swarm hops on a kick. On a beat (a third of the spectrum suddenly jumping against its own recent average) the highest-flying free figures there strike a bright note right where they are, with their mode's build animation. Dense music that never "jumps" still gets a strike every 0.65 s. In silence they land and rest. The swarm can be a mix or all one kind.
 
 ## Swarm Band (`/band`)
 
-Make music by spawning the swarm (`band.html`), in the page menu as "make music".
+Make music by spawning the swarm (`band.html`), in the page menu as "band".
 
 - **The grid**: a 16-step sequencer, one row per sound, with a playhead sweeping left to right. A built note sounds when the playhead reaches it (Web Audio, all synthesised; the bass and chords follow a 4-bar cycle of A minor, A minor, F, G, and the lead stays on the A minor pentatonic so any pattern fits).
 - **The players**: each kind of unit is a musician with its own rows: robots drum (kick, snare), cursors play bass, ninjas tick the hats, samurai stab chords, wizards play the lead. Use + and − to add or remove players (up to 4 of a kind). A part only sounds while it has at least one player; its rows dim otherwise, and the notes are kept.
@@ -100,4 +99,4 @@ A sign written by the swarm (`signs.html`; the old `/other` address redirects he
 - **What it says**: by default the time and date (in the visitor's own time zone), so the swarm rewrites the changed digits every minute. Type a message (up to 20 characters: letters, numbers and `. , : ! ? ' - + / *`, where `*` is a heart) and the swarm rewrites the sign. The message goes into the address as `?say=...`, so "copy link" gives a link that opens with your message being written: e.g. `/signs?say=HELLO+WORLD`.
 - With reduced motion (and no "play it anyway" choice saved from the résumé page), the sign just shows the text, with a "play it anyway" button to bring the swarm in. The music pages follow the same saved choice for their backgrounds.
 
-**Page menu**: every page has a "more" dropdown in its top right (`assets/menu.js`) listing the site's pages: résumé, game, music, make music, signs.
+**Page menu**: every page has a "more" dropdown in its top right (`assets/menu.js`) listing the site's pages: résumé, game, music, band, signs.

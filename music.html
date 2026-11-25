@@ -11,8 +11,10 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/site.css">
   <style>
-    /* Swarm Music: an equalizer of panels lit straight from the audio (every frame), and a swarm (swarm-intro, with every
-       mode's figures) that plays it: on each beat, free units fly to the hottest columns and build a bright note there. */
+    /* Swarm Music: the swarm is the visualizer. 24 figures (swarm-intro puppets, every mode's sprites), one per slice of
+       the sound from bass (left) to treble (right): each flies as high as its slice is loud, and strikes a note on the beat. */
+    .music .swarm-intro-badge { display: none; }
+    #legend { margin: 0; padding: 0 18px 6px; color: var(--dim); position: relative; z-index: 2; }
     html, body { height: 100%; overflow: hidden; }
     body.music { display: flex; flex-direction: column; font-size: 13px; --lo: #39FF7A; --mid: #FFE27A; --hi2: #7FE9FF; }
     .m-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 12px 18px 6px; position: relative; z-index: 2; }
@@ -28,10 +30,9 @@
     #status b { color: var(--accent); font-weight: 400; }
     #field { flex: 1; display: grid; grid-template-columns: repeat(24, 1fr); grid-template-rows: repeat(10, 1fr); gap: 5px; padding: 6px 28px 22px; min-height: 0; position: relative; z-index: 1; }
     #field::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 100%, rgb(57 255 122 / .22), transparent 65%); opacity: var(--p, 0); }
-    .cell { --c: var(--lo); position: relative; min-width: 0; min-height: 0; display: flex; border: 1px solid color-mix(in srgb, var(--c) 9%, transparent); transition: background .12s, border-color .12s, box-shadow .12s; }
+    .cell { --c: var(--lo); position: relative; min-width: 0; min-height: 0; display: flex; border: 1px solid color-mix(in srgb, var(--c) 4%, transparent); transition: background .12s, border-color .12s, box-shadow .12s; }
     .cell.mid { --c: var(--mid); } .cell.high { --c: var(--hi2); }
-    .cell.on { background: color-mix(in srgb, var(--c) 22%, transparent); border-color: color-mix(in srgb, var(--c) 60%, transparent); box-shadow: 0 0 10px color-mix(in srgb, var(--c) 25%, transparent); }
-    .cell.on.top { background: color-mix(in srgb, var(--c) 48%, transparent); border-color: var(--c); }
+    .cell.on { background: color-mix(in srgb, var(--c) 7%, transparent); }
     /* a note: built by a unit on the beat, then it fades */
     .note { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: #050806; background: var(--c); box-shadow: 0 0 18px var(--c), 0 0 4px #fff inset; transition: opacity .5s; overflow: hidden; }
     .music .swarm-intro-cursor, .music .swarm-intro-box { --swarm-intro-fg: var(--lo); }
@@ -65,17 +66,18 @@
     <span class="site-menu-slot" data-here="music"></span>
   </header>
   <p id="status" aria-live="polite"></p>
-  <main id="field" aria-label="The equalizer"></main>
+  <p id="legend">each figure is one slice of the sound, <span style="color:var(--lo)">bass</span> on the left to <span style="color:var(--hi2)">treble</span> on the right · the louder its slice, the higher it flies · on a beat, it strikes</p>
+  <main id="field" aria-label="The stage"></main>
 
   <div class="cover" id="startCover">
     <h2>SWARM MUSIC</h2>
-    <p>A swarm that plays the music: the panels follow the sound, and on every beat the swarm strikes the loudest notes.</p>
+    <p>A swarm that dances to the music. Each figure follows one slice of the sound, bass on the left to treble on the right: the louder its slice, the higher it flies, and on every beat the swarm strikes.</p>
     <button type="button" class="big" id="startDemo">▶ play the demo beat</button>
     <p class="dropzone"><b>Or use your own music:</b> drag an audio file (mp3, wav, m4a…) anywhere onto this page.<br>It plays in your browser and is never uploaded.</p>
     <div class="row">
       <label class="filebtn">choose a file<input type="file" id="file2" accept="audio/*"></label>
       <button type="button" id="startMic">use the microphone</button>
-      <a class="filebtn" href="band.html" style="text-decoration:none">or make music with the swarm →</a>
+      <a class="filebtn" href="band.html" style="text-decoration:none">or start a band with the swarm →</a>
     </div>
   </div>
   <div class="cover" id="dropCover" hidden><p class="dropzone">drop the audio file to play it</p></div>
@@ -90,7 +92,7 @@
   <script src="assets/ninja.js"></script>
   <script>
     (function () {
-      var COLS = 24, ROWS = 10, N = 16, KINDS = ["robot", "samurai", "wizard", "ninja", "cursor"], GROUPS = ["b", "m", "h"];
+      var COLS = 24, ROWS = 10, N = 24, KINDS = ["robot", "samurai", "wizard", "ninja", "cursor"], GROUPS = ["b", "m", "h"];
       var field = document.getElementById("field"), statusEl = document.getElementById("status"), $ = function (id) { return document.getElementById(id); };
       function say(html) { statusEl.innerHTML = html; }
       var HINT = "drop an audio file anywhere on the page to play your own";
@@ -109,31 +111,29 @@
 
       // ---------- the swarm: puppets. They idle in formation and build notes when ordered to ----------
       samuraiMode({ scoped: true }); robotMode({ scoped: true }); wizardMode({ scoped: true }); ninjaMode({ scoped: true });
-      var fast = { speed: 1.8 }, formation = "ring", quiet = true, pulse = 0, disp = new Float32Array(COLS);
+      var fast = { speed: 1.8 }, quiet = true, pulse = 0, disp = new Float32Array(COLS);
       var swarm = swarmIntro({ root: "#field", targets: ".note", logo: false, cursors: 0, skipButton: false, respectReducedMotion: false,
         persist: true, puppet: true, type: false,
         traits: { cursor: fast, samurai: fast, robot: fast, wizard: fast, ninja: fast },
-        buildPause: function (a) { return a.kind === "samurai" ? 150 : 0; },
-        revealPause: function (a) { return a.kind === "samurai" ? 280 : 0; },
+        buildPause: function (a) { return a.kind === "samurai" ? 120 : 0; },
+        revealPause: function (a) { return a.kind === "samurai" ? 220 : 0; },
+        // each figure owns one column: it flies as high as that slice of the sound is loud, and the whole swarm hops on a kick
         idle: function (a, now) {
-          var r = field.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, i = a.slot, n = N;
-          if (quiet) {                                            // silence: spread out and rest (each mode's idle pose)
-            a.el.dataset.rest = now;
-            return { x: r.left + (i + .5) / n * r.width, y: r.top + r.height * (i % 2 ? .42 : .58), ms: 700, wait: 300 };
+          if (a.slot === undefined) return { x: a.x, y: a.y, ms: 50, wait: 30 };   // just spawned: its column is set a moment later
+          var lo = cells[a.slot][0].getBoundingClientRect(), x = lo.left + lo.width / 2, floor = lo.bottom - 4;
+          if (quiet) {                                            // silence: land and rest (each mode's idle pose)
+            if (a.kind !== "ninja") a.el.dataset.rest = now;
+            return { x: x, y: floor, ms: 500, wait: 250 };
           }
-          if (formation === "surf") {                             // ride the tops of the columns
-            var col = Math.round(i / (n - 1) * (COLS - 1));
-            return { x: r.left + 28 + (col + .5) / COLS * (r.width - 56), y: r.bottom - 22 - disp[col] * (r.height - 60) - 14, ms: 150, wait: 90 };
-          }
-          var ang = i / n * 6.2832 + now * .0005, rad = Math.min(r.width, r.height) * (.24 + pulse * .16);   // a ring that kicks with the bass
-          return { x: cx + Math.cos(ang) * rad * 1.5, y: cy + Math.sin(ang) * rad, ms: 150, wait: 90 };
+          var top = cells[a.slot][ROWS - 1].getBoundingClientRect().top + 44;
+          return { x: x, y: floor - disp[a.slot] * (floor - top) - pulse * 16, ms: 110, wait: 70 };
         } });
       var kind = "mix";
       function muster() {
         swarm.clear();
         for (var i = 0; i < N; i++) {
           var edge = i % 4, x = edge === 1 ? innerWidth + 24 : edge === 3 ? -24 : Math.random() * innerWidth, y = edge === 0 ? -24 : edge === 2 ? innerHeight + 24 : Math.random() * innerHeight;
-          var a = swarm.add({ kind: kind === "mix" ? KINDS[i % KINDS.length] : kind, team: GROUPS[i % 3], x: x, y: y });
+          var a = swarm.add({ kind: kind === "mix" ? KINDS[i % KINDS.length] : kind, team: GROUPS[i >> 3], x: x, y: y });
           if (a) a.slot = i;
         }
       }
@@ -149,16 +149,14 @@
           setTimeout(function () { n.setAttribute("data-swarm-intro-pending", ""); n._busy = 0; }, 650);
         });
       }).observe(field, { subtree: true, attributes: true, attributeFilter: ["data-swarm-intro-pending"] });
-      // on a beat in one part of the spectrum: send a few free units (that part's own first) to the hottest columns there
+      // on a beat in one part of the spectrum: the free figures flying highest there strike a note right where they are
       function strike(g, howMany, now) {
-        var lo = g * 8, cols = []; for (var c = lo; c < lo + 8; c++) cols.push(c);
-        cols.sort(function (x, y) { return disp[y] - disp[x]; });
-        var free = swarm.units().filter(function (a) { return !a.working && !a.job; });
-        free.sort(function (x, y) { return (y.team === GROUPS[g]) - (x.team === GROUPS[g]); });
-        for (var k = 0; k < howMany && free.length; k++) {
-          var col = cols[Math.random() * 4 | 0], row = Math.max(0, Math.min(ROWS - 1, Math.round(disp[col] * ROWS) - 1 + (Math.random() * 2 | 0)));
-          var note = notes[col][row]; if (note._busy > now) continue;
-          if (swarm.order(free.shift(), note)) note._busy = now + 4000;
+        var free = swarm.units().filter(function (a) { return (a.slot >> 3) === g && !a.working && !a.job; });
+        free.sort(function (x, y) { return disp[y.slot] - disp[x.slot]; });
+        for (var k = 0; k < howMany && k < free.length; k++) {
+          var a = free[k], row = Math.max(0, Math.min(ROWS - 1, Math.round(disp[a.slot] * ROWS) - 1)), note = notes[a.slot][row];
+          if (note._busy > now) continue;
+          if (swarm.order(a, note)) note._busy = now + 4000;
         }
       }
 
@@ -245,45 +243,50 @@
 
       // ---------- analysis, every frame: band levels -> panels; beats -> the swarm ----------
       var edges = []; for (var b = 0; b <= COLS; b++) edges.push(40 * Math.pow(14000 / 40, b / COLS));
-      var lit = new Int8Array(COLS), avg = [0, 0, 0], lastHit = [0, 0, 0], beats = 0, silentSince = 0, last = 0, stats = { hits: [0, 0, 0] };
+      var lit = new Int8Array(COLS), prev = new Float32Array(COLS), lo = new Float32Array(COLS), hi = new Float32Array(COLS), fmean = [0, 0, 0], lastHit = [0, 0, 0], lastAny = 0, silentSince = 0, last = 0, stats = { hits: [0, 0, 0], forced: 0 };
       function frame(now) {
         requestAnimationFrame(frame);
         var dt = Math.min(.1, (now - last) / 1000 || 0); last = now;
         if (!analyser) return;
         analyser.getByteFrequencyData(freq);
-        var hz = AC.sampleRate / analyser.fftSize, total = 0, grp = [0, 0, 0];
+        var hz = AC.sampleRate / analyser.fftSize, total = 0, grp = [0, 0, 0], flux = [0, 0, 0];
         for (var c = 0; c < COLS; c++) {
           var i0 = Math.max(1, Math.floor(edges[c] / hz)), i1 = Math.max(i0 + 1, Math.ceil(edges[c + 1] / hz)), sum = 0;
           for (var i = i0; i < i1; i++) sum += freq[i];
           var v = Math.min(1, Math.pow(sum / (i1 - i0) / 255, 1.5) * (1 + c / COLS * 1.2));             // highs are quieter: lift them
-          disp[c] = v > disp[c] ? v : Math.max(v, disp[c] - dt * 1.6);                                    // rise at once, fall smoothly
+          flux[c >> 3] += Math.max(0, v - prev[c]); prev[c] = v;                                          // how much this slice just jumped
+          // height: mostly where the slice sits within its own recent range (so loud, compressed music still moves),
+          // partly how loud it is outright
+          lo[c] = v < lo[c] ? v : lo[c] + dt * .15; hi[c] = v > hi[c] ? v : hi[c] - dt * .15;
+          var lvl = .3 * v + .7 * Math.max(0, Math.min(1, (v - lo[c]) / Math.max(hi[c] - lo[c], .15)));
+          disp[c] = lvl > disp[c] ? lvl : Math.max(lvl, disp[c] - dt * 1.6);                              // rise at once, fall smoothly
           total += v; grp[c >> 3] += v / 8;
-          var h = Math.round(disp[c] * ROWS);
-          if (h !== lit[c]) {
-            for (var r = Math.min(h, lit[c]); r < Math.max(h, lit[c]); r++) cells[c][r].classList.toggle("on", r < h);
-            if (lit[c] > 0) cells[c][lit[c] - 1].classList.remove("top");
-            if (h > 0) cells[c][h - 1].classList.add("top");
-            lit[c] = h;
-          }
+          var h = Math.round(disp[c] * ROWS);                                                             // a faint trail under each figure
+          if (h !== lit[c]) { for (var r = Math.min(h, lit[c]); r < Math.max(h, lit[c]); r++) cells[c][r].classList.toggle("on", r < h); lit[c] = h; }
         }
         // silence, and what breaks it
         if (total / COLS > .03) { if (quiet && silentSince) pulse = 1; quiet = false; silentSince = 0; }
         else if (!silentSince) silentSince = now; else if (now - silentSince > 1200) quiet = true;
-        // beats: a part of the spectrum jumping well above its own recent average
+        // beats: a part of the spectrum suddenly jumping (its rise this frame, against its own recent average rise)
         for (var g = 0; g < 3; g++) {
-          if (grp[g] > avg[g] * 1.3 + .035 && now - lastHit[g] > (g === 2 ? 110 : 170)) {
-            lastHit[g] = now; stats.hits[g]++;
+          if (flux[g] > fmean[g] * 1.7 + .05 && now - lastHit[g] > (g === 2 ? 110 : 150)) {
+            lastHit[g] = lastAny = now; stats.hits[g]++;
             strike(g, g === 0 ? 3 : 2, now);
-            if (g === 0) { pulse = 1; if (++beats % 16 === 0) formation = formation === "ring" ? "surf" : "ring"; }
+            if (g === 0) pulse = 1;
           }
-          avg[g] += (grp[g] - avg[g]) * Math.min(1, dt * 5);
+          fmean[g] += (flux[g] - fmean[g]) * Math.min(1, dt * 3);
+        }
+        // dense, heavily compressed music may never "jump": keep the swarm striking anyway, in its loudest part
+        if (!quiet && now - lastAny > 650) {
+          lastAny = now; stats.forced++;
+          strike(grp[0] >= grp[1] && grp[0] >= grp[2] ? 0 : grp[1] >= grp[2] ? 1 : 2, 2, now); pulse = Math.max(pulse, .6);
         }
         pulse = Math.max(0, pulse - dt * 3.2);
         field.style.setProperty("--p", pulse.toFixed(2));
       }
       requestAnimationFrame(frame);
       say("press <b>play the demo beat</b>, or " + HINT);
-      window.__music = { swarm: swarm, stats: stats, disp: disp, state: function () { return { source: source === null ? null : typeof source === "string" ? source : "file", quiet: quiet, formation: formation, beats: beats, ac: AC && AC.state }; } };
+      window.__music = { swarm: swarm, stats: stats, disp: disp, state: function () { return { source: source === null ? null : typeof source === "string" ? source : "file", quiet: quiet, ac: AC && AC.state }; } };
     })();
   </script>
 </body>
