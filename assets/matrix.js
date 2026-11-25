@@ -5,14 +5,14 @@
 //   robot   -> deep space: a twinkling starfield with asteroids tumbling down through it
 //   wizard  -> an arcane night: glowing motes of gold and violet light drifting and swaying down, with twinkling sparkles
 //   ninja   -> a moonlit night in the rain: thin streaks slanting down past a pale moon (the moon is CSS, in site.css)
-// Runs at ~20-30 fps, pauses when the tab is hidden or after 20 s without input, and is off for visitors whose
+// Runs at 20-60 fps depending on the scene, pauses while the tab is hidden, and is off for visitors whose
 // device asks for reduced motion unless they chose "play it anyway".
 (function () {
   var cv = document.getElementById("matrix");
   if (!cv) return;
   if (window.MOTION === false) { cv.remove(); return; }
   var MODE = window.MODE || "normal";
-  var c2 = cv.getContext("2d"), last = 0, lastPoke = performance.now(), on = false;
+  var c2 = cv.getContext("2d"), last = 0, on = false;
   var dpr = Math.min(2, devicePixelRatio || 1), AW, AH, DL = 0, DR = 0;
   function rnd(a, b) { return a + Math.random() * (b - a); }
   function textColumn() { var el = document.getElementById("content"), r = el ? el.getBoundingClientRect() : { left: 0, right: 0 }; DL = r.left + 10; DR = r.right - 10; }
@@ -232,16 +232,15 @@
   }
   function tick(now) {
     on = false;
-    if (document.hidden || now - lastPoke > 20000) { c2.clearRect(0, 0, AW, AH); return; }
+    if (document.hidden) return;                       // paused while nobody can see it; picks up again when the tab is shown
     on = true; requestAnimationFrame(tick);
     if (now - last < 1000 / scene.fps) return;
     var dt = Math.min(.1, (now - last) / 1000); last = now;
     c2.clearRect(0, 0, AW, AH);
     scene.draw(dt, now);
   }
-  function wake() { lastPoke = performance.now(); if (!on) { last = 0; requestAnimationFrame(tick); } }
+  function wake() { if (!on) { last = 0; requestAnimationFrame(tick); } }
   size(); addEventListener("resize", size);
-  ["pointermove", "keydown", "scroll", "touchstart", "wheel"].forEach(function (ev) { addEventListener(ev, wake, { passive: true }); });
   document.addEventListener("visibilitychange", wake);
   wake();
 })();
