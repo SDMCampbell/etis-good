@@ -324,7 +324,7 @@ function swarmIntro(options = {}) {
             await wait(bp);
         }
         step(a, "drag");
-        const dragMs = (clamp(Math.hypot(r.w, r.h) * 1.05, 260, 720) * pace) / boost();
+        const dragMs = (clamp(Math.hypot(r.w, r.h) * 1.05, 260, 720) * pace) / boost() / (a.speed || 1);
         const start = performance.now();
         const grow = () => {
             const t = clamp((performance.now() - start) / dragMs, 0, 1);
@@ -410,7 +410,7 @@ function swarmIntro(options = {}) {
         }
         const total = nodes.reduce((t, n) => t + n.full.length, 0);
         const clip = el.style.clipPath;
-        const dragMs = (clamp(Math.hypot(r.w, r.h) * 1.05, 260, 720) * pace) / boost();
+        const dragMs = (clamp(Math.hypot(r.w, r.h) * 1.05, 260, 720) * pace) / boost() / (a.speed || 1);
         let live = true;
         const shrink = () => {
             if (!live)
