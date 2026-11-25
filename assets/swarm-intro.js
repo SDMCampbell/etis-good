@@ -1073,7 +1073,8 @@ function swarmIntro(options = {}) {
         }
     }
     /* ---------------- teardown ---------------- */
-    const onKey = (e) => e.key === "Escape" && !options.war && skip();
+    // etis-good patch: Escape skips the intro, but not in a war or a puppet show (Esc means something else there)
+    const onKey = (e) => e.key === "Escape" && !options.war && !options.puppet && skip();
     window.addEventListener("keydown", onKey);
     let finished = false;
     function finish(fast) {

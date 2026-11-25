@@ -28,9 +28,9 @@
     .range { position: absolute; border-radius: 50%; border: 1px dashed var(--c); transform: translate(-50%, -50%); pointer-events: none; opacity: .5; animation: range 1.2s ease-out forwards; }
     @keyframes range { to { opacity: 0; } }
     /* a selected defender: its range ring follows it until you click somewhere else */
-    .sel { position: absolute; border-radius: 50%; border: 1px dashed var(--c); background: radial-gradient(circle, transparent 60%, color-mix(in srgb, var(--c) 8%, transparent)); transform: translate(-50%, -50%); pointer-events: none; }
+    .sel { position: absolute; box-sizing: border-box; border-radius: 50%; border: 1px dashed var(--c); background: radial-gradient(circle, transparent 60%, color-mix(in srgb, var(--c) 8%, transparent)); transform: translate(-50%, -50%); pointer-events: none; }
     .sel span { position: absolute; left: 50%; top: -1.6em; transform: translateX(-50%); color: var(--c); font-size: 11px; white-space: nowrap; text-shadow: 0 0 6px #000; }
-    .sel::after { content: ""; position: absolute; left: 50%; top: 50%; width: 34px; height: 34px; margin: -17px; border: 1px solid var(--c); border-radius: 50%; box-shadow: 0 0 10px var(--c); }
+    .sel::after { content: ""; position: absolute; left: 50%; top: 50%; box-sizing: border-box; width: 46px; height: 46px; margin: -23px; border: 1px solid var(--c); border-radius: 50%; box-shadow: 0 0 10px var(--c); }
     .recruit .count { color: var(--dim); }
     #hint { position: fixed; left: 0; right: 0; bottom: 10px; text-align: center; color: var(--dim); z-index: 3; pointer-events: none; }
     [data-k="samurai"] { --c: #FFE27A; } [data-k="robot"] { --c: #39FF7A; } [data-k="wizard"] { --c: #C7A6FF; } [data-k="ninja"] { --c: #FF8FA0; } [data-k="cursor"] { --c: #5BC8FF; }
@@ -286,7 +286,7 @@
         } else if (a.kind === "ninja") {                       // a flying serpent kick: leaps at the bug, through it, and lands past it
           swarm.act(a, async function (u, moveTo, wait) {
             var sx = u.x, sy = u.y, dx = x - sx, dy = y - sy, d = Math.hypot(dx, dy) || 1, ms = Math.max(200, Math.min(420, d * 1.05));
-            u.el.dataset.kick = performance.now() + ms + 160;
+            u.el.dataset.kick = performance.now() + ms + 160; u.el.dataset.kickFace = dx >= 0 ? 1 : -1;
             setTimeout(function () {                           // contact, about two thirds of the way
               if (b.dead) return;
               if (b.type === "heisen" && Math.hypot(b.x - x, b.y - y) > 28) return pop(x, y - 10, "miss", "#FFB35C");
@@ -391,9 +391,19 @@
       // click: on a defender, select it (its range ring follows it); anywhere else, place the chosen defender there
       var selected = null, selRing = null;
       function where(a) { var m = /matrix\(([^)]+)\)/.exec(getComputedStyle(a.el).transform); return m ? [+m[1].split(",")[4], +m[1].split(",")[5]] : [a.x, a.y]; }
+      // the middle of the figure as drawn, from its point (the cursor's tip; figures stand above theirs). Starts from
+      // each kind's resting middle, then follows what's actually drawn, smoothed, ignoring frames where a beam or a
+      // slash makes the drawing much bigger than the body
+      var MID = { robot: [-2, -19], wizard: [-4, -31], samurai: [0, -16], ninja: [-3, -12], cursor: [7, 8] };
+      function mid(a) {
+        var p = where(a), o = a._mid || (a._mid = (MID[a.kind] || [0, -16]).slice());
+        var svgs = a.el.querySelectorAll("svg"), body = svgs.length && svgs[svgs.length - 1].firstElementChild, r = body && body.getBoundingClientRect();
+        if (r && r.width && r.width < 46 && r.height < 56) { var ar = arena.getBoundingClientRect(); o[0] += (r.left + r.width / 2 - ar.left - p[0] - o[0]) * .15; o[1] += (r.top + r.height / 2 - ar.top - p[1] - o[1]) * .15; }
+        return [p[0] + o[0], p[1] + o[1]];
+      }
       function unitAt(x, y) {
         var best = null, bd = 30;
-        units().forEach(function (a) { var p = where(a), d = Math.hypot(p[0] - x, (p[1] - 16) - y); if (d < bd) { bd = d; best = a; } });   // the figure is drawn above its point
+        units().forEach(function (a) { var p = mid(a), d = Math.hypot(p[0] - x, p[1] - y); if (d < bd) { bd = d; best = a; } });   // the figure is drawn above its point
         return best;
       }
       function select(a) {
@@ -407,7 +417,7 @@
       function follow() {
         if (!selected || !selRing) return;
         if (selected.dead || !selected.el.isConnected) return select(null);
-        var p = where(selected); selRing.style.left = p[0] + "px"; selRing.style.top = (p[1] - 14) + "px";
+        var p = mid(selected); selRing.style.left = p[0] + "px"; selRing.style.top = p[1] + "px";
         requestAnimationFrame(follow);
       }
       arena.addEventListener("click", function (e) {

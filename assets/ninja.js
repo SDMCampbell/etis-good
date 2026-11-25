@@ -130,9 +130,13 @@
         else s.state = s.vy < 0 ? "up" : "down";
         if (c.dataset.pose !== s.state) c.dataset.pose = s.state;   // how the figure is posed right now (data-state says what it's doing)
         if (s.state === "kick") {
-          // face the way it's flying; before it's moving, towards the middle of the box
-          if (Math.abs(s.vx) > .05) s.face = s.vx > 0 ? 1 : -1;
-          else if (c._box) s.face = parseFloat(c._box.style.left) + (parseFloat(c._box.style.width) || 0) / 2 >= s.x ? 1 : -1;
+          // pick a direction once per kick and hold it: a page can say which (data-kick-face); else the first clear
+          // movement decides; before that, a build's box does (the drag runs away from the corner the cursor starts at).
+          // Re-deciding every frame turned him round at the end: once he'd crossed the box its middle was behind him.
+          if (prev !== "kick") { s.kickFace = c.dataset.kickFace ? +c.dataset.kickFace : 0;
+            if (!s.kickFace && c._box) s.face = s.x <= parseFloat(c._box.style.left) + 4 ? 1 : -1; }
+          if (s.kickFace) s.face = s.kickFace;
+          else if (Math.abs(s.vx) > .08) s.face = s.kickFace = s.vx > 0 ? 1 : -1;
           if (speed > .2 && now - s.ghostT > 45) { s.ghostT = now; ghost(s); }
         } else {
           s.target = null;
