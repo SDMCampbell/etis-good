@@ -142,10 +142,6 @@ html.ninja .swarm-intro-box, .swarm-intro-box[data-kind="ninja"] { border: 1px s
 html.ninja .swarm-intro-badge, .swarm-intro-box[data-kind="ninja"] > .swarm-intro-badge { display: none; }
 html.ninja:not(.type-all) .swarm-intro-rest { color: inherit !important; }
 html.ninja:not(.type-all) .swarm-intro-caret { visibility: hidden; }
-html.ninja .nj-star, .war .nj-star { position: absolute; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; pointer-events: none; }
-html.ninja .nj-star svg, .war .nj-star svg { display: block; width: 100%; height: 100%; fill: #DCE4F2; stroke: #05070c; stroke-width: .6; filter: drop-shadow(0 0 2px rgb(255 255 255 / .5)); }
-html.ninja .nj-star svg circle, .war .nj-star svg circle { fill: #05070c; stroke: none; }
-html.ninja .nj-star.stuck, .war .nj-star.stuck { transition: opacity .4s; opacity: 0; }
 html.ninja .nj-ghost, .war .nj-ghost { position: absolute; margin: -2px 0 0 -2px; pointer-events: none; animation: nj-ghost .3s ease-out forwards; }
 @keyframes nj-ghost { from { opacity: .35; } to { opacity: 0; } }
 html.ninja .nj-smoke, .war .nj-smoke { position: absolute; width: 0; height: 0; pointer-events: none; }

@@ -1,13 +1,14 @@
 // Ninja mode: swarm-intro still moves the cursors and builds the page; this file turns each cursor into an
 // animated stick-figure ninja (an original design: a masked head with a glinting eye slit, a red headband whose
-// tails stream out behind, and a short sword slung across the back) who throws shuriken to pin each element into place.
+// tails stream out behind, and a short sword slung across the back) who flies through each element with a serpent kick.
 //
 // Each frame a ninja's real on-screen velocity picks its pose:
 //   still           -> a low ready crouch
 //   moving sideways -> a deep-leaning sprint, arms pumping; at speed it leaves fading afterimages behind it
 //   moving up       -> a tucked somersault, spinning as it rises
 //   moving down     -> a drop, legs ready for the landing, arms up and out, headband tails streaming up
-//   building        -> a crouched throwing stance, snapping shuriken into the selection box one after another
+//   building        -> a flying serpent kick: airborne, body leaning back, front leg driven out straight, the other tucked,
+//                      streaking across the selection box with speed lines and afterimages (also on a page's data-kick)
 //   idle            -> vanishes in a puff of smoke and lurks at the edge of the screen, almost invisible but for its eyes:
 //                      flat against a side wall with its back to it, gripping the wall behind, or crouched along the bottom.
 //                      If the pointer comes near, it vanishes again at once.
@@ -20,7 +21,7 @@
     run:   { lean: .62, tF: 0, kF: -.5, tB: 0, kB: -.5, aF: 0, eF: 1.2, aB: 0, eB: 1.2 },          // legs and arms driven by the stride
     up:    { lean: .1, tF: 1.7, kF: -2.5, tB: 1.4, kB: -2.4, aF: 1.4, eF: 1.3, aB: 1.1, eB: 1.5 },   // tucked for the flip
     down:  { lean: .12, tF: .35, kF: -.3, tB: -.3, kB: -.05, aF: 2.0, eF: .25, aB: -2.0, eB: -.25 },
-    throw: { lean: .3, tF: .75, kF: -1.0, tB: -.6, kB: -.25, aF: 1.6, eF: 0, aB: 1.1, eB: 1.6 },
+    kick:  { lean: -.55, tF: 1.68, kF: 0, tB: .35, kB: -2.3, aF: 1.15, eF: 1.0, aB: -1.85, eB: .25 },   // the serpent kick: front leg out straight, the other tucked
     lurk:  { lean: .5, tF: 1.05, kF: -2.1, tB: .25, kB: -1.7, aF: .7, eF: 1.5, aB: -.15, eB: .9 },
     wall:  { lean: -.12, tF: .08, kF: -.05, tB: .5, kB: -2.2, aF: -1.25, eF: -.2, aB: -2.1, eB: .35 }   // back to the wall, hands gripping it behind, one foot up against it
   };
@@ -30,7 +31,6 @@
   function lerp(cur, tgt, k) { for (var key in tgt) cur[key] += (tgt[key] - cur[key]) * k; }
   function f1(q) { return q[0].toFixed(1) + " " + q[1].toFixed(1); }
   function seg() { return "M" + [].map.call(arguments, f1).join(" L"); }
-  var STAR = '<svg viewBox="-6 -6 12 12"><path d="M0 -5.5 L1.3 -1.3 L5.5 0 L1.3 1.3 L0 5.5 L-1.3 1.3 L-5.5 0 L-1.3 -1.3 Z"/><circle r="1.1"/></svg>';
 
   function makeSprite(cursor) {
     var svg = document.createElementNS(SVGNS, "svg");
@@ -39,6 +39,7 @@
     g.appendChild(shade);
     function el(tag, attrs, parent) { var e = document.createElementNS(SVGNS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); (parent || shade).appendChild(e); return e; }
     var parts = {
+      streak: el("path", { "stroke-width": .9, opacity: .55 }),      // speed lines behind a flying kick
       tails: el("path", { class: "band", "stroke-width": 1.5 }),    // headband tails
       sword: el("path", { "stroke-width": 1.8 }),                   // short sword slung across the back
       body: el("path", { "stroke-width": 2.4 }),
@@ -48,7 +49,7 @@
     };
     svg.appendChild(g); cursor.appendChild(svg);
     return { svg: svg, g: g, shade: shade, p: parts, pose: JSON.parse(JSON.stringify(POSES.idle)), face: 1, x: null, y: null, vx: 0, vy: 0,
-      state: "idle", phase: 0, spin: 0, ox: 0, oy: 0, ovx: 0, ovy: 0, recoil: 0, lastClash: 0, throwT: 0, ghostT: 0, hand: [0, -20], fade: 1 };
+      state: "idle", phase: 0, spin: 0, ox: 0, oy: 0, ovx: 0, ovy: 0, recoil: 0, lastClash: 0, ghostT: 0, hand: [0, -20], fade: 1 };
   }
 
   function render(s, now) {
@@ -56,18 +57,18 @@
     var up = [Math.sin(P.lean), -Math.cos(P.lean)], fwd = [Math.cos(P.lean), Math.sin(P.lean)];
     // the legs first, from a hip at the origin, so the whole figure can be set down with its lowest foot on the ground
     var o = [0, 0], kF = dir(o, P.tF, 6.5), fF = dir(kF, P.tF + P.kF, 6.5), kB = dir(o, P.tB, 6.5), fB = dir(kB, P.tB + P.kB, 6.5);
-    var lift = st === "up" ? 12 : st === "down" ? 5 : st === "run" ? Math.abs(Math.sin(s.phase)) * 1.5 : 0;
+    var lift = st === "up" ? 12 : st === "kick" ? 9 : st === "down" ? 5 : st === "run" ? Math.abs(Math.sin(s.phase)) * 1.5 : 0;
     var dy = -Math.max(fF[1], fB[1], 1) - lift;
     function at(q) { return [q[0], q[1] + dy]; }
     var hip = at(o); kF = at(kF); fF = at(fF); kB = at(kB); fB = at(fB);
     var neck = add(hip, up, 10), sh = add(neck, up, -1.2), head = add(neck, up, 3.6);
-    if (st === "throw" && s.target) {
-      // the throwing arm snaps from cocked-back to pointing at the target with every shuriken
-      var aim = Math.atan2(s.target[0] - sh[0], s.target[1] - sh[1]), k = clamp((now - s.throwT) / 110, 0, 1);
-      P.aF = aim - (1 - k) * 1.9; P.eF = (1 - k) * 1.2;
-    }
     var eF = dir(sh, P.aF, 5.3), hF = dir(eF, P.aF + P.eF, 5.3), eB = dir(sh, P.aB, 5.3), hB = dir(eB, P.aB + P.eB, 5.3);
     s.hand = hF;
+    if (st === "kick") {                                            // speed lines streaming back from the body
+      var j = Math.sin(now / 40) * 2, str = "";
+      [-12, -6, 0].forEach(function (yy, i) { var x0 = hip[0] - 5 - i * 2, y0 = hip[1] + yy; str += "M" + f1([x0, y0]) + " L" + f1([x0 - 12 - i * 4 + j, y0]); });
+      s.p.streak.setAttribute("d", str);
+    } else s.p.streak.setAttribute("d", "");
     s.p.body.setAttribute("d", seg(hip, neck) + seg(hip, kF, fF) + seg(hip, kB, fB) + seg(sh, eF, hF) + seg(sh, eB, hB));
     s.p.head.setAttribute("cx", head[0].toFixed(1)); s.p.head.setAttribute("cy", head[1].toFixed(1));
     var eyeC = add(add(head, up, .5), fwd, 1.2);
@@ -120,37 +121,25 @@
         }
         s.x = p[0]; s.y = p[1];
         var speed = Math.hypot(s.vx, s.vy), prev = s.state;
-        // a zap (set by a page: data-zap, aimed at data-zx / data-zy): one shuriken thrown at that point
-        var zapping = !c._box && c.dataset.zap && now - c.dataset.zap < 260;
-        if (c._box || zapping) s.state = "throw";
+        // a flying kick: while building (the library drags the cursor across the box) or while a page says so (data-kick: until when)
+        var kicking = c._box || (c.dataset.kick && now < +c.dataset.kick);
+        if (kicking) s.state = "kick";
         else if (speed < .05 && c.dataset.rest && now - c.dataset.rest < 500) s.state = c.dataset.wall ? "wall" : "lurk";
         else if (speed < .04) s.state = "idle";
         else if (Math.abs(s.vx) >= Math.abs(s.vy) * .7) s.state = "run";
         else s.state = s.vy < 0 ? "up" : "down";
         if (c.dataset.pose !== s.state) c.dataset.pose = s.state;   // how the figure is posed right now (data-state says what it's doing)
-        if (s.state === "throw" && !c._box) {
-          var zx = +c.dataset.zx, zy = +c.dataset.zy;
-          s.face = zx >= s.x ? 1 : -1;
-          s.target = [(zx - s.x - s.ox) * s.face / K, (zy - s.y - s.oy) / K];
-          if (c.dataset.zap !== s.zapSeen) {
-            s.zapSeen = c.dataset.zap; s.throwT = now;
-            throwStar([s.x + s.ox + s.hand[0] * s.face * K, s.y + s.oy + s.hand[1] * K], [zx, zy]);
-          }
-        } else if (s.state === "throw") {
-          var b = c._box, bl = parseFloat(b.style.left), bt = parseFloat(b.style.top), bw = parseFloat(b.style.width) || 0, bh = parseFloat(b.style.height) || 0;
-          s.face = bl + bw / 2 >= s.x ? 1 : -1;
-          s.target = [(bl + bw / 2 - s.x - s.ox) * s.face / K, (bt + bh / 2 - s.y - s.oy) / K];      // in the sprite's own (flipped, scaled) frame
-          if (prev !== "throw" || now - s.throwT > 170) {            // another shuriken, into the open part of the box
-            s.throwT = now;
-            var from = [s.x + s.ox + s.hand[0] * s.face * K, s.y + s.oy + s.hand[1] * K];
-            throwStar(from, [bl + bw * (.35 + Math.random() * .65), bt + bh * Math.random()]);
-          }
+        if (s.state === "kick") {
+          // face the way it's flying; before it's moving, towards the middle of the box
+          if (Math.abs(s.vx) > .05) s.face = s.vx > 0 ? 1 : -1;
+          else if (c._box) s.face = parseFloat(c._box.style.left) + (parseFloat(c._box.style.width) || 0) / 2 >= s.x ? 1 : -1;
+          if (speed > .2 && now - s.ghostT > 45) { s.ghostT = now; ghost(s); }
         } else {
           s.target = null;
           if (s.state === "lurk" || s.state === "wall") s.face = c.dataset.face ? +c.dataset.face : s.face;
           else if (Math.abs(s.vx) > .03) s.face = s.vx > 0 ? 1 : -1;
         }
-        lerp(s.pose, POSES[s.state], s.state === "throw" ? .45 : .22);
+        lerp(s.pose, POSES[s.state], s.state === "kick" ? .5 : .22);
         if (s.state === "run") {                                    // the stride: legs scissor, arms pump against them
           var ph = s.phase, cyc = { tF: .15 + Math.sin(ph), kF: -.25 - 1.2 * Math.max(0, Math.cos(ph)), tB: .15 - Math.sin(ph), kB: -.25 - 1.2 * Math.max(0, -Math.cos(ph)), aF: -Math.sin(ph) * .9, aB: Math.sin(ph) * .9 };
           lerp(s.pose, cyc, .5);
@@ -167,15 +156,6 @@
     function wake() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } }
 
     // effects, all added to swarm-intro's world layer so they scroll with the page
-    function throwStar(from, to) {
-      var w = world(); if (!w) return;
-      var e = document.createElement("div"); e.className = "nj-star"; e.innerHTML = STAR;
-      e.style.left = from[0] + "px"; e.style.top = from[1] + "px"; w.appendChild(e);
-      var dx = to[0] - from[0], dy = to[1] - from[1];
-      e.animate([{ transform: "translate(0,0) rotate(0deg)" }, { transform: "translate(" + dx + "px," + dy + "px) rotate(900deg)" }],
-        { duration: 160 + Math.min(140, Math.hypot(dx, dy) * .25), easing: "cubic-bezier(.3,.6,.4,1)", fill: "forwards" })
-        .finished.then(function () { e.classList.add("stuck"); setTimeout(function () { e.remove(); }, 450); }, function () { e.remove(); });
-    }
     function smoke(x, y) {
       var w = world(); if (!w) return;
       var e = document.createElement("div"); e.className = "nj-smoke"; e.style.left = x + "px"; e.style.top = (y - 10) + "px";
@@ -199,7 +179,7 @@
         var dx = (b.x + b.ox) - (a.x + a.ox), dy = (b.y + b.oy) - (a.y + a.oy), d = Math.hypot(dx, dy);
         if (d >= R * 2 || d < .01) { if (d < .01) { a.ox -= .5; b.ox += .5; } continue; }
         var nx = dx / d, ny = dy / d, push = (R * 2 - d) / 2;
-        var aFixed = a.state === "throw", bFixed = b.state === "throw";
+        var aFixed = a.state === "kick", bFixed = b.state === "kick";
         if (!aFixed) { a.ox -= nx * push * (bFixed ? 2 : 1); a.oy -= ny * push * (bFixed ? 2 : 1); }
         if (!bFixed) { b.ox += nx * push * (aFixed ? 2 : 1); b.oy += ny * push * (aFixed ? 2 : 1); }
         var closing = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
@@ -215,7 +195,7 @@
       list.forEach(function (s) {
         s.ox += s.ovx * k; s.oy += s.ovy * k; s.ovx *= Math.pow(.82, k); s.ovy *= Math.pow(.82, k);
         s.ox -= s.ox * .06 * k; s.oy -= s.oy * .06 * k;
-        if (s.state === "throw") { s.ox *= .6; s.oy *= .6; }
+        if (s.state === "kick") { s.ox *= .6; s.oy *= .6; }
       });
     }
     function spark(w, x, y) {
