@@ -165,6 +165,7 @@
         var p = posOf(c); if (!p) return;
         if (s.x !== null) {
           var vx = (p[0] - s.x) / dt, vy = (p[1] - s.y) / dt;
+          if (Math.hypot(p[0] - s.x, p[1] - s.y) > 60 && dt < 120) vx = vy = s.vx = s.vy = 0;   // moved in an instant (an iaijutsu dash): not running
           s.vx += (vx - s.vx) * .35; s.vy += (vy - s.vy) * .35;               // smoothed px per ms
           s.phase += Math.abs(p[0] - s.x) * .22 + Math.abs(p[1] - s.y) * .08;
         }

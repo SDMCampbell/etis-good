@@ -105,12 +105,12 @@ A sign written by the swarm (`signs.html`; the old `/other` address redirects he
 
 ## Bug Hunt (`/new`)
 
-`new.html`, in the page menu as "new". Bugs crawl in from every edge towards the core in the middle of the screen, and the swarm, standing guard in a ring round it, squashes them with each kind's **attack** (not their build animations):
+`new.html`, in the page menu as "new". Bugs crawl in from every edge towards the core in the middle of the screen, and the swarm defends it with each kind's **attack** (not their build animations). **You place the defenders**: pick a kind in the header and click anywhere to put one there (up to 24; a ring shows its range; "clear the swarm" starts over). It begins with a small crew scattered round the core. Each kind fights its own way:
 
-- **robot**: its laser (long range); the bug fries.
-- **wizard**: a bolt from its staff that splashes bugs close by; the bug is zapped apart.
-- **ninja**: shuriken, fast, one point each, landing when the star arrives; the bug is pinned.
-- **samurai**: the iaijutsu from its idle strike (crouch, vanish, hairline cut); the bug freezes where it was cut and falls apart in two halves at the click of the sheath. Three points a hit.
-- **cursor**: dashes out, clicks it (a ripple) and dashes back; the bug is squashed flat.
+- **robot**, a turret: plants itself exactly where you put it; the longest range (its laser); the bug fries.
+- **wizard**: drifts slowly round its spot; long range; a bolt from its staff that splashes bugs close by; the bug is zapped apart.
+- **samurai**: guards its spot; when a bug comes within range it does the iaijutsu (crouch, vanish), cuts straight through it and lands on the far side, sheathes there, then walks back. The bug freezes where it was cut and falls apart in two halves at the click of the sheath. Three points a hit.
+- **ninja**: blinks in puffs of smoke from spot to spot near where you put it (leaning towards the closest bug), throwing rapid shuriken; the bug is pinned.
+- **cursor**: never stops: patrols the whole screen, heading for a bug no other cursor is after (or wandering when there's none), dashing in to click it (a ripple); the bug is squashed flat.
 
-Bugs come in waves that grow and speed up: plain bugs (NullPointer, OffByOne, Typo, 404, NaN), fast zig-zagging glitches (RaceCondition, Flaky), Heisenbugs that jump somewhere else now and then so attacks aimed at them can miss, and slow, tough Memory Leaks that leave a trail. A bug that reaches the core costs integrity; at 0 it's a kernel panic and the core reboots a couple of waves back. Recruit more of any kind (up to 20), release a handful of bugs, or click anywhere to drop one in. Built on the library's puppet mode, with `act(agent, fn)` for the cursor's dash; the ninja now also throws at a `data-zap` point the way the robot and wizard already fire at one.
+Bugs come in waves that grow and speed up: plain bugs (NullPointer, OffByOne, Typo, 404, NaN), fast zig-zagging glitches (RaceCondition, Flaky), Heisenbugs that jump somewhere else now and then so attacks aimed at them can miss, and slow, tough Memory Leaks that leave a trail. A bug that reaches the core costs integrity; at 0 it's a kernel panic and the core reboots a couple of waves back. "Release bugs" throws in a handful at once. Built on the library's puppet mode, with `act(agent, fn)` for the cursor's dash and the samurai's dash-through (the cursors' patrol is drawn every frame, like the music page's ring); the ninja now also throws at a `data-zap` point the way the robot and wizard already fire at one.
