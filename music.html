@@ -123,7 +123,7 @@
       // ---------- the circle: for each figure in the ring, three places to play outward from it (softer notes nearer) ----------
       var ringBox = document.createElement("div"); ringBox.id = "ring"; field.appendChild(ringBox);
       var guide = document.createElement("div"); guide.id = "ringGuide"; ringBox.appendChild(guide);
-      var rnotes = [], OUT = [1.22, 1.44, 1.66];
+      var rnotes = [], OUT = [1.22, 1.44, 1.66], rot = 0;   // rot: how far the ring has turned (it turns all the time)
       function groupOf(slot) { return Math.min(2, Math.floor(slot * 3 / N)); }
       for (var i = 0; i < N; i++) {
         rnotes.push([]);
@@ -136,7 +136,7 @@
       // geometry, in the field's own coordinates: bass starts on the left and goes clockwise, over the top, to treble
       function ring() {
         var W = field.clientWidth, H = field.clientHeight, ry = Math.max(60, (H / 2 - 28) / OUT[2]), rx = Math.min(ry * 1.6, (W / 2 - 34) / OUT[2]);
-        return { cx: W / 2, cy: H / 2, rx: rx, ry: ry, at: function (i, sc) { var t = Math.PI + i / N * 2 * Math.PI; return [W / 2 + Math.cos(t) * rx * sc, H / 2 + Math.sin(t) * ry * sc]; } };
+        return { cx: W / 2, cy: H / 2, rx: rx, ry: ry, at: function (i, sc) { var t = Math.PI + i / N * 2 * Math.PI + rot; return [W / 2 + Math.cos(t) * rx * sc, H / 2 + Math.sin(t) * ry * sc]; } };
       }
       function placeRing() {
         var g = ring();
@@ -160,9 +160,8 @@
           if (layout === "circle") {
             var r = field.getBoundingClientRect(), p = ring().at(a.slot, 1), x = r.left + scrollX + p[0], y = r.top + scrollY + p[1] + 16, d = Math.hypot(x - a.x, y - a.y);
             var side = GROUPS[groupOf(a.slot)]; if (a.el.dataset.side !== side) { a.team = side; a.el.dataset.side = side; }
-            if (d > 4) return { x: x, y: y, ms: Math.max(250, Math.min(1400, d * 2.2 / pace)), wait: 60 };
-            if (a.kind !== "ninja") a.el.dataset.rest = now;
-            return { x: x, y: y, ms: 200, wait: 120 };
+            if (d > 30) return { x: x, y: y, ms: Math.max(250, Math.min(1400, d * 2.2 / pace)), wait: 0 };   // back to its place
+            return { x: x, y: y, ms: 90, wait: 0 };                                                            // riding the ring round
           }
           if (!a.placed) {
             a.placed = true;
@@ -221,6 +220,8 @@
           var ks = [want, want === 2 ? 1 : want + 1, want === 0 ? 2 : want - 1], note = null;
           for (var k = 0; k < 3 && !note; k++) if (!(rnotes[s2][ks[k]]._busy > now)) note = rnotes[s2][ks[k]];
           if (!note) continue;
+          var g2 = ring(), at = g2.at(s2, OUT[ks[k - 1]]);                  // played outward from where the figure is right now
+          note.parentNode.style.left = at[0] + "px"; note.parentNode.style.top = at[1] + "px";
           a.speed = pace;
           if (!swarm.order(a, note)) continue;
           note._busy = now + 6000; return true;
@@ -233,7 +234,7 @@
       if (layout !== "circle" && layout !== "blocks") { layout = "blocks"; try { if (localStorage.getItem("musicLayout") === "circle") layout = "circle"; } catch (e) {} }
       var LEGEND = {
         blocks: 'every note or beat sends one of the swarm to play it: <span style="color:var(--lo)">bass</span> on the left, <span style="color:var(--hi2)">treble</span> on the right · they move at the music\'s pace · <span id="pace"></span>',
-        circle: 'each figure in the ring is one slice of the sound, <span style="color:var(--lo)">bass</span> on the left going clockwise round to <span style="color:var(--hi2)">treble</span> · on its note, it plays outward · <span id="pace"></span>'
+        circle: 'each figure is a slice of the sound, <span style="color:var(--lo)">bass</span> round to <span style="color:var(--hi2)">treble</span> · the ring turns with the music · on its note, a figure plays outward · <span id="pace"></span>'
       };
       function setLayout(l) {
         layout = l; try { localStorage.setItem("musicLayout", l); } catch (e) {}
@@ -335,6 +336,7 @@
       function frame(now) {
         requestAnimationFrame(frame);
         var dt = Math.min(.1, (now - last) / 1000 || 0); last = now;
+        rot += dt * .22 * (quiet ? .6 : pace);                             // the ring turns clockwise, faster with the music
         if (!analyser) return;
         analyser.getByteFrequencyData(freq);
         var hz = AC.sampleRate / analyser.fftSize, total = 0, flux = [0, 0, 0], best = [0, 8, 16], bestF = [0, 0, 0], lvl = new Float32Array(COLS);
