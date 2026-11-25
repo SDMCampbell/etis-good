@@ -103,9 +103,9 @@ A sign written by the swarm (`signs.html`; the old `/other` address redirects he
 
 **Page menu**: every page has a "more" dropdown in its top right (`assets/menu.js`) listing the site's pages: résumé, game, music, band, signs.
 
-## Bug Hunt (`/new`)
+## Bug Hunt (`/tower`)
 
-`new.html`, in the page menu as "new". Bugs crawl in from every edge towards the core in the middle of the screen, and the swarm defends it with each kind's **attack** (not their build animations). **You place the defenders**: pick a kind in the header and click anywhere to put one there (up to 24; a ring shows its range; "clear the swarm" starts over). It begins with a small crew scattered round the core. Each kind fights its own way:
+`tower.html`, in the page menu as "tower" (the old `/new` address redirects here). Bugs crawl in from every edge towards the core in the middle of the screen, and the swarm defends it with each kind's **attack** (not their build animations). **You place the defenders**: pick a kind in the header and click anywhere to put one there (up to 24; a ring shows its range; "clear the swarm" starts over). Click a defender to select it: its range ring follows it around, labelled, until you click somewhere else. It begins with a small crew scattered round the core. Each kind fights its own way:
 
 - **robot**, a turret: plants itself exactly where you put it; the longest range (its laser); the bug fries.
 - **wizard**: drifts slowly round its spot; long range; a bolt from its staff that splashes bugs close by; the bug is zapped apart.
