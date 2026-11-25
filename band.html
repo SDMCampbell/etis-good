@@ -65,7 +65,7 @@
 
   <div class="cover" id="startCover">
     <h2>SWARM BAND</h2>
-    <p>Make music by spawning a swarm. Every unit is a musician: robots drum, cursors play bass, samurai stab chords, wizards play the lead, ninjas tick the hi-hats. They write their own parts on the grid, and keep changing them.</p>
+    <p>Make music by spawning a swarm. Every unit is a musician: robots drum, cursors play bass, wizards stab chords, ninjas play the lead, samurai tick the hi-hats. They write their own parts on the grid, and keep changing them.</p>
     <button type="button" class="big" id="start">▶ start the band</button>
     <p>Then use <b>+</b> and <b>−</b> to add or remove players. Click any square to have a player add or remove that note.</p>
   </div>
@@ -85,11 +85,11 @@
       function w(base, map) { var a = []; for (var s = 0; s < STEPS; s++) a.push(map[s] !== undefined ? map[s] : typeof base === "function" ? base(s) : base); return a; }
       var evenOdd = function (e, o) { return function (s) { return s % 2 ? o : e; }; };
       var PARTS = [
-        { kind: "wizard", name: "lead", mono: true, max: 10, rows: [
+        { kind: "ninja", name: "lead", mono: true, max: 10, rows: [
           { label: "lead A", w: w(evenOdd(3, 1.2), { 0: 4 }) }, { label: "lead G", w: w(evenOdd(3, 1.2), {}) }, { label: "lead E", w: w(evenOdd(3, 1.2), {}) }, { label: "lead C", w: w(evenOdd(3, 1.2), {}) }] },
-        { kind: "samurai", name: "chords", max: 8, rows: [
+        { kind: "wizard", name: "chords", max: 8, rows: [
           { label: "chord 5", w: w(.6, { 2: 5, 6: 5, 10: 5, 14: 5, 0: 2, 8: 2 }) }, { label: "chord 3", w: w(.6, { 2: 5, 6: 5, 10: 5, 14: 5, 4: 2, 12: 2 }) }, { label: "chord 1", w: w(.6, { 2: 5, 6: 5, 10: 5, 14: 5, 0: 2, 8: 2 }) }] },
-        { kind: "ninja", name: "hats", max: 16, rows: [
+        { kind: "samurai", name: "hats", max: 16, rows: [
           { label: "click", w: w(evenOdd(.5, 1.5), { 3: 3, 11: 3 }) }, { label: "hi-hat", w: w(evenOdd(3, 1.5), { 2: 6, 6: 6, 10: 6, 14: 6 }) }] },
         { kind: "cursor", name: "bass", mono: true, max: 10, rows: [
           { label: "bass oct", w: w(evenOdd(.6, .3), { 3: 1.5, 6: 2, 11: 1.5, 14: 2 }) }, { label: "bass 5th", w: w(evenOdd(.8, .3), { 6: 2, 11: 2, 14: 2 }) }, { label: "bass root", w: w(evenOdd(1.5, .5), { 0: 9, 8: 6, 3: 3, 11: 3 }) }] },
@@ -160,7 +160,7 @@
         var now = performance.now();
         swarm.units().forEach(function (a) {
           if (a.working || a.job || now < a.nextAct) return;
-          var p = byKind[a.kind], have = partNotes(p), want = Math.min(p.max, 2 + members(p.kind).length * 2 + (p.kind === "ninja" ? 2 : 0));
+          var p = byKind[a.kind], have = partNotes(p), want = Math.min(p.max, 2 + members(p.kind).length * 2 + (p.name === "hats" ? 2 : 0));
           a.nextAct = now + 1300 + Math.random() * 2400;
           if (have.length < want) { var n = spot(p, now); if (n) send(a, n, "build", now); }
           else if (Math.random() < .45) { var free = have.filter(function (n) { return !(n._busy > now); }); if (free.length) send(a, free[Math.random() * free.length | 0], "unbuild", now); }
@@ -198,11 +198,11 @@
       }
       function hit(t, type, f, peak, dur) { var s = AC.createBufferSource(); s.buffer = noise; var fl = AC.createBiquadFilter(); fl.type = type; fl.frequency.value = f; s.connect(fl); env(fl, t, peak, dur); s.start(t, Math.random() * .5, dur + .02); }
       function sound(r, t, bar) {
-        var k = r.part.kind, i = r.i, root = ROOT[bar], d = stepDur;
-        if (k === "robot") { if (i === 1) tone("sine", 150, t, 1, .3).frequency.exponentialRampToValueAtTime(42, t + .13); else { hit(t, "bandpass", 1900, .55, .17); tone("triangle", 190, t, .25, .09); } }
-        else if (k === "cursor") tone("sawtooth", semis(root, [12, 7, 0][i]), t, .5, d * 1.9, 520);
-        else if (k === "ninja") { if (i === 1) hit(t, "highpass", 7500, .2, .05); else hit(t, "bandpass", 4200, .25, .025); }
-        else if (k === "samurai") { var f = semis(root * 4, [7, THIRD[bar], 0][i]); tone("sawtooth", f, t, .13, d * 1.6, 2400, false, -8); tone("sawtooth", f, t, .13, d * 1.6, 2400, false, 8); }
+        var k = r.part.name, i = r.i, root = ROOT[bar], d = stepDur;
+        if (k === "drums") { if (i === 1) tone("sine", 150, t, 1, .3).frequency.exponentialRampToValueAtTime(42, t + .13); else { hit(t, "bandpass", 1900, .55, .17); tone("triangle", 190, t, .25, .09); } }
+        else if (k === "bass") tone("sawtooth", semis(root, [12, 7, 0][i]), t, .5, d * 1.9, 520);
+        else if (k === "hats") { if (i === 1) hit(t, "highpass", 7500, .2, .05); else hit(t, "bandpass", 4200, .25, .025); }
+        else if (k === "chords") { var f = semis(root * 4, [7, THIRD[bar], 0][i]); tone("sawtooth", f, t, .13, d * 1.6, 2400, false, -8); tone("sawtooth", f, t, .13, d * 1.6, 2400, false, 8); }
         else tone("triangle", semis(440, [12, 10, 7, 3][i]), t, .2, d * 2.2, 0, true);
       }
       function schedule() {
@@ -221,7 +221,7 @@
       function pause() { playing = false; clearInterval(timer); $("playBtn").textContent = "play"; }
       $("playBtn").onclick = function () { playing ? pause() : play(); };
       $("bpm").onchange = function () { var v = Math.max(60, Math.min(180, Math.round(+this.value) || 110)); this.value = v; stepDur = 60 / v / 4; };
-      $("start").onclick = function () { $("startCover").hidden = true; play(); addPlayer("robot"); addPlayer("cursor"); addPlayer("ninja"); };
+      $("start").onclick = function () { $("startCover").hidden = true; play(); addPlayer("robot"); addPlayer("cursor"); addPlayer("samurai"); };
       refresh();
       window.__band = { swarm: swarm, stats: stats, add: addPlayer, remove: removePlayer, notes: function () { var o = {}; PARTS.forEach(function (p) { o[p.kind] = partNotes(p).length; }); return o; } };
     })();

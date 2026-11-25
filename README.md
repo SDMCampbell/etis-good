@@ -89,7 +89,7 @@ A music visualizer played by the swarm (`music.html`), in the page menu.
 Make music by spawning the swarm (`band.html`), in the page menu as "band".
 
 - **The grid**: a 16-step sequencer, one row per sound, with a playhead sweeping left to right. A built note sounds when the playhead reaches it (Web Audio, all synthesised; the bass and chords follow a 4-bar cycle of A minor, A minor, F, G, and the lead stays on the A minor pentatonic so any pattern fits).
-- **The players**: each kind of unit is a musician with its own rows: robots drum (kick, snare), cursors play bass, ninjas tick the hats, samurai stab chords, wizards play the lead. Use + and − to add or remove players (up to 4 of a kind). A part only sounds while it has at least one player; its rows dim otherwise, and the notes are kept.
+- **The players**: each kind of unit is a musician with its own rows: robots drum (kick, snare), cursors play bass, samurai tick the hats, wizards stab chords, ninjas play the lead. Use + and − to add or remove players (up to 4 of a kind). A part only sounds while it has at least one player; its rows dim otherwise, and the notes are kept.
 - **How they write**: every couple of seconds a free player builds a note in its rows, weighted towards where that sound usually falls (kick on the beat, snare on 2 and 4, chords off the beat), up to a size that grows with the number of players; after that it now and then takes a note apart so the part keeps changing. Between jobs the players walk along their rows with the playhead. Clicking a square has a player add or remove that note. Tempo, pause and "clear the notes" are in the header.
 - Built on the library's puppet mode: `order(agent, el, "unbuild")` and `remove(agent)` were added for it.
 
