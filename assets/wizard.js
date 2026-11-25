@@ -132,7 +132,9 @@
         }
         s.x = p[0]; s.y = p[1];
         var speed = Math.hypot(s.vx, s.vy), prev = s.state;
-        if (c._box) s.state = "cast";
+        // a zap (set by the game when a warder repels someone): the same cast, aimed at the data-zx / data-zy point
+        var zapping = !c._box && c.dataset.zap && now - c.dataset.zap < 280;
+        if (c._box || zapping) s.state = "cast";
         // seated stays seated through gentle movement (following the pointer, settling into place); only a real move stands it up
         else if (c.dataset.rest && now - c.dataset.rest < 500 && speed < (c.dataset.line && now - c.dataset.line < 500 ? .6 : .25)) s.state = "meditate";
         else if (speed < .04) s.state = "idle";
@@ -140,7 +142,7 @@
         else s.state = s.vy < 0 ? "up" : "down";
         if (s.state === "cast") {
           if (prev !== "cast") s.castT = now;
-          var b = c._box, bx = parseFloat(b.style.left) + (parseFloat(b.style.width) || 0) / 2, by = parseFloat(b.style.top) + (parseFloat(b.style.height) || 0) / 2;
+          var b = c._box, bx = b ? parseFloat(b.style.left) + (parseFloat(b.style.width) || 0) / 2 : +c.dataset.zx, by = b ? parseFloat(b.style.top) + (parseFloat(b.style.height) || 0) / 2 : +c.dataset.zy;
           s.face = bx >= s.x ? 1 : -1;
           s.target = [(bx - s.x - s.ox) * s.face, by - s.y - s.oy];          // in the sprite's own (flipped) frame
         } else { s.target = null; if (Math.abs(s.vx) > .03) s.face = s.vx > 0 ? 1 : -1; }

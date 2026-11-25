@@ -468,7 +468,7 @@ function swarmIntro(options = {}) {
         return r.bottom > 40 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth;
     };
     async function knockedBack(a, from, power) {
-        if (options.war && hurt(a, power || 1))
+        if (options.war && power !== 0 && hurt(a, power || 1))
             return;
         const p = cursorPos(a);
         let dx = p[0] - from[0], dy = p[1] - from[1], d = Math.hypot(dx, dy) || 1;
@@ -625,6 +625,20 @@ function swarmIntro(options = {}) {
         const p = cursorPos(b), dx = p[0] - from[0], dy = p[1] - from[1], d = Math.hypot(dx, dy) || 1;
         moveTo(b, p[0] + dx / d * 26, p[1] + dy / d * 18, 160);
     }
+    // pushed out past the edge of a ward centred on c (radius R), and stunned; a teardown in progress is called off
+    function repel(b, c, R) {
+        if (Math.random() < (TR(b).dodge || 0))
+            return blink(b);
+        const now = performance.now(), p = cursorPos(b);
+        let dx = p[0] - c[0], dy = p[1] - c[1], d = Math.hypot(dx, dy);
+        if (d < 1) { dx = rand(-1, 1); dy = rand(-1, 1); d = Math.hypot(dx, dy) || 1; }
+        b.repelledUntil = now + 1400;
+        if (b.target && b.target._abort && b.state === "unbuilding")
+            return b.target._abort(c, 0);              // knockedBack does the shove (no damage) and the stun
+        b.restUntil = now + rand(900, 1400);
+        setState(b, "stunned");
+        moveTo(b, c[0] + dx / d * (R + 46), c[1] + dy / d * (R + 32), 240);
+    }
     function blink(b) {
         const p = cursorPos(b);
         moveTo(b, p[0] + rand(-110, 110), p[1] + rand(-70, 70), 1);
@@ -719,6 +733,31 @@ function swarmIntro(options = {}) {
             }
             else
                 delete a.el.dataset.zap;
+        }
+        // a warder repels: anyone coming into its ward is blasted back out and stunned for a moment (no damage). A unit
+        // that's duelling the warder itself isn't pushed out: beating the warder is how a ward is broken.
+        if (role === "ward") {
+            const now = performance.now(), R = t.ward || 0;
+            let foe = null, fd = R + 10;
+            agents.forEach((b) => {
+                if (b.team === a.team || b.dead || b.extra || b.state === "duelling" || now < (b.repelledUntil || 0))
+                    return;
+                const p = cursorPos(b), d = Math.hypot(p[0] - c[0], p[1] - c[1]);
+                if (d < fd) { fd = d; foe = b; }
+            });
+            if (foe && now > (a.zapT || 0)) {
+                a.zapT = now + 900;
+                const p = cursorPos(foe);
+                a.el.dataset.zap = now;
+                a.el.dataset.zx = p[0];
+                a.el.dataset.zy = p[1] - 14;
+                if (a.ring) {
+                    a.ring.classList.remove("repel");
+                    void a.ring.offsetWidth;
+                    a.ring.classList.add("repel");
+                }
+                setTimeout(() => !a.dead && !foe.dead && repel(foe, c, R), 120);
+            }
         }
         await wait(260);
         return true;

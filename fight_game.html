@@ -55,6 +55,9 @@
     .war-ward[data-side="g"] { --c: #39FF7A; } .war-ward[data-side="r"] { --c: #FF5C70; }
     @keyframes ward-spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
     @keyframes ward-in { from { opacity: 0; } }
+    /* a repel: the ward flares and a shockwave rolls out to its edge */
+    .war-ward.repel::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--c); box-shadow: 0 0 14px var(--c), inset 0 0 14px var(--c); animation: ward-repel .45s ease-out forwards; }
+    @keyframes ward-repel { from { transform: scale(.3); opacity: 1; } to { transform: scale(1.08); opacity: 0; } }
     /* lives left, as pips under each unit */
     .war .swarm-intro-cursor[data-hp]::after { position: absolute; left: 50%; top: 9px; transform: translateX(-50%); font-size: 7px; letter-spacing: 1px; line-height: 1; color: var(--swarm-intro-fg); white-space: nowrap; text-shadow: 0 0 4px #000; }
     .war .swarm-intro-cursor[data-hp="1"]::after { content: "■"; } .war .swarm-intro-cursor[data-hp="2"]::after { content: "■■"; }
@@ -110,7 +113,7 @@
     <span><b>cursor</b> swarmer: grabs empty panels</span>
     <span><b>samurai</b> duelist: hunts enemy units, hits twice as hard</span>
     <span><b>robot</b> sentinel: holds a fortress panel, lasers anyone close</span>
-    <span><b>wizard</b> warder: shields every panel in its ward</span>
+    <span><b>wizard</b> warder: shields every panel in its ward, and blasts back anyone who comes in</span>
     <span><b>ninja</b> raider: goes for the enemy keep, dodges half the time</span>
     <span><b>to win</b>: take the enemy keep. it's sealed while its side holds two of its four towers, and armoured (▮ = one more hit)</span>
   </p>
