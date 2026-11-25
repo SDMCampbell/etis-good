@@ -1,7 +1,7 @@
 // The site's page menu: a "more" dropdown in the top right of every page. Put <span class="site-menu-slot"
-// data-here="..."></span> where it goes; data-here marks the current page (resume, game, music, band, signs).
+// data-here="..."></span> where it goes; data-here marks the current page (resume, game, music, band, signs, new).
 (function () {
-  var PAGES = [["resume", "./", "résumé"], ["game", "fight_game.html", "game"], ["music", "music.html", "music"], ["band", "band.html", "band"], ["signs", "signs.html", "signs"]];
+  var PAGES = [["resume", "./", "résumé"], ["game", "fight_game.html", "game"], ["music", "music.html", "music"], ["band", "band.html", "band"], ["signs", "signs.html", "signs"], ["new", "new.html", "new"]];
   document.querySelectorAll(".site-menu-slot").forEach(function (slot) {
     var here = slot.dataset.here, menu = document.createElement("details");
     menu.className = "site-menu";

@@ -102,3 +102,15 @@ A sign written by the swarm (`signs.html`; the old `/other` address redirects he
 - With reduced motion (and no "play it anyway" choice saved from the résumé page), the sign just shows the text, with a "play it anyway" button to bring the swarm in. The music pages follow the same saved choice for their backgrounds.
 
 **Page menu**: every page has a "more" dropdown in its top right (`assets/menu.js`) listing the site's pages: résumé, game, music, band, signs.
+
+## Bug Hunt (`/new`)
+
+`new.html`, in the page menu as "new". Bugs crawl in from every edge towards the core in the middle of the screen, and the swarm, standing guard in a ring round it, squashes them with each kind's **attack** (not their build animations):
+
+- **robot**: its laser (long range); the bug fries.
+- **wizard**: a bolt from its staff that splashes bugs close by; the bug is zapped apart.
+- **ninja**: shuriken, fast, one point each, landing when the star arrives; the bug is pinned.
+- **samurai**: the iaijutsu from its idle strike (crouch, vanish, hairline cut); the bug freezes where it was cut and falls apart in two halves at the click of the sheath. Three points a hit.
+- **cursor**: dashes out, clicks it (a ripple) and dashes back; the bug is squashed flat.
+
+Bugs come in waves that grow and speed up: plain bugs (NullPointer, OffByOne, Typo, 404, NaN), fast zig-zagging glitches (RaceCondition, Flaky), Heisenbugs that jump somewhere else now and then so attacks aimed at them can miss, and slow, tough Memory Leaks that leave a trail. A bug that reaches the core costs integrity; at 0 it's a kernel panic and the core reboots a couple of waves back. Recruit more of any kind (up to 20), release a handful of bugs, or click anywhere to drop one in. Built on the library's puppet mode, with `act(agent, fn)` for the cursor's dash; the ninja now also throws at a `data-zap` point the way the robot and wizard already fire at one.

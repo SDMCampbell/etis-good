@@ -120,13 +120,23 @@
         }
         s.x = p[0]; s.y = p[1];
         var speed = Math.hypot(s.vx, s.vy), prev = s.state;
-        if (c._box) s.state = "throw";
+        // a zap (set by a page: data-zap, aimed at data-zx / data-zy): one shuriken thrown at that point
+        var zapping = !c._box && c.dataset.zap && now - c.dataset.zap < 260;
+        if (c._box || zapping) s.state = "throw";
         else if (speed < .05 && c.dataset.rest && now - c.dataset.rest < 500) s.state = c.dataset.wall ? "wall" : "lurk";
         else if (speed < .04) s.state = "idle";
         else if (Math.abs(s.vx) >= Math.abs(s.vy) * .7) s.state = "run";
         else s.state = s.vy < 0 ? "up" : "down";
         if (c.dataset.pose !== s.state) c.dataset.pose = s.state;   // how the figure is posed right now (data-state says what it's doing)
-        if (s.state === "throw") {
+        if (s.state === "throw" && !c._box) {
+          var zx = +c.dataset.zx, zy = +c.dataset.zy;
+          s.face = zx >= s.x ? 1 : -1;
+          s.target = [(zx - s.x - s.ox) * s.face / K, (zy - s.y - s.oy) / K];
+          if (c.dataset.zap !== s.zapSeen) {
+            s.zapSeen = c.dataset.zap; s.throwT = now;
+            throwStar([s.x + s.ox + s.hand[0] * s.face * K, s.y + s.oy + s.hand[1] * K], [zx, zy]);
+          }
+        } else if (s.state === "throw") {
           var b = c._box, bl = parseFloat(b.style.left), bt = parseFloat(b.style.top), bw = parseFloat(b.style.width) || 0, bh = parseFloat(b.style.height) || 0;
           s.face = bl + bw / 2 >= s.x ? 1 : -1;
           s.target = [(bl + bw / 2 - s.x - s.ox) * s.face / K, (bt + bh / 2 - s.y - s.oy) / K];      // in the sprite's own (flipped, scaled) frame

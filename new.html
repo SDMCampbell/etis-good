@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bug Hunt · Samuel Campbell</title>
+  <meta name="description" content="Bugs crawl in from every side; the swarm (samurai, robots, wizards, ninjas and cursors) guards the core and squashes them.">
+  <meta name="theme-color" content="#050806">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
+  <style>
+    /* Bug Hunt: bugs crawl in from the edges towards the core in the middle; the swarm (swarm-intro puppets, every mode's
+       figures) stands guard round it and squashes them with each kind's attack. Waves get bigger and stranger. */
+    html, body { height: 100%; overflow: hidden; }
+    body.hunt { font-size: 13px; }
+    .h-top { position: fixed; top: 0; left: 0; right: 0; z-index: 2147483647; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px 18px 6px; }
+    .h-top h1 { margin: 0 8px 0 0; font-size: 18px; letter-spacing: .14em; color: var(--hi); }
+    .h-top .site-menu { margin-left: auto; }
+    .hunt button { font: inherit; color: var(--text); background: rgb(5 8 6 / .7); border: 1px solid rgb(255 255 255 / .18); border-radius: 3px; padding: 4px 9px; min-height: 30px; cursor: pointer; }
+    .hunt button:hover { border-color: var(--c, var(--accent)); color: var(--c, var(--accent)); }
+    .recruit { display: inline-flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+    .recruit button { color: var(--c); }
+    .recruit .count { color: var(--dim); }
+    #hint { position: fixed; left: 0; right: 0; bottom: 10px; text-align: center; color: var(--dim); z-index: 3; pointer-events: none; }
+    [data-k="samurai"] { --c: #FFE27A; } [data-k="robot"] { --c: #39FF7A; } [data-k="wizard"] { --c: #C7A6FF; } [data-k="ninja"] { --c: #FF8FA0; } [data-k="cursor"] { --c: #5BC8FF; }
+    .hunt .swarm-intro-cursor[data-kind="samurai"] { --swarm-intro-fg: #FFE27A; } .hunt .swarm-intro-cursor[data-kind="robot"] { --swarm-intro-fg: #39FF7A; }
+    .hunt .swarm-intro-cursor[data-kind="wizard"] { --swarm-intro-fg: #C7A6FF; } .hunt .swarm-intro-cursor[data-kind="ninja"] { --swarm-intro-fg: #FF8FA0; }
+    .hunt .swarm-intro-cursor[data-kind="cursor"] { --swarm-intro-fg: #5BC8FF; filter: drop-shadow(0 0 4px #5BC8FF); }
+    #dummy { position: fixed; left: 0; bottom: 0; width: 2px; height: 2px; }
+    #dummy .tgt { display: block; width: 2px; height: 2px; }   /* the library needs one visible target to start; nothing is ever built here */
+    #arena { position: fixed; inset: 0; z-index: 1; cursor: crosshair; }
+    /* the core: what the bugs are after */
+    #core { position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%); width: 190px; padding: 12px 14px; text-align: center; color: var(--text);
+      border: 1px solid rgb(57 255 122 / .6); border-radius: 6px; background: rgb(5 8 6 / .8); box-shadow: 0 0 24px rgb(57 255 122 / .2), inset 0 0 20px rgb(57 255 122 / .08); }
+    #core b { display: block; font-size: 18px; letter-spacing: .3em; color: var(--hi); }
+    #core .bar { font-size: 12px; letter-spacing: 1px; color: var(--accent); white-space: pre; }
+    #core.low .bar { color: #FF5C70; }
+    #core .stats { color: var(--dim); font-size: 11.5px; }
+    #core.hit { animation: core-hit .35s steps(3); }
+    @keyframes core-hit { 0% { transform: translate(-50%, -50%) translate(4px, -2px) skewX(6deg); border-color: #FF5C70; filter: hue-rotate(-90deg) brightness(1.6); } 50% { transform: translate(-50%, -50%) translate(-3px, 1px) skewX(-4deg); } }
+    #banner { position: absolute; left: 0; right: 0; top: 22%; text-align: center; font-size: clamp(22px, 4vw, 40px); letter-spacing: .3em; color: var(--hi); text-shadow: 0 0 16px rgb(57 255 122 / .6); opacity: 0; transition: opacity .4s; pointer-events: none; }
+    #banner.on { opacity: 1; }
+    #banner.panic { color: #FF5C70; text-shadow: 0 0 16px #FF5C70; }
+    /* bugs */
+    .bug { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
+    .bug svg { position: absolute; left: -13px; top: -11px; width: 26px; height: 22px; overflow: visible; }
+    .bug .b { fill: #FF5C70; } .bug .l { stroke: #FF5C70; stroke-width: 1.4; stroke-linecap: round; fill: none; }
+    .bug .eye { fill: #fff; }
+    .bug .l1 { animation: legs .22s ease-in-out infinite alternate; transform-origin: 0 0; } .bug .l2 { animation: legs .22s ease-in-out infinite alternate-reverse; transform-origin: 0 0; }
+    @keyframes legs { from { transform: rotate(-12deg); } to { transform: rotate(12deg); } }
+    .bug span { position: absolute; left: 50%; top: 13px; transform: translateX(-50%); font-size: 9px; color: rgb(255 140 155 / .8); white-space: nowrap; letter-spacing: .04em; }
+    .bug.glitch .b, .bug.glitch .l { fill: #FF8FE6; stroke: #FF8FE6; }
+    .bug.heisen { animation: heisen 1.2s steps(2) infinite; } .bug.heisen .b { fill: #FFB35C; } .bug.heisen .l { stroke: #FFB35C; }
+    @keyframes heisen { 50% { opacity: .45; } }
+    .bug.leak svg { left: -26px; top: -22px; width: 52px; height: 44px; } .bug.leak span { top: 25px; }
+    .bug.leak .b { fill: #C25CFF; } .bug.leak .l { stroke: #C25CFF; }
+    .bug.flash svg { filter: brightness(3) drop-shadow(0 0 6px #fff); }
+    .bug.frozen svg { filter: grayscale(1) brightness(1.6); }
+    .bug.frozen .l1, .bug.frozen .l2 { animation: none; }
+    .leakdrop { position: absolute; width: 5px; height: 5px; margin: -2.5px; border-radius: 50%; background: #C25CFF; opacity: .5; pointer-events: none; animation: leakdrop 3s linear forwards; }
+    @keyframes leakdrop { to { opacity: 0; transform: scale(.3); } }
+    /* how a bug dies depends on what got it */
+    .bug.dead-cut .half { position: absolute; inset: 0; }
+    .bug.dead-cut .half svg { animation: half-a .5s ease-out forwards; clip-path: polygon(0 0, 100% 0, 100% 45%, 0 60%); }
+    .bug.dead-cut .half + .half svg { animation-name: half-b; clip-path: polygon(0 60%, 100% 45%, 100% 100%, 0 100%); }
+    @keyframes half-a { to { transform: translate(-10px, -12px) rotate(-25deg); opacity: 0; } }
+    @keyframes half-b { to { transform: translate(10px, 12px) rotate(25deg); opacity: 0; } }
+    .bug.dead-fry svg { animation: fry .5s ease-out forwards; } @keyframes fry { 0% { filter: brightness(4); } 100% { filter: brightness(0) blur(2px); opacity: 0; transform: scale(.6); } }
+    .bug.dead-zap svg { animation: zapd .5s ease-out forwards; } @keyframes zapd { 0% { filter: hue-rotate(200deg) brightness(3); } 100% { transform: scale(1.8) rotate(90deg); opacity: 0; filter: hue-rotate(200deg) blur(3px); } }
+    .bug.dead-pin svg { animation: pin .45s ease-in forwards; } @keyframes pin { 30% { transform: rotate(30deg) scale(1.1); } 100% { transform: rotate(-20deg) scale(.4); opacity: 0; } }
+    .bug.dead-squash svg { animation: squash .45s ease-out forwards; } @keyframes squash { 0% { transform: scale(1.3, .25); } 100% { transform: scale(1.6, .15); opacity: 0; } }
+    .splat { position: absolute; width: 0; height: 0; pointer-events: none; }
+    .splat i { position: absolute; font-style: normal; font-weight: 700; font-size: 11px; color: var(--c); text-shadow: 0 0 6px var(--c); animation: splat .7s cubic-bezier(.2,.7,.4,1) forwards; }
+    @keyframes splat { from { transform: translate(0, 0); opacity: 1; } to { transform: translate(var(--x), var(--y)) rotate(var(--r)); opacity: 0; } }
+    .pop { position: absolute; transform: translate(-50%, -50%); font-size: 11px; font-weight: 700; pointer-events: none; animation: pop .8s ease-out forwards; text-shadow: 0 0 6px #000; }
+    @keyframes pop { from { opacity: 1; } to { transform: translate(-50%, -150%); opacity: 0; } }
+    .ripple { position: absolute; width: 40px; height: 40px; margin: -20px; border-radius: 50%; border: 2px solid #5BC8FF; pointer-events: none; animation: ripple .4s ease-out forwards; }
+    @keyframes ripple { from { transform: scale(.2); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
+    .cover { position: fixed; inset: 0; z-index: 2147483646; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center; background: rgb(5 8 6 / .9); }
+    .cover[hidden] { display: none; }
+    .cover p { max-width: 32em; font-size: 16px; color: var(--text); }
+    @media (max-width: 700px) { #core { width: 150px; } #core b { font-size: 15px; } #hint { font-size: 11px; } }
+  </style>
+</head>
+<body class="hunt war">
+  <canvas id="matrix" class="matrix" aria-hidden="true"></canvas>
+  <header class="h-top">
+    <h1>BUG HUNT</h1>
+    <span class="recruit" id="recruit"><span style="color:var(--dim)">recruit:</span></span>
+    <button type="button" id="swarmBugs">release bugs</button>
+    <span class="site-menu-slot" data-here="new"></span>
+  </header>
+  <main id="arena" aria-label="The arena. Click anywhere to drop a bug.">
+    <div id="core" aria-live="polite"><b>CORE</b><div class="bar" id="bar"></div><div class="stats" id="stats"></div></div>
+    <p id="banner" aria-live="polite"></p>
+  </main>
+  <p id="hint">bugs crawl in from every side · the swarm guards the core · click anywhere to drop a bug in</p>
+  <div id="dummy"><span class="tgt"></span></div>
+  <div class="cover" id="motionCover" hidden><p>Bug Hunt is all animation, and your device is set to reduce motion.</p><button type="button" id="motionOn">play it anyway</button></div>
+
+  <script>window.MODE = "normal"; window.MOTION = (function () { try { var m = localStorage.getItem("motion"); if (m === "on") return true; if (m === "off") return false; } catch (e) {} return !matchMedia("(prefers-reduced-motion: reduce)").matches; })();</script>
+  <script src="assets/matrix.js"></script>
+  <script src="assets/menu.js"></script>
+  <script src="assets/swarm-intro.js"></script>
+  <script src="assets/samurai.js"></script>
+  <script src="assets/robot.js"></script>
+  <script src="assets/wizard.js"></script>
+  <script src="assets/ninja.js"></script>
+  <script>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); }, arena = $("arena"), core = $("core");
+      if (!MOTION) {
+        $("motionCover").hidden = false;
+        $("motionOn").onclick = function () { try { localStorage.setItem("motion", "on"); } catch (e) {} location.reload(); };
+        return;
+      }
+      // ---------- the defenders ----------
+      // range: how far from its post it attacks (px); cool: seconds between attacks; dmg: per hit; style: how its kills look
+      var KINDS = {
+        robot:   { range: 520, cool: .95, dmg: 1, style: "fry" },
+        wizard:  { range: 480, cool: 1.15, dmg: 1, style: "zap", splash: 50 },
+        ninja:   { range: 420, cool: .5, dmg: 1, style: "pin" },
+        samurai: { range: 380, cool: 1.45, dmg: 3, style: "cut" },
+        cursor:  { range: 260, cool: .7, dmg: 1, style: "squash" }
+      };
+      var ORDER = ["samurai", "robot", "wizard", "ninja", "cursor"], CAP = 20;
+      samuraiMode({ scoped: true }); robotMode({ scoped: true }); wizardMode({ scoped: true }); ninjaMode({ scoped: true });
+      var swarm = swarmIntro({ root: "#dummy", targets: ".tgt", logo: false, cursors: 0, skipButton: false, respectReducedMotion: false,
+        persist: true, puppet: true, type: false,
+        // each stands at its own post on a ring round the core
+        idle: function (a, now) {
+          var p = post(a), d = Math.hypot(p[0] - a.x, p[1] - a.y);
+          if (a.kind !== "ninja" && d < 6) a.el.dataset.rest = now;
+          return { x: p[0], y: p[1], ms: d < 6 ? 200 : Math.max(300, Math.min(1500, d * 2.4)), wait: d < 6 ? 200 : 60 };
+        } });
+      function units() { return swarm.units(); }
+      function centre() { var r = core.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }
+      function post(a) {
+        var list = units(), i = list.indexOf(a), n = list.length || 1, c = centre();
+        var rx = Math.min(innerWidth * .3, 340), ry = Math.min(innerHeight * .28, 210), t = -Math.PI / 2 + (i + .5) / n * Math.PI * 2;
+        return [c[0] + Math.cos(t) * rx, c[1] + Math.sin(t) * ry + 18];
+      }
+      function recruit(kind) {
+        if (units().length >= CAP) return;
+        var side = Math.random() < .5, a = swarm.add({ kind: kind, team: "g", x: side ? -30 : innerWidth + 30, y: innerHeight * (.2 + Math.random() * .6) });
+        if (a) a.cool = 0;
+        counts();
+      }
+      ORDER.forEach(function (k) {
+        var b = document.createElement("button"); b.type = "button"; b.dataset.k = k; b.innerHTML = "+ " + k + ' <span class="count"></span>';
+        b.onclick = function () { recruit(k); }; $("recruit").appendChild(b);
+      });
+      function counts() { document.querySelectorAll("#recruit button").forEach(function (b) { var n = units().filter(function (a) { return a.kind === b.dataset.k; }).length; b.querySelector(".count").textContent = n ? "×" + n : ""; }); }
+      ORDER.forEach(function (k) { recruit(k); recruit(k); });
+
+      // ---------- bugs ----------
+      var TYPES = {
+        bug:    { hp: 1, speed: 38, label: ["NullPointer", "OffByOne", "Typo", "404", "NaN", "Undefined"], dmg: 5 },
+        glitch: { hp: 1, speed: 78, label: ["RaceCondition", "Flaky", "Glitch"], dmg: 4 },
+        heisen: { hp: 2, speed: 44, label: ["Heisenbug"], dmg: 6 },
+        leak:   { hp: 7, speed: 19, label: ["MemoryLeak"], dmg: 15 }
+      };
+      var bugs = [], squashed = 0, integrity = 100, wave = 0, toSpawn = 0, spawnAt = 0, nextWaveAt = 1200, panicUntil = 0;
+      var SVG = '<svg viewBox="-13 -11 26 22"><g class="l l1"><path d="M-3 -2 L-8 -7 M0 -3 L-1 -9 M3 -2 L7 -8"/></g><g class="l l2"><path d="M-3 2 L-8 7 M0 3 L-1 9 M3 2 L7 8"/></g>' +
+        '<ellipse class="b" cx="-1" cy="0" rx="7" ry="4.6"/><circle class="b" cx="7" cy="0" r="3"/><circle class="eye" cx="8.4" cy="-1.2" r=".9"/><circle class="eye" cx="8.4" cy="1.2" r=".9"/>' +
+        '<path class="l" d="M9 -2 L13 -6 M9 2 L13 6"/></svg>';
+      function spawnBug(type, x, y) {
+        var T = TYPES[type], el = document.createElement("div");
+        el.className = "bug " + type; el.innerHTML = SVG + "<span>" + T.label[Math.random() * T.label.length | 0] + "</span>";
+        if (x === undefined) {                                  // from a random edge
+          var e = Math.random() * 4 | 0; x = e === 1 ? innerWidth + 20 : e === 3 ? -20 : Math.random() * innerWidth; y = e === 0 ? 60 : e === 2 ? innerHeight + 20 : 70 + Math.random() * (innerHeight - 70);
+        }
+        arena.appendChild(el);
+        var b = { el: el, type: type, x: x, y: y, hp: T.hp, speed: T.speed * (.85 + Math.random() * .3) * (1 + wave * .03), wob: Math.random() * 6, hopAt: performance.now() + 1500 + Math.random() * 1500, dmg: T.dmg, dead: false };
+        bugs.push(b); place(b, 0);
+        return b;
+      }
+      function place(b, ang) { b.el.style.transform = "translate(" + b.x.toFixed(1) + "px," + b.y.toFixed(1) + "px)"; b.el.firstChild.style.transform = "rotate(" + ang.toFixed(0) + "deg)"; }
+      function pop(x, y, text, color) { var e = document.createElement("div"); e.className = "pop"; e.textContent = text; e.style.left = x + "px"; e.style.top = y + "px"; e.style.color = color; arena.appendChild(e); setTimeout(function () { e.remove(); }, 800); }
+      function splat(x, y, color) {
+        var e = document.createElement("div"), G = "*~.;:#%"; e.className = "splat"; e.style.left = x + "px"; e.style.top = y + "px"; e.style.setProperty("--c", color);
+        for (var i = 0; i < 9; i++) { var g = document.createElement("i"), t = Math.random() * 6.28, d = 14 + Math.random() * 30; g.textContent = G[Math.random() * G.length | 0]; g.style.setProperty("--x", Math.cos(t) * d + "px"); g.style.setProperty("--y", Math.sin(t) * d + "px"); g.style.setProperty("--r", (Math.random() * 400 - 200) + "deg"); e.appendChild(g); }
+        arena.appendChild(e); setTimeout(function () { e.remove(); }, 750);
+      }
+      var COLOR = { samurai: "#FFE27A", robot: "#39FF7A", wizard: "#C7A6FF", ninja: "#FF8FA0", cursor: "#5BC8FF" };
+      // a hit on a bug, from an attack aimed at (ax, ay): heisenbugs that have moved since are missed
+      function hit(b, dmg, kind, ax, ay) {
+        if (b.dead) return;
+        if (b.type === "heisen" && ax !== undefined && Math.hypot(b.x - ax, b.y - ay) > 28) { pop(ax, ay - 10, "miss", "#FFB35C"); return; }
+        b.hp -= dmg; b.el.classList.add("flash"); setTimeout(function () { b.el.classList.remove("flash"); }, 90);
+        if (b.hp > 0) return;
+        b.dead = true; squashed++;
+        b.el.classList.add("dead-" + KINDS[kind].style);
+        if (KINDS[kind].style === "cut") { var svg = b.el.querySelector("svg").outerHTML; b.el.innerHTML = '<div class="half">' + svg + '</div><div class="half">' + svg + "</div>"; }
+        splat(b.x, b.y, COLOR[kind]); pop(b.x, b.y - 14, "+" + TYPES[b.type].hp, COLOR[kind]);
+        setTimeout(function () { b.el.remove(); }, 600);
+      }
+
+      // ---------- the attacks: each kind's own animation, aimed at the bug ----------
+      function attack(a, b, now) {
+        var K = KINDS[a.kind], x = b.x, y = b.y; a.cool = now + K.cool * 1000 * (.85 + Math.random() * .3);
+        if (a.kind === "robot") {                              // the laser
+          a.el.dataset.zap = now; a.el.dataset.zx = x; a.el.dataset.zy = y;
+          setTimeout(function () { hit(b, K.dmg, "robot"); }, 90);
+        } else if (a.kind === "wizard") {                      // a bolt from the staff, splashing those close by
+          a.el.dataset.zap = now; a.el.dataset.zx = x; a.el.dataset.zy = y;
+          setTimeout(function () {
+            hit(b, K.dmg, "wizard", x, y);
+            bugs.forEach(function (o) { if (o !== b && !o.dead && Math.hypot(o.x - x, o.y - y) < K.splash) hit(o, 1, "wizard"); });
+          }, 130);
+        } else if (a.kind === "ninja") {                       // a shuriken: the hit lands when it arrives
+          a.el.dataset.zap = now; a.el.dataset.zx = x; a.el.dataset.zy = y - 4;
+          var fly = 160 + Math.min(140, Math.hypot(x - a.x, y - a.y) * .25);
+          setTimeout(function () { hit(b, K.dmg, "ninja", x, y); }, fly + 40);
+        } else if (a.kind === "samurai") {                     // the iaijutsu: the bug freezes where it's cut and falls apart at the click
+          a.el.dataset.iai = now; a.el.dataset.ix = x; a.el.dataset.iy = y;
+          setTimeout(function () {
+            if (b.dead) return;
+            if (b.type === "heisen" && Math.hypot(b.x - x, b.y - y) > 28) { pop(x, y - 10, "miss", "#FFB35C"); return; }
+            if (b.hp <= K.dmg) { b.frozen = true; b.el.classList.add("frozen"); setTimeout(function () { b.el.classList.remove("frozen"); hit(b, K.dmg, "samurai"); }, 860); }
+            else hit(b, K.dmg, "samurai");
+          }, 360);
+        } else {                                               // a cursor: dashes out and clicks it
+          swarm.act(a, async function (u, moveTo, wait) {
+            var hx = a.x, hy = a.y;
+            await moveTo(u, b.x + 2, b.y + 2, 170);
+            var r = document.createElement("div"); r.className = "ripple"; r.style.left = b.x + "px"; r.style.top = b.y + "px"; arena.appendChild(r); setTimeout(function () { r.remove(); }, 420);
+            hit(b, K.dmg, "cursor");
+            await wait(140);
+            await moveTo(u, hx, hy, 260);
+          });
+        }
+      }
+      // every moment: each defender that's ready picks the bug in its range that's closest to the core
+      setInterval(function () {
+        var now = performance.now(), c = centre();
+        units().forEach(function (a) {
+          if (a.working || a.job || now < (a.cool || 0)) return;
+          var p = post(a); if (Math.hypot(p[0] - a.x, p[1] - a.y) > 12) return;   // not at its post yet
+          var R = KINDS[a.kind].range, best = null, bd = 1e9;
+          bugs.forEach(function (b) {
+            if (b.dead || b.frozen || b.claimed > now || Math.hypot(b.x - a.x, b.y - a.y) > R) return;
+            var d = Math.hypot(b.x - c[0], b.y - c[1]); if (d < bd) { bd = d; best = b; }
+          });
+          if (best) { if (best.hp <= KINDS[a.kind].dmg) best.claimed = now + 500; attack(a, best, now); }
+        });
+      }, 90);
+
+      // ---------- the core, the waves, and the bugs crawling ----------
+      function bar() {
+        var n = Math.round(integrity / 10); $("bar").textContent = "integrity " + "█".repeat(n) + "░".repeat(10 - n);
+        $("stats").textContent = "wave " + Math.max(1, wave) + " · squashed " + squashed;
+        core.classList.toggle("low", integrity <= 30);
+      }
+      function banner(text, panic) { var e = $("banner"); e.textContent = text; e.classList.toggle("panic", !!panic); e.classList.add("on"); clearTimeout(banner.t); banner.t = setTimeout(function () { e.classList.remove("on"); }, 1800); }
+      function pick() {
+        var r = Math.random(), bag = ["bug"];
+        if (wave >= 2) bag.push("glitch", "bug"); if (wave >= 3) bag.push("heisen"); if (wave >= 4 && r < .12) return "leak";
+        return bag[Math.random() * bag.length | 0];
+      }
+      var last = 0;
+      function frame(now) {
+        requestAnimationFrame(frame);
+        var dt = Math.min(.05, (now - last) / 1000 || 0); last = now;
+        if (document.hidden) return;
+        var c = centre();
+        if (now > panicUntil) {
+          // waves: when one is done and the field is clear, the next begins
+          if (toSpawn > 0 && now > spawnAt) { spawnBug(pick()); toSpawn--; spawnAt = now + (300 + Math.random() * 900) / (1 + wave * .08); }
+          if (!toSpawn && !bugs.some(function (b) { return !b.dead; }) && !nextWaveAt) nextWaveAt = now + 1800;
+          if (nextWaveAt && now > nextWaveAt) { nextWaveAt = 0; wave++; toSpawn = 6 + wave * 4; banner("WAVE " + wave); bar(); }
+        }
+        bugs.forEach(function (b) {
+          if (b.dead || b.frozen) return;
+          var dx = c[0] - b.x, dy = c[1] - b.y, d = Math.hypot(dx, dy) || 1, wob = 0;
+          if (b.type === "glitch") wob = Math.sin(now / 120 + b.wob) * 1.1;          // zig-zags
+          else wob = Math.sin(now / 500 + b.wob) * .35;
+          var vx = dx / d * Math.cos(wob) - dy / d * Math.sin(wob), vy = dy / d * Math.cos(wob) + dx / d * Math.sin(wob);
+          b.x += vx * b.speed * dt; b.y += vy * b.speed * dt;
+          if (b.type === "heisen" && now > b.hopAt) {                                   // observed? it's somewhere else now
+            b.hopAt = now + 1200 + Math.random() * 1800; var t = Math.random() * 6.28; b.x += Math.cos(t) * 55; b.y += Math.sin(t) * 55;
+          }
+          if (b.type === "leak" && Math.random() < dt * 6) { var drop = document.createElement("div"); drop.className = "leakdrop"; drop.style.left = b.x + "px"; drop.style.top = b.y + "px"; arena.appendChild(drop); setTimeout(function () { drop.remove(); }, 3000); }
+          place(b, Math.atan2(vy, vx) * 180 / Math.PI);
+          var cr = core.getBoundingClientRect();
+          if (b.x > cr.left - 6 && b.x < cr.right + 6 && b.y > cr.top - 6 && b.y < cr.bottom + 6) {   // it got in
+            b.dead = true; b.el.remove(); integrity = Math.max(0, integrity - b.dmg);
+            core.classList.remove("hit"); void core.offsetWidth; core.classList.add("hit"); pop(b.x, b.y - 12, "-" + b.dmg + "%", "#FF5C70"); bar();
+            if (!integrity) panic(now);
+          }
+        });
+        bugs = bugs.filter(function (b) { return !b.dead || b.el.isConnected; });
+      }
+      function panic(now) {
+        banner("KERNEL PANIC · rebooting", true); panicUntil = now + 3200; toSpawn = 0;
+        bugs.forEach(function (b) { if (!b.dead) { b.dead = true; splat(b.x, b.y, "#FF5C70"); b.el.remove(); } });
+        setTimeout(function () { integrity = 100; wave = Math.max(0, wave - 2); nextWaveAt = performance.now() + 600; bar(); }, 3000);
+      }
+      requestAnimationFrame(frame); bar();
+
+      // click: drop a bug there. "release bugs": a handful at once, from the edges
+      arena.addEventListener("click", function (e) { if (e.target.closest("#core")) return; spawnBug(wave >= 2 && Math.random() < .3 ? "glitch" : "bug", e.clientX, e.clientY); });
+      $("swarmBugs").onclick = function () { for (var i = 0; i < 8; i++) setTimeout(function () { spawnBug(pick()); }, i * 120); };
+      window.__hunt = { swarm: swarm, bugs: function () { return bugs; }, state: function () { return { wave: wave, squashed: squashed, integrity: integrity, live: bugs.filter(function (b) { return !b.dead; }).length }; }, spawnBug: spawnBug };
+    })();
+  </script>
+</body>
+</html>
