@@ -50,6 +50,15 @@
     .cover .dropzone { border: 2px dashed rgb(57 255 122 / .5); border-radius: 10px; padding: 18px 26px; color: var(--hi); }
     #dropCover { background: rgb(5 8 6 / .8); pointer-events: none; }
     #dropCover .dropzone { font-size: clamp(20px, 3vw, 32px); padding: 40px 60px; border-color: var(--accent); }
+    /* the circle layout: the swarm stands in a ring round the middle; a note is played outward from its own figure */
+    #ring { position: absolute; inset: 0; pointer-events: none; display: none; }
+    body.circle #ring { display: block; }
+    body.circle .cell { visibility: hidden; }
+    body.circle #field::before { background: radial-gradient(circle at 50% 50%, rgb(57 255 122 / .18), transparent 55%); }
+    .rnote { --c: var(--lo); position: absolute; width: 34px; height: 26px; margin: -13px 0 0 -17px; display: flex; }
+    .rnote.mid { --c: var(--mid); } .rnote.high { --c: var(--hi2); }
+    .rnote .note { font-size: 12px; }
+    #ringGuide { position: absolute; border: 1px dashed rgb(200 247 197 / .1); border-radius: 50%; transform: translate(-50%, -50%); }
     @media (max-width: 900px) { #field { padding: 4px 8px 12px; gap: 2px; } .note { font-size: 9px; } }
   </style>
 </head>
@@ -63,6 +72,8 @@
     <button type="button" id="stopBtn">stop</button>
     <span class="sep">· swarm:</span>
     <span id="kinds"></span>
+    <span class="sep">· layout:</span>
+    <span id="layouts"></span>
     <span class="site-menu-slot" data-here="music"></span>
   </header>
   <p id="status" aria-live="polite"></p>
@@ -109,6 +120,32 @@
         }
       }
 
+      // ---------- the circle: for each figure in the ring, three places to play outward from it (softer notes nearer) ----------
+      var ringBox = document.createElement("div"); ringBox.id = "ring"; field.appendChild(ringBox);
+      var guide = document.createElement("div"); guide.id = "ringGuide"; ringBox.appendChild(guide);
+      var rnotes = [], OUT = [1.22, 1.44, 1.66];
+      function groupOf(slot) { return Math.min(2, Math.floor(slot * 3 / N)); }
+      for (var i = 0; i < N; i++) {
+        rnotes.push([]);
+        OUT.forEach(function (_, k) {
+          var w = document.createElement("div"); w.className = "rnote" + ["", " mid", " high"][groupOf(i)];
+          var n = document.createElement("div"); n.className = "note"; n.textContent = GLYPH[(i + k) % GLYPH.length];
+          w.appendChild(n); ringBox.appendChild(w); rnotes[i].push(n);
+        });
+      }
+      // geometry, in the field's own coordinates: bass starts on the left and goes clockwise, over the top, to treble
+      function ring() {
+        var W = field.clientWidth, H = field.clientHeight, ry = Math.max(60, (H / 2 - 28) / OUT[2]), rx = Math.min(ry * 1.6, (W / 2 - 34) / OUT[2]);
+        return { cx: W / 2, cy: H / 2, rx: rx, ry: ry, at: function (i, sc) { var t = Math.PI + i / N * 2 * Math.PI; return [W / 2 + Math.cos(t) * rx * sc, H / 2 + Math.sin(t) * ry * sc]; } };
+      }
+      function placeRing() {
+        var g = ring();
+        guide.style.cssText = "left:" + g.cx + "px;top:" + g.cy + "px;width:" + g.rx * 2 + "px;height:" + g.ry * 2 + "px";
+        rnotes.forEach(function (list, i) { list.forEach(function (n, k) { var p = g.at(i, OUT[k]); n.parentNode.style.left = p[0] + "px"; n.parentNode.style.top = p[1] + "px"; }); });
+      }
+      addEventListener("resize", placeRing);
+      ringBox.style.display = "block"; placeRing();          // the library only takes targets it can see when it starts
+
       // ---------- the swarm: puppets. They idle in formation and build notes when ordered to ----------
       samuraiMode({ scoped: true }); robotMode({ scoped: true }); wizardMode({ scoped: true }); ninjaMode({ scoped: true });
       var quiet = true, pulse = 0, pace = 1, rate = 0, noteLife = 900;
@@ -116,9 +153,17 @@
         persist: true, puppet: true, type: false,
         buildPause: function (a) { return a.kind === "samurai" ? 130 / pace : 0; },
         revealPause: function (a) { return a.kind === "samurai" ? 230 / pace : 0; },
-        // with nothing to play, a figure waits where it last played (at first: spread along the bottom), in its idle pose
+        // with nothing to play, a figure waits where it last played (at first: spread along the bottom), in its idle pose;
+        // in the circle, it goes back to its own place in the ring
         idle: function (a, now) {
           if (a.slot === undefined) return { x: a.x, y: a.y, ms: 50, wait: 30 };   // just spawned: its place is set a moment later
+          if (layout === "circle") {
+            var r = field.getBoundingClientRect(), p = ring().at(a.slot, 1), x = r.left + scrollX + p[0], y = r.top + scrollY + p[1] + 16, d = Math.hypot(x - a.x, y - a.y);
+            var side = GROUPS[groupOf(a.slot)]; if (a.el.dataset.side !== side) { a.team = side; a.el.dataset.side = side; }
+            if (d > 4) return { x: x, y: y, ms: Math.max(250, Math.min(1400, d * 2.2 / pace)), wait: 60 };
+            if (a.kind !== "ninja") a.el.dataset.rest = now;
+            return { x: x, y: y, ms: 200, wait: 120 };
+          }
           if (!a.placed) {
             a.placed = true;
             var r = field.getBoundingClientRect();
@@ -127,6 +172,7 @@
           if (a.kind !== "ninja") a.el.dataset.rest = now;
           return { x: a.x, y: a.y, ms: 200, wait: 120 };
         } });
+      ringBox.style.display = "";
       var kind = "mix";
       function muster() {
         swarm.clear();
@@ -152,6 +198,7 @@
       // height: how loud) and does its action there, wearing that part of the sound's colour. At a slow pace it's one of
       // the few nearest (a stroll); at a fast pace it's the very nearest, so the swarm can keep up.
       function dispatch(g, col, level, now) {
+        if (layout === "circle") return dispatchRing(col, level, now);
         var row = Math.max(0, Math.min(ROWS - 1, Math.round(level * (ROWS - 1) + (Math.random() * 3 - 1.5)))), note = notes[col][row];
         if (note._busy > now) { note = notes[col][Math.min(ROWS - 1, row + 1)]; if (note._busy > now) return false; }
         var c = note.getBoundingClientRect(), free = swarm.units().filter(function (a) { return a.placed && !a.working && !a.job; });
@@ -162,6 +209,44 @@
         if (!swarm.order(a, note)) return false;
         note._busy = now + 6000; return true;
       }
+
+      // in the circle: the figure for that slice of the sound (or a neighbour, if it's busy) plays outward from its place,
+      // nearer for a soft note and further out for a loud one
+      function dispatchRing(col, level, now) {
+        var slot = Math.round(col / (COLS - 1) * (N - 1)), units = swarm.units();
+        var want = level < .4 ? 0 : level < .7 ? 1 : 2, tries = [slot, slot + 1, slot - 1, slot + 2, slot - 2];
+        for (var t = 0; t < tries.length; t++) {
+          var s2 = (tries[t] + N) % N, a = units.filter(function (u) { return u.slot === s2 && !u.working && !u.job; })[0];
+          if (!a) continue;
+          var ks = [want, want === 2 ? 1 : want + 1, want === 0 ? 2 : want - 1], note = null;
+          for (var k = 0; k < 3 && !note; k++) if (!(rnotes[s2][ks[k]]._busy > now)) note = rnotes[s2][ks[k]];
+          if (!note) continue;
+          a.speed = pace;
+          if (!swarm.order(a, note)) continue;
+          note._busy = now + 6000; return true;
+        }
+        return false;
+      }
+
+      // ---------- the layout: blocks (the figures go to the sound's place on a grid) or circle; remembered, or ?layout= ----------
+      var layout = new URLSearchParams(location.search).get("layout");
+      if (layout !== "circle" && layout !== "blocks") { layout = "blocks"; try { if (localStorage.getItem("musicLayout") === "circle") layout = "circle"; } catch (e) {} }
+      var LEGEND = {
+        blocks: 'every note or beat sends one of the swarm to play it: <span style="color:var(--lo)">bass</span> on the left, <span style="color:var(--hi2)">treble</span> on the right · they move at the music\'s pace · <span id="pace"></span>',
+        circle: 'each figure in the ring is one slice of the sound, <span style="color:var(--lo)">bass</span> on the left going clockwise round to <span style="color:var(--hi2)">treble</span> · on its note, it plays outward · <span id="pace"></span>'
+      };
+      function setLayout(l) {
+        layout = l; try { localStorage.setItem("musicLayout", l); } catch (e) {}
+        document.body.classList.toggle("circle", l === "circle"); $("legend").innerHTML = LEGEND[l];
+        [].forEach.call($("layouts").children, function (o) { o.classList.toggle("on", o.dataset.layout === l); });
+        placeRing();
+        swarm.units().forEach(function (a) { a.placed = false; });          // walk over to the new places
+      }
+      ["blocks", "circle"].forEach(function (l) {
+        var b = document.createElement("button"); b.type = "button"; b.textContent = l; b.dataset.layout = l; b.style.marginRight = "4px";
+        b.onclick = function () { setLayout(l); }; $("layouts").appendChild(b);
+      });
+      setLayout(layout);
 
       // ---------- audio ----------
       var AC, analyser, monitor, freq, source = null, stopSource = function () {};
